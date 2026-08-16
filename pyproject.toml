@@ -1,7 +1,7 @@
 [project]
-name = "jjm-triage"
+name = "watertriage"
 version = "0.1.0"
-description = "Add your description here"
+description = "WaterTriage: A Data-Driven Water Quality Risk Scoring and Intervention Prioritization System for Uttar Pradesh and Bihar"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
