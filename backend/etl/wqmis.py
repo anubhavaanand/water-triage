@@ -119,7 +119,10 @@ def parse_report(html: str) -> dict | None:
             vm = re.match(r"([\d.]+)", value_raw.replace(",", ""))
             if not vm:
                 continue
-            num = lambda s: float(re.sub(r"[^0-9.]", "", s)) if re.search(r"\d", s) else None
+
+            def num(s: str):
+                m2 = re.search(r"\d+(?:\.\d+)?", s or "")
+                return float(m2.group()) if m2 else None
             results.append({
                 "parameter": cells[1], "unit": cells[2],
                 "acceptable": num(acceptable), "permissible": num(permissible),
@@ -144,45 +147,107 @@ def parse_report(html: str) -> dict | None:
     }
 
 
-def cached_html(s_id_enc: str) -> tuple[str, bool]:
+def cached_html(internal_id: int, enc: str, keep_html: bool = False) -> tuple[str | None, bool]:
     RAW_DIR.mkdir(parents=True, exist_ok=True)
-    safe = s_id_enc.replace("/", "_").replace("+", "-").replace("=", "")
+    safe = enc.replace("/", "_").replace("+", "-").replace("=", "")
     path = RAW_DIR / f"{safe}.html"
     if path.exists():
         return path.read_text(errors="ignore"), True
-    r = session.get(FINAL_REPORT, params={"s_id": s_id_enc}, timeout=40)
+    try:
+        r = session.get(FINAL_REPORT, params={"s_id": enc}, timeout=40)
+    except requests.RequestException:
+        return None, False
     time.sleep(RATE_SECONDS)
-    path.write_text(r.text, errors="ignore")
+    if keep_html:
+        path.write_text(r.text, errors="ignore")
+        return r.text, False
     return r.text, False
+
+
+JSONL_PATH = RAW_DIR / "records.jsonl"
+PROGRESS_PATH = RAW_DIR / "crawl_progress.txt"
+
+
+def _load_progress() -> set[int]:
+    done: set[int] = set()
+    if PROGRESS_PATH.exists():
+        done = {int(x) for x in PROGRESS_PATH.read_text().split()}
+    return done
+
+
+def _mark_done(internal_id: int):
+    with PROGRESS_PATH.open("a") as fh:
+        fh.write(f"{internal_id}\n")
+
+
+def _append_record(record: dict):
+    JSONL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with JSONL_PATH.open("a") as fh:
+        fh.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
 
 
 STATE_ALIASES = {"uttar pradesh": "Uttar Pradesh", "bihar": "Bihar"}
 
 
-def crawl(start: int, end: int, store_fn=None):
-    hits, parsed_total = 0, 0
+def state_of(html: str) -> str | None:
+    m = re.search(r"District-\s*[^,]+,\s*State-\s*([A-Za-z &]+)", html)
+    if not m:
+        return None
+    return STATE_ALIASES.get(m.group(1).strip().lower())
+
+
+def crawl(start: int, end: int, max_hits: int | None = None, keep_html: bool = False):
+    done = _load_progress()
+    hits, parsed_total, skipped = 0, 0, 0
     for internal_id in range(start, end + 1):
+        if internal_id in done:
+            skipped += 1
+            continue
         enc = aes_encrypt(str(internal_id))
-        try:
-            html, was_cached = cached_html(enc)
-        except requests.RequestException as exc:
-            print(f"  [{internal_id}] fetch failed: {exc}", flush=True)
+        html, was_cached = cached_html(internal_id, enc, keep_html=keep_html)
+        if not html:
+            print(f"  [{internal_id}] fetch failed", flush=True)
             continue
         record = parse_report(html)
-        if not record:
+        if record is None:
+            _mark_done(internal_id)
             continue
         parsed_total += 1
         state_key = STATE_ALIASES.get((record["state"] or "").lower())
         if state_key is None:
+            _mark_done(internal_id)
             continue
         record["state"] = state_key
         record["internal_id"] = internal_id
         hits += 1
+        _append_record(record)
+        _mark_done(internal_id)
         print(f"  [{internal_id}] HIT {state_key}/{record['district']}/{record['village']} "
               f"params={len(record['results'])}", flush=True)
-        if store_fn:
-            store_fn(record)
+        if max_hits and hits >= max_hits:
+            print("hit cap reached", flush=True)
+            break
     return parsed_total, hits
+
+
+def map_ranges(start: int, end: int, stride: int):
+    counts = {"Uttar Pradesh": 0, "Bihar": 0, "other": 0}
+    ranges: dict[str, list[int]] = {}
+    for internal_id in range(start, end + 1, stride):
+        enc = aes_encrypt(str(internal_id))
+        try:
+            r = session.get(FINAL_REPORT, params={"s_id": enc}, timeout=40)
+        except requests.RequestException as exc:
+            print(f"  [{internal_id}] fail {exc}", flush=True)
+            continue
+        time.sleep(RATE_SECONDS)
+        st = state_of(r.text)
+        key = st or "other"
+        counts[key] += 1
+        lo, hi = ranges.get(key, [internal_id, internal_id])
+        ranges[key] = [min(lo, internal_id), max(hi, internal_id)]
+        print(f"  [{internal_id}] {key}", flush=True)
+    print(json.dumps({"counts": counts, "ranges": ranges}, indent=1))
 
 
 def pull_parameter_wise(cookie_file: Path, fy="2026-2027"):
@@ -192,9 +257,11 @@ def pull_parameter_wise(cookie_file: Path, fy="2026-2027"):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("command", choices=["probe", "districts", "crawl", "pull"])
+    ap.add_argument("command", choices=["probe", "districts", "crawl", "pull", "map"])
     ap.add_argument("--start", type=int, default=1)
     ap.add_argument("--end", type=int, default=50)
+    ap.add_argument("--stride", type=int, default=50000)
+    ap.add_argument("--max-hits", type=int, default=None)
     args = ap.parse_args()
 
     if args.command == "probe":
@@ -208,8 +275,10 @@ def main():
             d = fetch_districts(state)
             print(f"{state}: {len(d)} districts; sample: {dict(list(d.items())[:3])}")
     elif args.command == "crawl":
-        total, hits = crawl(args.start, args.end)
+        total, hits = crawl(args.start, args.end, max_hits=args.max_hits)
         print(f"parsed={total} target-state hits={hits}")
+    elif args.command == "map":
+        map_ranges(args.start, args.end, args.stride)
     elif args.command == "pull":
         pull_parameter_wise(None)
 

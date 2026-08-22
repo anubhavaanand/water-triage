@@ -14,3 +14,7 @@ wheels/
 
 # local dev databases
 data/*.db
+
+# bulk data files stay local, not in git
+data/raw/**/*.csv
+!data/raw/**/README.md
