@@ -113,3 +113,16 @@ class Intervention(Base):
     action: Mapped[str] = mapped_column(String(300))
     notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class HistoricalContamination(Base):
+    __tablename__ = "historical_contamination"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    village_id: Mapped[int] = mapped_column(ForeignKey("villages.id"), index=True)
+    parameter: Mapped[str] = mapped_column(String(60), index=True)
+    year: Mapped[int] = mapped_column(index=True)
+    registry: Mapped[str] = mapped_column(
+        String(80), default="quality-affected-habitations"
+    )
+    habitation: Mapped[str | None] = mapped_column(String(200), nullable=True)
