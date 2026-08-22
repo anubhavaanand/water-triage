@@ -1,6 +1,7 @@
 from .entities import (
     BisParameter,
     District,
+    HistoricalContamination,
     Intervention,
     Reading,
     RiskScore,
