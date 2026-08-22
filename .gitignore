@@ -11,3 +11,6 @@ wheels/
 
 # Secrets — never commit
 .env
+
+# local dev databases
+data/*.db
