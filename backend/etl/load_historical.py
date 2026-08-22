@@ -16,6 +16,7 @@ CSV = Path(__file__).resolve().parents[2] / "data" / "raw" / "kaggle" / \
     "affected_areas_2009_2012" / "IndiaAffectedWaterQualityAreas.csv"
 
 TARGET_STATES = {"UTTAR PRADESH", "BIHAR"}
+CANONICAL_STATE = {"UTTAR PRADESH": "Uttar Pradesh", "BIHAR": "Bihar"}
 
 
 def clean_name(value: str) -> str:
@@ -48,7 +49,7 @@ def main():
         seen_events: set[tuple[int, str, int, str]] = set()
 
         for row in ub.itertuples(index=False):
-            state_name = row[0]
+            state_name = CANONICAL_STATE[row[0]]
             district_name = clean_name(row[1])
             block_name = clean_name(row[2])
             village_name = clean_village(row[4])
