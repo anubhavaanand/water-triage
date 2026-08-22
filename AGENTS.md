@@ -15,7 +15,7 @@ Build **WaterTriage**: a system that scores water quality risk at village level 
 
 1. **Stack:** FastAPI + SQLAlchemy 2 + PostgreSQL (Docker) + Alembic + Streamlit dashboard
    - React was explicitly rejected (overkill; backend-focused student)
-2. **Scope:** 6 districts only (3 UP + 3 Bihar), NOT all 113 districts
+2. **Scope:** STATE-WIDE — all of UP (76 districts) + Bihar (38 districts), ~114 total. Changed from 6-district subset on 17 Aug 2026 after WQMIS API reverse-engineering made bulk pulls feasible (~1,800 requests via session-gated parameter-wise endpoint). Synthetic demo data still covers 6 representative districts
    - UP: Unnao, Ferozabad, Hardoi · Bihar: Katihar, Araria, +1 TBD
 3. **Data path:** WQMIS WQ4 manual exports → AIKosh CSV → synthetic fallback (in that order)
 4. **Scoring model:** per-parameter severity = (value − acceptable)/(permissible − acceptable), clamped 0–1; composite = weighted avg × 100. Weights: As 1.0, E. coli 0.9, F 0.8, Nitrate 0.7, Iron 0.4, Turbidity 0.3, TDS 0.3, pH 0.2. Bands: Critical ≥75, High 50–74, Medium 25–49, Low <25
@@ -55,7 +55,7 @@ Build **WaterTriage**: a system that scores water quality risk at village level 
 2. **Build backend skeleton:** `backend/app/{main.py, config.py, database.py, models.py, schemas.py, scoring.py, recurrence.py}` + `routers/` (samples, districts, scoring, priority)
 3. **DB schema** (target tables): states, districts, blocks, panchayats, villages, bis_limits, water_samples, parameter_readings, risk_scores, interventions
 4. **API endpoints:** `/api/samples`, `/api/samples/{id}`, `/api/districts`, `/api/districts/{id}`, `/api/scoring`, `/api/priority`, `/api/priority/top/{n}`, `/api/compare`
-5. **ETL parser** for confirmed WQ4 format → load 6-district subset
+5. **ETL parser** for WQMIS parameter-wise JSON/Excel → load state-wide (all UP + Bihar districts)
 6. **Docker compose:** postgres + backend + dashboard
 7. **Streamlit dashboard:** map (severity-colored markers) + district table + priority list + UP/Bihar comparison
 8. **WPR-4 (Literature Review)** — due Week 4, draft from existing research (JJM WQMIS, BIS 10500, JalRakshak comparison)

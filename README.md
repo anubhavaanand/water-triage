@@ -38,7 +38,7 @@ Guide: Dr. Girish Paliwal
 2. **AIKosh CSV** (backup) — village-level dataset, access pending
 3. **Synthetic data** (fallback) — generated from known contamination patterns (Unnao/Ferozabad fluoride, Hardoi E. coli, Katihar iron)
 
-**Scope: 6 districts** — UP: Unnao, Ferozabad, Hardoi · Bihar: Katihar, Araria, +1 TBD
+**Scope: state-wide** — all of Uttar Pradesh (76 districts) + Bihar (38 districts); synthetic demo subset covers Unnao, Ferozabad, Hardoi, Katihar, Araria, Saharsa
 
 ## How to Run (once implemented)
 

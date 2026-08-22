@@ -51,8 +51,8 @@ collection/receipt/analysis dates, lab name+address, and the results table with
 | Path | Effort | Verdict |
 |------|--------|---------|
 | A. User registers free WQMIS account → share session cookie → we automate detail endpoints per district×parameter×FY | ~10 min user, then fully automated | ⭐ preferred |
-| B. User logs in, uses UI Export-to-Excel per district (6 districts × FY) → drop files in `data/raw/wqmis/` | ~45 min manual | fallback, zero risk |
-| C. Sequential crawl of `final_report_print`, filter to 6 districts locally | weeks, ~0.8% hit-rate over 20M+ ids | ❌ rejected (impolite + infeasible) |
+| B. User logs in, uses UI Export-to-Excel per district (state-wide: ~114 districts × FY) → drop files in `data/raw/wqmis/` | ~45 min manual | fallback, zero risk |
+| C. Sequential crawl of `final_report_print`, filter locally | weeks, ~0.8% hit-rate over 20M+ ids | ❌ rejected (impolite + infeasible) |
 
 Politeness rules for any automated fetching: ≤1 req/sec, single-threaded, off-peak windows,
 identify honestly, cache everything under `data/raw/wqmis/`.
@@ -60,5 +60,5 @@ identify honestly, cache everything under `data/raw/wqmis/`.
 ## Next actions
 
 1. [USER] Register at `ejalshakti.gov.in/WQMIS/Home/login_register` (public user role), note credentials
-2. [USER→AGENT] Share session cookie OR export 6-district Excel files manually
+2. [USER→AGENT] Share session cookie OR export district-wise Excel files manually (all UP+Bihar preferred; 6-district demo subset minimum)
 3. [AGENT] Build `backend/etl/wqmis.py`: cookie/token flow + AES helpers + parser → `water_samples`
