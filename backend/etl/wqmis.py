@@ -119,6 +119,11 @@ def parse_report(html: str) -> dict | None:
             vm = re.match(r"([\d.]+)", value_raw.replace(",", ""))
             if not vm:
                 continue
+            val_clean = re.sub(r"\.{2,}", ".", vm.group(1)).strip(".")
+            try:
+                value = float(val_clean)
+            except ValueError:
+                continue
 
             def num(s: str):
                 m2 = re.search(r"\d+(?:\.\d+)?", s or "")
@@ -126,7 +131,7 @@ def parse_report(html: str) -> dict | None:
             results.append({
                 "parameter": cells[1], "unit": cells[2],
                 "acceptable": num(acceptable), "permissible": num(permissible),
-                "value": float(vm.group(1)),
+                "value": value,
             })
         if results:
             break
