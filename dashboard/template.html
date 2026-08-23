@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WaterTriage — Intervention Priority Console</title>
+<style>
+  :root{
+    --bg:#F6F7F9; --surface:#FFFFFF; --ink:#101828; --muted:#667085;
+    --line:#E4E7EC; --navy:#0C1D2B; --navy2:#12293B; --teal:#0E6E6B; --teal-soft:#E6F2F1;
+    --crit:#B42318; --crit-bg:#FEF3F2; --high:#B54708; --high-bg:#FFFAEB;
+    --low:#067647; --low-bg:#ECFDF3; --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,'Segoe UI',Inter,Roboto,sans-serif;
+       font-feature-settings:'tnum' 1,'lnum' 1;-webkit-font-smoothing:antialiased}
+  .shell{max-width:1240px;margin:0 auto;padding:0 24px 56px}
+
+  header{background:var(--navy);color:#fff;margin-bottom:26px}
+  .hrow{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
+  .mark{width:30px;height:30px;border-radius:6px;background:var(--teal);display:grid;place-items:center;font-weight:700;font-size:15px}
+  .brand{font-weight:650;font-size:16px;letter-spacing:-.2px}
+  .brand span{opacity:.55;font-weight:450}
+  .tabs{margin-left:22px;display:flex;gap:2px;height:100%}
+  .tab{padding:18px 14px 15px;font-size:13.5px;color:#B7C4CE;cursor:pointer;border-bottom:2px solid transparent;user-select:none}
+  .tab.on{color:#fff;border-bottom-color:var(--teal)}
+  .tab:hover{color:#fff}
+  .hright{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .live{font:10.5px/1 var(--mono);font-weight:600;letter-spacing:.5px;padding:5px 8px;border-radius:4px;display:flex;gap:6px;align-items:center;cursor:pointer}
+  .live .dot{width:6px;height:6px;border-radius:50%}
+  .live.off{color:#94A3B8;background:rgba(255,255,255,.06)} .live.off .dot{background:#64748B}
+  .live.on{color:#6EE7B7;background:rgba(16,185,129,.12)} .live.on .dot{background:#10B981}
+  .env{font:11px/1 var(--mono);letter-spacing:.6px;text-transform:uppercase;border:1px solid rgba(255,255,255,.25);border-radius:4px;padding:6px 9px;opacity:.85}
+
+  h2.sec{font-size:13px;font-weight:650;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:28px 0 10px;display:flex;align-items:center;gap:8px}
+  h2.sec::after{content:'';flex:1;height:1px;background:var(--line)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .kpi{padding:16px 20px;border-left:1px solid var(--line)}
+  .kpi:first-child{border-left:none}
+  .kpi .n{font-size:26px;font-weight:680;letter-spacing:-.8px;line-height:1.1}
+  .kpi .l{font-size:12px;color:var(--muted);margin-top:3px}
+  .kpi .n em{font-style:normal;font-size:12px;font-weight:600;color:var(--muted);margin-left:6px}
+
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .panel h3{font-size:13.5px;font-weight:650;padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+  .panel h3 small{font-weight:450;color:var(--muted)}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-align:left;padding:9px 14px;background:#FAFBFC;border-bottom:1px solid var(--line)}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tbody tr.click{cursor:pointer} tbody tr.click:hover td{background:var(--teal-soft)}
+  td.num,th.num{text-align:right;font-family:var(--mono);font-size:12.5px}
+  .rank{color:var(--muted);font-family:var(--mono);font-size:12px;width:34px}
+  .vname{font-weight:600}
+  .vmeta{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .score-bar{display:inline-block;height:5px;border-radius:3px;background:var(--line);width:64px;position:relative;overflow:hidden;vertical-align:middle;margin-right:8px}
+  .score-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+
+  .chip{display:inline-block;font:11px/1 var(--mono);font-weight:600;letter-spacing:.3px;padding:4px 8px;border-radius:4px;text-transform:uppercase}
+  .c-Critical{color:var(--crit);background:var(--crit-bg)} .c-High{color:var(--high);background:var(--high-bg)} .c-Low{color:var(--low);background:var(--low-bg)}
+  .param{font:11.5px/1 var(--mono);color:#475467;background:#F2F4F7;padding:4px 7px;border-radius:4px}
+  .param.hot{color:var(--crit);background:var(--crit-bg)}
+  .verdict{font:10.5px/1 var(--mono);font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:#7A271A;background:#FEF0EF;border:1px solid #FADCDA;padding:4px 7px;border-radius:4px}
+
+  .split{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:18px 16px 6px}
+  .split i{height:100%}
+  .legend{display:grid;gap:8px;padding:10px 16px 16px;font-size:12.5px}
+  .legend .row{display:flex;align-items:center;gap:8px}
+  .legend .sw{width:9px;height:9px;border-radius:2px}
+  .legend b{margin-left:auto;font-family:var(--mono);font-weight:600}
+  .registry{border-top:1px solid var(--line);padding:14px 16px;font-size:12.5px;color:var(--muted)}
+  .registry b{color:var(--ink);font-family:var(--mono);font-weight:600}
+  .registry .big{font-size:22px;font-weight:680;color:var(--ink);display:block;margin-bottom:2px}
+
+  /* compare */
+  .states{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .state-card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px}
+  .state-card h4{font-size:15px;font-weight:650;display:flex;justify-content:space-between;align-items:baseline}
+  .state-card h4 span{font:12px var(--mono);color:var(--muted);font-weight:500}
+  .bars{display:grid;gap:12px;margin-top:16px}
+  .bar-row{display:grid;grid-template-columns:70px 1fr 40px;align-items:center;gap:10px;font-size:12.5px}
+  .bar-track{height:14px;background:#EEF1F4;border-radius:3px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:3px}
+  .avg-line{display:flex;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted)}
+  .avg-line b{font-family:var(--mono);color:var(--ink);font-weight:600}
+
+  /* drawer */
+  .scrim{position:fixed;inset:0;background:rgba(12,29,43,.45);opacity:0;pointer-events:none;transition:.18s;z-index:40}
+  .drawer{position:fixed;top:0;right:-520px;width:500px;max-width:94vw;height:100vh;background:var(--surface);
+          box-shadow:-12px 0 32px rgba(12,29,43,.14);transition:right .2s ease;z-index:50;display:flex;flex-direction:column}
+  body.open .scrim{opacity:1;pointer-events:auto} body.open .drawer{right:0}
+  .dhead{padding:16px 20px;background:var(--navy);color:#fff}
+  .dhead .t{font-size:16px;font-weight:650}
+  .dhead .m{font-size:12px;opacity:.65;margin-top:2px}
+  .dbody{overflow-y:auto;padding:18px 20px;display:grid;gap:18px}
+  .dsec h5{font-size:11px;font-weight:650;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .dtable{width:100%;font-size:12.5px}
+  .dtable td,.dtable th{padding:7px 8px}
+  .pass{color:var(--low);font:10.5px/1 var(--mono);font-weight:700}
+  .exceed{color:var(--crit);font:10.5px/1 var(--mono);font-weight:700}
+  .hist-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .hchip{font:11px/1 var(--mono);padding:5px 8px;border-radius:4px;background:var(--high-bg);color:var(--high);border:1px solid #FDE9C8}
+  .dstat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .dstat .box{border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+  .dstat .box b{display:block;font-size:19px;font-weight:680}
+  .dstat .box span{font-size:11px;color:var(--muted)}
+
+  footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <div class="mark">W</div>
+    <div class="brand">WaterTriage <span>· Priority Console</span></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="hright">
+      <div class="live off" id="live" title="FastAPI at 127.0.0.1:8000"><span class="dot"></span><span id="live-txt">OFFLINE · baked data</span></div>
+      <div class="env">FY 2025–26 · UP + BIHAR</div>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <section id="view-queue">
+    <section class="kpis" id="kpis" style="margin-bottom:26px"></section>
+    <h2 class="sec">Intervention priority queue — ranked by severity band, then score</h2>
+    <div class="grid">
+      <div class="panel">
+        <h3>Ranked water sources <small id="tbl-note"></small></h3>
+        <table><thead><tr>
+          <th class="rank">#</th><th>Village / Source</th><th>Band</th>
+          <th class="num">Score</th><th style="width:110px">Severity</th>
+          <th>Driver</th><th class="num">Collected</th></tr></thead>
+        <tbody id="qbody"></tbody></table>
+      </div>
+      <aside style="display:grid;gap:20px">
+        <div class="panel"><h3>Severity distribution</h3>
+          <div class="split" id="split"></div><div class="legend" id="legend"></div></div>
+        <div class="panel"><h3>Historical registry</h3><div class="registry" id="registry"></div></div>
+      </aside>
+    </div>
+
+    <h2 class="sec">Chronic hotspots — ≥ 6 registry events, 2009–2012</h2>
+    <div class="panel"><table>
+      <thead><tr><th class="rank">#</th><th>Village</th><th>District</th><th>Parameter</th>
+        <th class="num">Events</th><th class="num">Span</th><th>Status</th></tr></thead>
+      <tbody id="hotspots"></tbody></table></div>
+  </section>
+
+  <section id="view-compare" style="display:none">
+    <h2 class="sec">State comparison — contamination burden by band</h2>
+    <div class="states" id="states"></div>
+    <h2 class="sec">Registry depth by state — where chronic risk lives</h2>
+    <div class="panel"><table id="depth">
+      <thead><tr><th>State</th><th class="num">Registry villages</th><th class="num">Registry events</th><th class="num">Current samples</th><th class="num">Avg score</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+</div>
+
+<div class="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <div class="dhead"><div class="t" id="dv-name"></div><div class="m" id="dv-meta"></div></div>
+  <div class="dbody" id="dv-body"></div>
+</aside>
+
+<footer class="shell" style="max-width:1240px">
+  <span>Source · WQMIS / DDWS public lab reports · Quality-Affected Habitations registry 2009–2012 · Scored against BIS IS 10500</span>
+  <span id="gen-time"></span>
+</footer>
+
+<script>
+const DATA = __DATA__;
+const API = 'http://127.0.0.1:8000';
+const sevColor = {Critical:'#B42318', High:'#DC6803', Low:'#067647'};
+const k = DATA.kpi;
+
+/* live api probe */
+async function ping(){ try{ const r = await fetch(API+'/api/health',{mode:'cors'}); const j=await r.json();
+  document.getElementById('live').className='live on'; document.getElementById('live-txt').textContent='LIVE v'+(j.version||'');
+}catch(e){} }
+ping();
+
+/* tabs */
+const VIEWS=[['queue','Priority Queue'],['compare','State Compare']];
+document.getElementById('tabs').innerHTML=VIEWS.map(([id,l])=>`<div class="tab" data-v="${id}" onclick="go('${id}')">${l}</div>`).join('');
+function go(v){ location.hash=v; }
+function route(){
+  const v=(location.hash||'#queue').slice(1);
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));
+  document.getElementById('view-queue').style.display = v==='compare'?'none':'block';
+  document.getElementById('view-compare').style.display = v==='compare'?'block':'none';
+}
+window.addEventListener('hashchange',route);
+
+/* queue */
+document.getElementById('kpis').innerHTML=`
+  <div class="kpi"><div class="n">${k.samples}</div><div class="l">Lab samples scored</div></div>
+  <div class="kpi"><div class="n" style="color:var(--crit)">${k.critical}</div><div class="l">Critical — immediate action</div></div>
+  <div class="kpi"><div class="n" style="color:var(--high)">${k.high}</div><div class="l">High priority</div></div>
+  <div class="kpi"><div class="n">${DATA.registry.villages.toLocaleString('en-IN')}<em>villages</em></div><div class="l">Historical registry under watch</div></div>`;
+
+function renderQueue(list){
+  const tb=document.getElementById('qbody');
+  tb.innerHTML=list.map(r=>`
+   <tr class="click" onclick="openDetail(${r.sample_id})">
+    <td class="rank">${String(r.rank).padStart(2,'0')}</td>
+    <td><div class="vname">${r.village==='Not Available'?r.district+' — unnamed source':r.village}</div>
+        <div class="vmeta">${r.district}, ${r.state} · ${r.ref||''}</div></td>
+    <td><span class="chip c-${r.band}">${r.band}</span></td>
+    <td class="num"><b>${(+r.score).toFixed(2)}</b></td>
+    <td><span class="score-bar"><i style="width:${Math.min(100,r.score*4)}%;background:${sevColor[r.band]}"></i></span></td>
+    <td>${r.worst?`<span class="param ${r.score>=50?'hot':''}">${String(r.worst).replace('_',' ')}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+    <td class="num" style="color:var(--muted)">${r.date}</td>
+   </tr>`).join('');
+  document.getElementById('tbl-note').textContent=`showing ${list.length} of ${DATA.priority.length} · band-first ordering`;
+}
+renderQueue(DATA.priority.slice(0,25));
+
+const tot=k.samples||1;
+document.getElementById('split').innerHTML=['Critical','High','Low'].map(b=>`<i style="width:${((k[b.toLowerCase()]||0)/tot*100)}%;background:${sevColor[b]}"></i>`).join('');
+document.getElementById('legend').innerHTML=['Critical','High','Low'].map(b=>`<div class="row"><span class="sw" style="background:${sevColor[b]}"></span>${b}<b>${k[b.toLowerCase()]||0}</b></div>`).join('');
+document.getElementById('registry').innerHTML=`<span class="big">${DATA.registry.events.toLocaleString('en-IN')}</span>contamination events · ${DATA.registry.villages.toLocaleString('en-IN')} villages tracked from the 2009–2012 Quality-Affected Habitations registry (DDWS).`;
+
+/* hotspots */
+document.getElementById('hotspots').innerHTML=DATA.hotspots.map((h,i)=>`
+ <tr><td class="rank">${String(i+1).padStart(2,'0')}</td>
+     <td class="vname">${h.village}</td><td>${h.district}, ${h.state}</td>
+     <td><span class="param">${h.params}</span></td>
+     <td class="num"><b>${h.events}</b></td>
+     <td class="num" style="color:var(--muted)">${h.first}–${h.last}</td>
+     <td><span class="verdict">chronic</span></td></tr>`).join('');
+
+/* compare */
+const bands=['Critical','High','Low'];
+document.getElementById('states').innerHTML=Object.entries(DATA.state_bands).map(([st,b])=>{
+  const totS=bands.reduce((a,x)=>a+(b[x]||0),0)||1;
+  return `<div class="state-card"><h4>${st}<span>${totS} samples</span></h4><div class="bars">${
+    bands.map(x=>`<div class="bar-row"><span>${x}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${((b[x]||0)/totS*100).toFixed(1)}%;background:${sevColor[x]}"></div></div>
+      <span class="num"><b>${b[x]||0}</b></span></div>`).join('')}</div></div>`;
+}).join('');
+
+const cmpRows=Object.keys(DATA.state_bands).map(st=>{
+  const c=(DATA.compare.find(x=>x.state===st)||{});
+  const sb=DATA.state_bands[st]||{};
+  const rg=DATA.registry_by_state[st]||{villages:0,events:0};
+  return `<tr><td class="vname">${st}</td>
+    <td class="num">${rg.villages.toLocaleString('en-IN')}</td>
+    <td class="num">${rg.events.toLocaleString('en-IN')}</td>
+    <td class="num">${sb.Critical||0} / ${sb.High||0} / ${sb.Low||0}</td>
+    <td class="num"><b>${c.avg??'—'}</b></td></tr>`;
+}).join('');
+document.querySelector('#depth tbody').innerHTML=cmpRows;
+
+/* village drawer */
+function closeDrawer(){document.body.classList.remove('open')}
+function openDetail(sampleId){
+  const d=DATA.details[String(sampleId)]||{};
+  const meta=DATA.priority.find(p=>p.sample_id===sampleId)||{};
+  document.getElementById('dv-name').textContent =
+    (meta.village==='Not Available'? meta.district+' — unnamed source' : (meta.village||'Sample '+sampleId));
+  document.getElementById('dv-meta').textContent =
+    `${meta.district||''}, ${meta.state||''} · ref ${meta.ref||sampleId} · collected ${meta.date||''}`;
+  const rowsHtml=(d.readings||[]).map(rd=>{
+    let ok=true;
+    if(rd.strategy==='range') ok=rd.value>=rd.acceptable&&rd.value<=rd.permissible;
+    else if(rd.strategy==='microbial') ok=rd.value<=rd.acceptable;
+    else if(rd.permissible!=null&&rd.permissible>rd.acceptable) ok=rd.value<=rd.acceptable;
+    else ok=rd.value<=rd.acceptable;
+    return `<tr><td style="font-weight:600">${rd.param}</td>
+      <td class="num">${rd.value}</td><td class="num" style="color:var(--muted)">${rd.acceptable}${rd.permissible&&rd.permissible!==rd.acceptable?' – '+rd.permissible:''} ${rd.unit}</td>
+      <td class="num">${ok?'<span class="pass">PASS</span>':'<span class="exceed">EXCEED</span>'}</td></tr>`;
+  }).join('')||'<tr><td colspan="4" style="color:var(--muted)">No readings recorded — pending lab analysis.</td></tr>';
+
+  const histChips=(d.hist_years||[]).slice(0,10).map(y=>`<span class="hchip">${y}</span>`).join('')
+    || '<span style="color:var(--muted);font-size:12px">No registry matches — first-time detection.</span>';
+  const paramsTxt=(d.hist_params||[]).length?` (${d.hist_params.join(', ').toLowerCase()})`:'';
+  const cls=d.hist_count>=6?'chronic-hotspot':d.hist_count>0?'recurring':'new-detection';
+
+  document.getElementById('dv-body').innerHTML=`
+    <div class="dstat">
+      <div class="box"><b class="chip c-${meta.band}" style="font-size:13px">${meta.band}</b><span>severity band</span></div>
+      <div class="box"><b>${(+meta.score).toFixed(2)}</b><span>composite score / 100</span></div>
+      <div class="box"><b>${d.hist_count}</b><span>registry events (2009–12)</span></div>
+      <div class="box"><b style="text-transform:none">${cls.replace('-',' ')}</b><span>recurrence verdict</span></div>
+    </div>
+    <div class="dsec"><h5>Laboratory readings vs BIS IS 10500</h5>
+      <table class="dtable"><thead><tr><th>Parameter</th><th class="num">Result</th><th class="num">Acceptable limit</th><th class="num">Verdict</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
+    <div class="dsec"><h5>Registry history${paramsTxt}</h5><div class="hist-chips">${histChips}</div></div>`;
+  document.body.classList.add('open');
+}
+
+document.getElementById('gen-time').textContent='Generated '+new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+route();
+</script>
+</body>
+</html>

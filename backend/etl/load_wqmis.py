@@ -15,6 +15,8 @@ from app.models import District, Reading, State, Village, WaterSample
 
 JSONL = Path(__file__).resolve().parents[2] / "data" / "raw" / "wqmis" / "records.jsonl"
 
+CANONICAL_STATE = {"UTTAR PRADESH": "Uttar Pradesh", "BIHAR": "Bihar"}
+
 PARAM_ALIASES = {
     "ph": "ph",
     "tds": "tds",
@@ -49,7 +51,7 @@ def parse_dt(value):
 
 
 def upsert_geo(db: Session, record: dict):
-    state_name = record["state"]
+    state_name = CANONICAL_STATE.get(record["state"], record["state"])
     district_name = clip(record["district"], 100) or "UNKNOWN"
     village_name = clip(record["village"], 150) or "UNKNOWN"
 
