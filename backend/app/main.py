@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .api import all_routers
 from .database import Base, SessionLocal, engine
@@ -20,6 +21,13 @@ app = FastAPI(
     description="Water quality risk scoring and intervention prioritization for UP & Bihar",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 for router in all_routers:
