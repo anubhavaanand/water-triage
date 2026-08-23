@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WaterTriage — Intervention Priority Console</title>
+<style>
+  :root{
+    --bg:#F6F7F9; --surface:#FFFFFF; --ink:#101828; --muted:#667085;
+    --line:#E4E7EC; --navy:#0C1D2B; --teal:#0E6E6B; --teal-soft:#E6F2F1;
+    --crit:#B42318; --crit-bg:#FEF3F2; --high:#B54708; --high-bg:#FFFAEB;
+    --low:#067647; --low-bg:#ECFDF3; --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,'Segoe UI',Inter,Roboto,sans-serif;
+       font-feature-settings:'tnum' 1,'lnum' 1;-webkit-font-smoothing:antialiased}
+  .shell{max-width:1240px;margin:0 auto;padding:0 24px 56px}
+
+  /* ── header ─────────────────────────────── */
+  header{background:var(--navy);color:#fff;margin-bottom:28px}
+  .hrow{max-width:1240px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px}
+  .mark{width:30px;height:30px;border-radius:6px;background:var(--teal);display:grid;place-items:center;
+        font-weight:700;font-size:15px;letter-spacing:-.5px}
+  .brand{font-weight:650;font-size:16px;letter-spacing:-.2px}
+  .brand span{opacity:.55;font-weight:450}
+  .env{margin-left:auto;font:11px/1 var(--mono);letter-spacing:.6px;text-transform:uppercase;
+       border:1px solid rgba(255,255,255,.25);border-radius:4px;padding:6px 9px;opacity:.85}
+  nav.crumbs{max-width:1240px;margin:0 auto;padding:10px 24px 0;display:flex;gap:8px;color:#94A3B8;font-size:12.5px}
+  nav.crumbs b{color:#fff;font-weight:550}
+
+  /* ── kpi strip ──────────────────────────── */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);
+        border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .kpi{padding:16px 20px;border-left:1px solid var(--line)}
+  .kpi:first-child{border-left:none}
+  .kpi .n{font-size:26px;font-weight:680;letter-spacing:-.8px;line-height:1.1}
+  .kpi .l{font-size:12px;color:var(--muted);margin-top:3px;letter-spacing:.1px}
+  .kpi .n em{font-style:normal;font-size:12px;font-weight:600;color:var(--muted);margin-left:6px}
+
+  h2.sec{font-size:13px;font-weight:650;letter-spacing:.4px;text-transform:uppercase;
+         color:var(--muted);margin:30px 0 10px;display:flex;align-items:center;gap:8px}
+  h2.sec::after{content:'';flex:1;height:1px;background:var(--line)}
+
+  /* ── grid ───────────────────────────────── */
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .panel h3{font-size:13.5px;font-weight:650;padding:12px 16px;border-bottom:1px solid var(--line);
+            display:flex;justify-content:space-between;align-items:baseline}
+  .panel h3 small{font-weight:450;color:var(--muted)}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);
+     text-align:left;padding:9px 14px;background:#FAFBFC;border-bottom:1px solid var(--line)}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#FAFBFC}
+  td.num,th.num{text-align:right;font-family:var(--mono);font-size:12.5px}
+  .rank{color:var(--muted);font-family:var(--mono);font-size:12px;width:34px}
+  .vname{font-weight:600}
+  .vmeta{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .score-bar{display:inline-block;height:5px;border-radius:3px;background:var(--line);width:64px;
+             vertical-align:middle;margin-right:8px;position:relative;overflow:hidden}
+  .score-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+
+  .chip{display:inline-block;font:11px/1 var(--mono);font-weight:600;letter-spacing:.3px;
+        padding:4px 8px;border-radius:4px;text-transform:uppercase}
+  .c-Critical{color:var(--crit);background:var(--crit-bg)}
+  .c-High{color:var(--high);background:var(--high-bg)}
+  .c-Low{color:var(--low);background:var(--low-bg)}
+  .param{font:11.5px/1 var(--mono);color:#475467;background:#F2F4F7;padding:4px 7px;border-radius:4px}
+  .param.hot{color:var(--crit);background:var(--crit-bg)}
+
+  /* severity split */
+  .split{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:18px 16px 6px}
+  .split i{height:100%}
+  .legend{display:grid;gap:8px;padding:10px 16px 16px;font-size:12.5px}
+  .legend .row{display:flex;align-items:center;gap:8px}
+  .legend .sw{width:9px;height:9px;border-radius:2px}
+  .legend b{margin-left:auto;font-family:var(--mono);font-weight:600}
+  .registry{border-top:1px solid var(--line);padding:14px 16px;font-size:12.5px;color:var(--muted)}
+  .registry b{color:var(--ink);font-family:var(--mono);font-weight:600}
+  .registry .big{font-size:22px;font-weight:680;color:var(--ink);display:block;margin-bottom:2px}
+
+  /* hotspots */
+  .hot-grid td .years{font:11.5px/1 var(--mono);color:var(--muted)}
+  .verdict{font:10.5px/1 var(--mono);font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+           color:#7A271A;background:#FEF0EF;border:1px solid #FADCDA;padding:4px 7px;border-radius:4px}
+
+  footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);
+         font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <div class="mark">W</div>
+    <div class="brand">WaterTriage <span>· Intervention Priority Console</span></div>
+    <div class="env">FY 2025–26 · UP + BIHAR</div>
+  </div>
+</header>
+<nav class="crumbs"><b>Console</b><span>/</span><span>Priority Queue</span></nav>
+
+<div class="shell">
+
+  <section class="kpis" id="kpis"></section>
+
+  <h2 class="sec">Intervention priority queue — ranked by severity band, then score</h2>
+  <div class="grid">
+    <div class="panel">
+      <h3>Ranked water sources <small id="tbl-note"></small></h3>
+      <table id="priority">
+        <thead><tr>
+          <th class="rank">#</th><th>Village / Source</th><th>Band</th>
+          <th class="num">Score</th><th class="num" style="text-align:left;width:110px">Severity</th>
+          <th>Driver</th><th class="num">Collected</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <aside style="display:grid;gap:20px">
+      <div class="panel">
+        <h3>Severity distribution</h3>
+        <div class="split" id="split"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="panel">
+        <h3>Historical registry</h3>
+        <div class="registry" id="registry"></div>
+      </div>
+    </aside>
+  </div>
+
+  <h2 class="sec">Chronic hotspots — ≥ 6 registry events, 2009–2012</h2>
+  <div class="panel">
+    <table id="hotspots">
+      <thead><tr><th class="rank">#</th><th>Village</th><th>District</th><th>Dominant parameter</th>
+        <th class="num">Events</th><th class="num">Span</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <footer>
+    <span>Source · WQMIS / DDWS lab reports (public) · Quality-Affected Habitations registry 2009–2012 · BIS IS 10500 scoring</span>
+    <span id="gen-time"></span>
+  </footer>
+</div>
+
+<script>
+const DATA = {"kpi": {"samples": 112, "critical": 1, "high": 31, "low": 80}, "priority": [{"rank": 1, "sample_id": 109, "village": "Not Available", "district": "Lucknow", "state": "Uttar Pradesh", "score": 24.35, "band": "Critical", "worst": "e_coli", "ref": "U691097L158S1903", "date": "22 Aug 2022"}, {"rank": 2, "sample_id": 82, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1440", "date": "07 Jul 2022"}, {"rank": 3, "sample_id": 58, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1218", "date": "08 Jul 2022"}, {"rank": 4, "sample_id": 45, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1196", "date": "07 Jul 2022"}, {"rank": 5, "sample_id": 35, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1130", "date": "06 Aug 2022"}, {"rank": 6, "sample_id": 86, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1446", "date": "07 Jul 2022"}, {"rank": 7, "sample_id": 36, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1135", "date": "06 Aug 2022"}, {"rank": 8, "sample_id": 62, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1226", "date": "08 Jul 2022"}, {"rank": 9, "sample_id": 28, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1105", "date": "06 Aug 2022"}, {"rank": 10, "sample_id": 32, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1126", "date": "06 Aug 2022"}, {"rank": 11, "sample_id": 91, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1452", "date": "07 Jul 2022"}, {"rank": 12, "sample_id": 65, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1232", "date": "08 Jul 2022"}, {"rank": 13, "sample_id": 66, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1403", "date": "06 Aug 2022"}, {"rank": 14, "sample_id": 67, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1410", "date": "06 Jul 2022"}, {"rank": 15, "sample_id": 68, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1414", "date": "06 Jul 2022"}, {"rank": 16, "sample_id": 50, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1204", "date": "08 Jul 2022"}, {"rank": 17, "sample_id": 97, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1460", "date": "07 Jul 2022"}, {"rank": 18, "sample_id": 29, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1117", "date": "06 Aug 2022"}, {"rank": 19, "sample_id": 40, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1178", "date": "06 Aug 2022"}, {"rank": 20, "sample_id": 100, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1463", "date": "07 Jul 2022"}, {"rank": 21, "sample_id": 72, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1420", "date": "06 Jul 2022"}, {"rank": 22, "sample_id": 73, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1423", "date": "06 Jul 2022"}, {"rank": 23, "sample_id": 74, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1425", "date": "07 Jul 2022"}, {"rank": 24, "sample_id": 104, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1467", "date": "07 Jul 2022"}, {"rank": 25, "sample_id": 105, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1471", "date": "07 Jul 2022"}, {"rank": 26, "sample_id": 75, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1428", "date": "07 Jul 2022"}, {"rank": 27, "sample_id": 41, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1181", "date": "06 Aug 2022"}, {"rank": 28, "sample_id": 43, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1189", "date": "06 Aug 2022"}, {"rank": 29, "sample_id": 30, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1121", "date": "06 Aug 2022"}, {"rank": 30, "sample_id": 42, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1183", "date": "06 Aug 2022"}, {"rank": 31, "sample_id": 55, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1212", "date": "08 Jul 2022"}, {"rank": 32, "sample_id": 79, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1435", "date": "07 Jul 2022"}, {"rank": 33, "sample_id": 107, "village": "Not Available", "district": "Arwal", "state": "Bihar", "score": 3.04, "band": "Low", "worst": "tds", "ref": "U709000L408S1816", "date": "25 Jul 2022"}, {"rank": 34, "sample_id": 46, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1197", "date": "03 Aug 2022"}, {"rank": 35, "sample_id": 47, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1200", "date": "03 Aug 2022"}, {"rank": 36, "sample_id": 48, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1201", "date": "04 Aug 2022"}, {"rank": 37, "sample_id": 49, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1203", "date": "04 Aug 2022"}, {"rank": 38, "sample_id": 51, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1205", "date": "04 Aug 2022"}, {"rank": 39, "sample_id": 52, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1207", "date": "04 Aug 2022"}, {"rank": 40, "sample_id": 53, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1209", "date": "04 Aug 2022"}, {"rank": 41, "sample_id": 54, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1211", "date": "04 Aug 2022"}, {"rank": 42, "sample_id": 56, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1214", "date": "04 Aug 2022"}, {"rank": 43, "sample_id": 57, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1217", "date": "04 Aug 2022"}, {"rank": 44, "sample_id": 59, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1219", "date": "04 Aug 2022"}, {"rank": 45, "sample_id": 60, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1222", "date": "04 Aug 2022"}, {"rank": 46, "sample_id": 61, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1225", "date": "04 Aug 2022"}, {"rank": 47, "sample_id": 63, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1227", "date": "04 Aug 2022"}, {"rank": 48, "sample_id": 64, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1229", "date": "04 Aug 2022"}, {"rank": 49, "sample_id": 69, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1415", "date": "04 Aug 2022"}, {"rank": 50, "sample_id": 70, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1417", "date": "04 Aug 2022"}, {"rank": 51, "sample_id": 71, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1419", "date": "04 Aug 2022"}, {"rank": 52, "sample_id": 76, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1430", "date": "04 Aug 2022"}, {"rank": 53, "sample_id": 77, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1432", "date": "04 Aug 2022"}, {"rank": 54, "sample_id": 78, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1434", "date": "04 Aug 2022"}, {"rank": 55, "sample_id": 80, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1437", "date": "04 Aug 2022"}, {"rank": 56, "sample_id": 81, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1439", "date": "04 Aug 2022"}, {"rank": 57, "sample_id": 83, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1442", "date": "04 Aug 2022"}, {"rank": 58, "sample_id": 84, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1444", "date": "04 Aug 2022"}, {"rank": 59, "sample_id": 85, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1445", "date": "04 Aug 2022"}, {"rank": 60, "sample_id": 87, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1448", "date": "04 Aug 2022"}, {"rank": 61, "sample_id": 88, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1449", "date": "04 Aug 2022"}, {"rank": 62, "sample_id": 89, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1450", "date": "04 Aug 2022"}, {"rank": 63, "sample_id": 90, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1451", "date": "04 Aug 2022"}, {"rank": 64, "sample_id": 92, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1454", "date": "04 Aug 2022"}, {"rank": 65, "sample_id": 93, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1456", "date": "04 Aug 2022"}, {"rank": 66, "sample_id": 94, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1457", "date": "04 Aug 2022"}, {"rank": 67, "sample_id": 95, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1458", "date": "04 Aug 2022"}, {"rank": 68, "sample_id": 96, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1459", "date": "04 Aug 2022"}, {"rank": 69, "sample_id": 98, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1461", "date": "05 Aug 2022"}, {"rank": 70, "sample_id": 99, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1462", "date": "05 Aug 2022"}, {"rank": 71, "sample_id": 101, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1464", "date": "05 Aug 2022"}, {"rank": 72, "sample_id": 102, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1465", "date": "05 Aug 2022"}, {"rank": 73, "sample_id": 103, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1466", "date": "05 Aug 2022"}, {"rank": 74, "sample_id": 106, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U727080L390S1800", "date": "02 Aug 2022"}, {"rank": 75, "sample_id": 108, "village": "Not Available", "district": "Arwal", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U3285L408S1837", "date": "23 Aug 2022"}, {"rank": 76, "sample_id": 110, "village": "Not Available", "district": "Jehanabad", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U720403L213S1976", "date": "03 Aug 2022"}, {"rank": 77, "sample_id": 111, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1988", "date": "05 Aug 2022"}, {"rank": 78, "sample_id": 112, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1992", "date": "05 Aug 2022"}, {"rank": 79, "sample_id": 2, "village": "Not Available", "district": "Nalanda", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U725064L488S215", "date": "03 Aug 2022"}, {"rank": 80, "sample_id": 113, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1998", "date": "05 Aug 2022"}, {"rank": 81, "sample_id": 3, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S261", "date": "03 Aug 2022"}, {"rank": 82, "sample_id": 4, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S262", "date": "03 Aug 2022"}, {"rank": 83, "sample_id": 5, "village": "Not Available", "district": "Jehanabad", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U720403L475S303", "date": "05 Aug 2022"}, {"rank": 84, "sample_id": 6, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S615", "date": "03 Aug 2022"}, {"rank": 85, "sample_id": 7, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S617", "date": "03 Aug 2022"}, {"rank": 86, "sample_id": 8, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S619", "date": "03 Aug 2022"}, {"rank": 87, "sample_id": 9, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S620", "date": "03 Aug 2022"}, {"rank": 88, "sample_id": 10, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S621", "date": "03 Aug 2022"}, {"rank": 89, "sample_id": 11, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S622", "date": "03 Aug 2022"}, {"rank": 90, "sample_id": 12, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S623", "date": "03 Aug 2022"}, {"rank": 91, "sample_id": 13, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S624", "date": "03 Aug 2022"}, {"rank": 92, "sample_id": 14, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S625", "date": "03 Aug 2022"}, {"rank": 93, "sample_id": 15, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S626", "date": "03 Aug 2022"}, {"rank": 94, "sample_id": 16, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S627", "date": "03 Aug 2022"}, {"rank": 95, "sample_id": 17, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S628", "date": "03 Aug 2022"}, {"rank": 96, "sample_id": 18, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S629", "date": "03 Aug 2022"}, {"rank": 97, "sample_id": 19, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S630", "date": "03 Aug 2022"}, {"rank": 98, "sample_id": 20, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S631", "date": "03 Aug 2022"}, {"rank": 99, "sample_id": 21, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S632", "date": "03 Aug 2022"}, {"rank": 100, "sample_id": 22, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S633", "date": "03 Aug 2022"}, {"rank": 101, "sample_id": 23, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1083", "date": "04 Aug 2022"}, {"rank": 102, "sample_id": 24, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1086", "date": "04 Aug 2022"}, {"rank": 103, "sample_id": 25, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1089", "date": "04 Aug 2022"}, {"rank": 104, "sample_id": 26, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1091", "date": "04 Aug 2022"}, {"rank": 105, "sample_id": 27, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1093", "date": "04 Aug 2022"}, {"rank": 106, "sample_id": 31, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1123", "date": "04 Aug 2022"}, {"rank": 107, "sample_id": 33, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1127", "date": "04 Aug 2022"}, {"rank": 108, "sample_id": 34, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1128", "date": "04 Aug 2022"}, {"rank": 109, "sample_id": 37, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1137", "date": "04 Aug 2022"}, {"rank": 110, "sample_id": 38, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1153", "date": "04 Aug 2022"}, {"rank": 111, "sample_id": 39, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1156", "date": "04 Aug 2022"}, {"rank": 112, "sample_id": 44, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1192", "date": "03 Aug 2022"}], "registry": {"villages": 14006, "events": 100690}, "compare": [{"state": "Bihar", "samples": 111, "avg": 2.1}, {"state": "Uttar Pradesh", "samples": 1, "avg": 24.35}], "hotspots": [{"village": "Khokha", "district": "Purnia", "state": "Bihar", "events": 166, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Khunti Dhanaili", "district": "Purnia", "state": "Bihar", "events": 165, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Satkodaria", "district": "Purnia", "state": "Bihar", "events": 156, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Singhia", "district": "Purnia", "state": "Bihar", "events": 153, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Chausa", "district": "Madhepura", "state": "Bihar", "events": 142, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Kajha", "district": "Purnia", "state": "Bihar", "events": 140, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Goasi", "district": "Purnia", "state": "Bihar", "events": 129, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Hardi", "district": "Supaul", "state": "Bihar", "events": 129, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Majra", "district": "Purnia", "state": "Bihar", "events": 128, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Jhila Dumri", "district": "Supaul", "state": "Bihar", "events": 126, "first": 2009, "last": 2012, "params": "IRON"}]};
+const sevColor = {Critical:'#B42318', High:'#DC6803', Low:'#067647'};
+const k = DATA.kpi;
+
+document.getElementById('kpis').innerHTML = `
+  <div class="kpi"><div class="n">${k.samples}</div><div class="l">Lab samples scored</div></div>
+  <div class="kpi"><div class="n" style="color:var(--crit)">${k.critical}</div><div class="l">Critical — immediate action</div></div>
+  <div class="kpi"><div class="n" style="color:var(--high)">${k.high}</div><div class="l">High priority</div></div>
+  <div class="kpi"><div class="n">${DATA.registry.villages.toLocaleString('en-IN')}<em>villages</em></div>
+    <div class="l">Historical registry under watch</div></div>`;
+
+const tb = document.querySelector('#priority tbody');
+tb.innerHTML = DATA.priority.slice(0,25).map(r=>`
+  <tr>
+    <td class="rank">${String(r.rank).padStart(2,'0')}</td>
+    <td><div class="vname">${r.village === "Not Available" ? r.district + " — unnamed source" : r.village}</div><div class="vmeta">${r.district}, ${r.state} · ${r.ref||''}</div></td>
+    <td><span class="chip c-${r.band}">${r.band}</span></td>
+    <td class="num"><b>${r.score.toFixed(2)}</b></td>
+    <td><span class="score-bar"><i style="width:${Math.min(100,r.score*4)}%;background:${sevColor[r.band]}"></i></span></td>
+    <td>${r.worst?`<span class="param ${r.score>=50?'hot':''}">${r.worst.replace('_',' ')}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+    <td class="num" style="color:var(--muted)">${r.date}</td>
+  </tr>`).join('');
+document.getElementById('tbl-note').textContent =
+  `showing ${Math.min(25, DATA.priority.length)} of ${DATA.priority.length} · band-first ordering`;
+
+const tot = k.samples || 1;
+document.getElementById('split').innerHTML =
+  ['Critical','High','Low'].map(b=>`<i style="width:${(k[b]/tot*100)}%;background:${sevColor[b]}"></i>`).join('');
+document.getElementById('legend').innerHTML =
+  ['Critical','High','Low'].map(b=>`<div class="row"><span class="sw" style="background:${sevColor[b]}"></span>${b}<b>${k[b.toLowerCase()]||0}</b></div>`).join('');
+
+document.getElementById('registry').innerHTML =
+  `<span class="big">${DATA.registry.events.toLocaleString('en-IN')}</span>
+   contamination events · ${DATA.registry.villages.toLocaleString('en-IN')} villages
+   tracked from the 2009–2012 Quality-Affected Habitations registry (DDWS).`;
+
+document.querySelector('#hotspots tbody').innerHTML = DATA.hotspots.map((h,i)=>`
+  <tr>
+    <td class="rank">${String(i+1).padStart(2,'0')}</td>
+    <td class="vname">${h.village}</td>
+    <td>${h.district}, ${h.state}</td>
+    <td><span class="param">${h.params}</span></td>
+    <td class="num"><b>${h.events}</b></td>
+    <td class="num years">${h.first}–${h.last}</td>
+    <td><span class="verdict">chronic</span></td>
+  </tr>`).join('');
+
+document.getElementById('gen-time').textContent =
+  'Generated ' + new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+</script>
+</body>
+</html>
