@@ -87,6 +87,13 @@
   .avg-line{display:flex;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted)}
   .avg-line b{font-family:var(--mono);color:var(--ink);font-weight:600}
 
+  /* district map */
+  .map-wrap{padding:12px 14px 14px}
+  .map-wrap svg{display:block;width:100%;height:auto}
+  .map-wrap path{cursor:pointer}
+  .map-wrap path:hover{stroke:var(--navy)}
+  .map-tip{position:fixed;z-index:60;display:none;background:var(--navy);color:#fff;padding:8px 11px;border-radius:5px;font-size:12px;line-height:1.5;pointer-events:none;box-shadow:0 6px 18px rgba(12,29,43,.28)}
+
   /* drawer */
   .scrim{position:fixed;inset:0;background:rgba(12,29,43,.45);opacity:0;pointer-events:none;transition:.18s;z-index:40}
   .drawer{position:fixed;top:0;right:-520px;width:500px;max-width:94vw;height:100vh;background:var(--surface);
@@ -101,8 +108,12 @@
   .dtable td,.dtable th{padding:7px 8px}
   .pass{color:var(--low);font:10.5px/1 var(--mono);font-weight:700}
   .exceed{color:var(--crit);font:10.5px/1 var(--mono);font-weight:700}
-  .hist-chips{display:flex;flex-wrap:wrap;gap:6px}
-  .hchip{font:11px/1 var(--mono);padding:5px 8px;border-radius:4px;background:var(--high-bg);color:var(--high);border:1px solid #FDE9C8}
+  .tl{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:300px}
+  .tl-cell{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .tl-bar{width:100%;height:14px;border-radius:4px;background:#EEF0F3;border:1px solid #E4E7EC}
+  .tl-cell.on .tl-bar{background:rgba(220,104,3,.16);border-color:#DC6803}
+  .tl-year{font:10px/1 var(--mono);color:var(--muted)}
+  .tl-cell.on .tl-year{color:var(--high);font-weight:600}
   .dstat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .dstat .box{border:1px solid var(--line);border-radius:6px;padding:10px 12px}
   .dstat .box b{display:block;font-size:19px;font-weight:680}
@@ -162,6 +173,17 @@
       <tbody></tbody></table></div>
   </section>
 
+  <section id="view-map" style="display:none">
+    <h2 class="sec">District map — current sample coverage across Uttar Pradesh &amp; Bihar</h2>
+    <div class="states">
+      <div class="panel"><h3>Uttar Pradesh<small id="map-meta-up"></small></h3><div class="map-wrap" id="map-up"></div></div>
+      <div class="panel"><h3>Bihar<small id="map-meta-br"></small></h3><div class="map-wrap" id="map-br"></div></div>
+    </div>
+    <div class="panel" style="margin-top:20px"><div class="legend" style="grid-template-columns:auto auto;justify-content:start;gap:28px;padding-top:14px" id="mleg"></div></div>
+  </section>
+
+  <div class="map-tip" id="mtip"></div>
+
 </div>
 
 <div class="scrim" onclick="closeDrawer()"></div>
@@ -175,6 +197,8 @@
   <span id="gen-time"></span>
 </footer>
 
+<script src="assets/up.js"></script>
+<script src="assets/bihar.js"></script>
 <script>
 const DATA = __DATA__;
 const API = 'http://127.0.0.1:8000';
@@ -188,14 +212,13 @@ async function ping(){ try{ const r = await fetch(API+'/api/health',{mode:'cors'
 ping();
 
 /* tabs */
-const VIEWS=[['queue','Priority Queue'],['compare','State Compare']];
+const VIEWS=[['queue','Priority Queue'],['compare','State Compare'],['map','District Map']];
 document.getElementById('tabs').innerHTML=VIEWS.map(([id,l])=>`<div class="tab" data-v="${id}" onclick="go('${id}')">${l}</div>`).join('');
 function go(v){ location.hash=v; }
 function route(){
   const v=(location.hash||'#queue').slice(1);
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));
-  document.getElementById('view-queue').style.display = v==='compare'?'none':'block';
-  document.getElementById('view-compare').style.display = v==='compare'?'block':'none';
+  ['queue','compare','map'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'block':'none');
 }
 window.addEventListener('hashchange',route);
 
@@ -259,6 +282,47 @@ const cmpRows=Object.keys(DATA.state_bands).map(st=>{
 }).join('');
 document.querySelector('#depth tbody').innerHTML=cmpRows;
 
+/* district map */
+const DIST={};
+DATA.priority.forEach(p=>{const s=DIST[p.state+'|'+p.district]||(DIST[p.state+'|'+p.district]={n:0,sum:0});s.n++;s.sum+=+p.score;});
+const TEAL_LO=[230,242,241],TEAL_HI=[10,77,74];
+const ramp=t=>`rgb(${TEAL_LO.map((v,i)=>Math.round(v+(TEAL_HI[i]-v)*t)).join(',')})`;
+function drawMap(hostId,metaId,state,geo){
+  const lo=[999,999],hi=[-999,-999];
+  geo.features.forEach(f=>(f.geometry.type==='MultiPolygon'?f.geometry.coordinates:[f.geometry.coordinates])
+    .forEach(po=>po.forEach(r=>r.forEach(([x,y])=>{
+      if(x<lo[0])lo[0]=x; if(x>hi[0])hi[0]=x; if(y<lo[1])lo[1]=y; if(y>hi[1])hi[1]=y;}))));
+  const W=1000,H=Math.round(W*(hi[1]-lo[1])*Math.cos((lo[1]+hi[1])/2*Math.PI/180)/(hi[0]-lo[0]));
+  const maxN=Math.max(...Object.values(DIST).map(s=>s.n));
+  const paths=geo.features.flatMap(f=>{
+    const d=f.properties.district,s=DIST[state+'|'+d];
+    const fill=s?ramp(.22+.78*s.n/maxN):'#EEF1F4';
+    const dd=(f.geometry.type==='MultiPolygon'?f.geometry.coordinates:[f.geometry.coordinates])
+      .map(po=>po.map(r=>'M'+r.map(p=>((p[0]-lo[0])/(hi[0]-lo[0])*W).toFixed(1)+' '+((hi[1]-p[1])/(hi[1]-lo[1])*H).toFixed(1)).join('L')+'Z').join(''));
+    return dd.map(x=>`<path d="${x}" fill="${fill}" stroke="#fff" stroke-width="1" vector-effect="non-scaling-stroke" data-d="${d}" data-n="${s?s.n:''}" data-a="${s?(s.sum/s.n).toFixed(1):''}"/>`);
+  });
+  document.getElementById(hostId).innerHTML=`<svg viewBox="-2 -2 ${W+4} ${H+4}">${paths.join('')}</svg>`;
+  const got=new Set(geo.features.filter(f=>DIST[state+'|'+f.properties.district]).map(f=>f.properties.district));
+  document.getElementById(metaId).textContent=`${got.size}/${geo.features.length} districts sampled`;
+}
+drawMap('map-up','map-meta-up','Uttar Pradesh',GEO_UP);
+drawMap('map-br','map-meta-br','Bihar',GEO_BIHAR);
+document.getElementById('mleg').innerHTML=
+ `<div class="row">${[0,.5,1].map(t=>`<span class="sw" style="width:16px;border-radius:0;background:${ramp(t)}"></span>`).join('')}sampled district · darker = more current samples</div>
+  <div class="row"><span class="sw" style="background:#EEF1F4;border:1px solid var(--line)"></span>not yet sampled</div>`;
+const mtip=document.getElementById('mtip');
+document.getElementById('view-map').addEventListener('mousemove',e=>{
+  const t=e.target.closest('path');
+  if(!t){mtip.style.display='none';return}
+  mtip.innerHTML=`<b>${t.dataset.d}</b> district<br>`+(t.dataset.n
+    ?`${t.dataset.n} sample${t.dataset.n>1?'s':''} · avg score <span>${t.dataset.a}</span>`
+    :`<span>no samples yet</span>`);
+  mtip.style.display='block';
+  mtip.style.left=Math.min(innerWidth-190,e.clientX+14)+'px';
+  mtip.style.top=(e.clientY+16)+'px';
+});
+document.getElementById('view-map').addEventListener('mouseleave',()=>mtip.style.display='none');
+
 /* village drawer */
 function closeDrawer(){document.body.classList.remove('open')}
 function openDetail(sampleId){
@@ -279,8 +343,11 @@ function openDetail(sampleId){
       <td class="num">${ok?'<span class="pass">PASS</span>':'<span class="exceed">EXCEED</span>'}</td></tr>`;
   }).join('')||'<tr><td colspan="4" style="color:var(--muted)">No readings recorded — pending lab analysis.</td></tr>';
 
-  const histChips=(d.hist_years||[]).slice(0,10).map(y=>`<span class="hchip">${y}</span>`).join('')
-    || '<span style="color:var(--muted);font-size:12px">No registry matches — first-time detection.</span>';
+  const HIST_YEARS=[2009,2010,2011,2012];
+  const histSet=new Set(d.hist_years||[]);
+  const histTimeline=HIST_YEARS.map(y=>`<div class="tl-cell${histSet.has(y)?' on':''}"><span class="tl-bar"></span><span class="tl-year">${y}</span></div>`).join('');
+  const histHtml=histSet.size?`<div class="tl">${histTimeline}</div>`
+    :'<span style="color:var(--muted);font-size:12px">No registry matches — first-time detection.</span>';
   const paramsTxt=(d.hist_params||[]).length?` (${d.hist_params.join(', ').toLowerCase()})`:'';
   const cls=d.hist_count>=6?'chronic-hotspot':d.hist_count>0?'recurring':'new-detection';
 
@@ -293,7 +360,7 @@ function openDetail(sampleId){
     </div>
     <div class="dsec"><h5>Laboratory readings vs BIS IS 10500</h5>
       <table class="dtable"><thead><tr><th>Parameter</th><th class="num">Result</th><th class="num">Acceptable limit</th><th class="num">Verdict</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
-    <div class="dsec"><h5>Registry history${paramsTxt}</h5><div class="hist-chips">${histChips}</div></div>`;
+    <div class="dsec"><h5>Registry history${paramsTxt}</h5>${histHtml}</div>`;
   document.body.classList.add('open');
 }
 
