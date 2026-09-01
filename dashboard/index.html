@@ -2,370 +2,1780 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WaterTriage — Intervention Priority Console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WaterTriage — All-India & UP/Bihar Water Quality Triage Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#F6F7F9; --surface:#FFFFFF; --ink:#101828; --muted:#667085;
-    --line:#E4E7EC; --navy:#0C1D2B; --navy2:#12293B; --teal:#0E6E6B; --teal-soft:#E6F2F1;
-    --crit:#B42318; --crit-bg:#FEF3F2; --high:#B54708; --high-bg:#FFFAEB;
-    --low:#067647; --low-bg:#ECFDF3; --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,'Segoe UI',Inter,Roboto,sans-serif;
-       font-feature-settings:'tnum' 1,'lnum' 1;-webkit-font-smoothing:antialiased}
-  .shell{max-width:1240px;margin:0 auto;padding:0 24px 56px}
+:root {
+  --bg: #070d19;
+  --bg-panel: rgba(13, 22, 41, 0.78);
+  --bg-panel-hover: rgba(20, 32, 58, 0.88);
+  --border: rgba(56, 189, 248, 0.16);
+  --border-active: rgba(56, 189, 248, 0.45);
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --crit: #ef4444;
+  --crit-glow: rgba(239, 68, 68, 0.4);
+  --high: #f97316;
+  --high-glow: rgba(249, 115, 22, 0.4);
+  --low: #10b981;
+  --low-glow: rgba(16, 185, 129, 0.4);
+  --cyan: #06b6d4;
+  --cyan-glow: rgba(6, 182, 212, 0.35);
+  --river: #38bdf8;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
 
-  header{background:var(--navy);color:#fff;margin-bottom:26px}
-  .hrow{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px}
-  .mark{width:30px;height:30px;border-radius:6px;background:var(--teal);display:grid;place-items:center;font-weight:700;font-size:15px}
-  .brand{font-weight:650;font-size:16px;letter-spacing:-.2px}
-  .brand span{opacity:.55;font-weight:450}
-  .tabs{margin-left:22px;display:flex;gap:2px;height:100%}
-  .tab{padding:18px 14px 15px;font-size:13.5px;color:#B7C4CE;cursor:pointer;border-bottom:2px solid transparent;user-select:none}
-  .tab.on{color:#fff;border-bottom-color:var(--teal)}
-  .tab:hover{color:#fff}
-  .hright{margin-left:auto;display:flex;align-items:center;gap:10px}
-  .live{font:10.5px/1 var(--mono);font-weight:600;letter-spacing:.5px;padding:5px 8px;border-radius:4px;display:flex;gap:6px;align-items:center;cursor:pointer}
-  .live .dot{width:6px;height:6px;border-radius:50%}
-  .live.off{color:#94A3B8;background:rgba(255,255,255,.06)} .live.off .dot{background:#64748B}
-  .live.on{color:#6EE7B7;background:rgba(16,185,129,.12)} .live.on .dot{background:#10B981}
-  .env{font:11px/1 var(--mono);letter-spacing:.6px;text-transform:uppercase;border:1px solid rgba(255,255,255,.25);border-radius:4px;padding:6px 9px;opacity:.85}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  user-select: none;
+}
 
-  h2.sec{font-size:13px;font-weight:650;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:28px 0 10px;display:flex;align-items:center;gap:8px}
-  h2.sec::after{content:'';flex:1;height:1px;background:var(--line)}
+canvas#webgl {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  outline: none;
+}
 
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
-  .kpi{padding:16px 20px;border-left:1px solid var(--line)}
-  .kpi:first-child{border-left:none}
-  .kpi .n{font-size:26px;font-weight:680;letter-spacing:-.8px;line-height:1.1}
-  .kpi .l{font-size:12px;color:var(--muted);margin-top:3px}
-  .kpi .n em{font-style:normal;font-size:12px;font-weight:600;color:var(--muted);margin-left:6px}
+/* Glassmorphism Classes */
+.glass {
+  background: var(--bg-panel);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
 
-  .grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
-  .panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
-  .panel h3{font-size:13.5px;font-weight:650;padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
-  .panel h3 small{font-weight:450;color:var(--muted)}
+.glass-pill {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+.glass-pill:hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: var(--border-active);
+}
 
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-align:left;padding:9px 14px;background:#FAFBFC;border-bottom:1px solid var(--line)}
-  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
-  tr:last-child td{border-bottom:none}
-  tbody tr.click{cursor:pointer} tbody tr.click:hover td{background:var(--teal-soft)}
-  td.num,th.num{text-align:right;font-family:var(--mono);font-size:12.5px}
-  .rank{color:var(--muted);font-family:var(--mono);font-size:12px;width:34px}
-  .vname{font-weight:600}
-  .vmeta{font-size:11.5px;color:var(--muted);margin-top:1px}
-  .score-bar{display:inline-block;height:5px;border-radius:3px;background:var(--line);width:64px;position:relative;overflow:hidden;vertical-align:middle;margin-right:8px}
-  .score-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+/* ─── Header ─── */
+header {
+  position: fixed;
+  top: 14px;
+  left: 20px;
+  right: 20px;
+  height: 56px;
+  z-index: 20;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+}
 
-  .chip{display:inline-block;font:11px/1 var(--mono);font-weight:600;letter-spacing:.3px;padding:4px 8px;border-radius:4px;text-transform:uppercase}
-  .c-Critical{color:var(--crit);background:var(--crit-bg)} .c-High{color:var(--high);background:var(--high-bg)} .c-Low{color:var(--low);background:var(--low-bg)}
-  .param{font:11.5px/1 var(--mono);color:#475467;background:#F2F4F7;padding:4px 7px;border-radius:4px}
-  .param.hot{color:var(--crit);background:var(--crit-bg)}
-  .verdict{font:10.5px/1 var(--mono);font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:#7A271A;background:#FEF0EF;border:1px solid #FADCDA;padding:4px 7px;border-radius:4px}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.logo-gem {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #0284c7, #06b6d4);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 20px var(--cyan-glow);
+}
+.logo-gem svg { width: 20px; height: 20px; fill: #fff; }
+.brand-name {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.brand-name small {
+  font-size: 11px;
+  color: var(--cyan);
+  font-weight: 500;
+  font-family: var(--mono);
+  letter-spacing: 0.5px;
+}
 
-  .split{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:18px 16px 6px}
-  .split i{height:100%}
-  .legend{display:grid;gap:8px;padding:10px 16px 16px;font-size:12.5px}
-  .legend .row{display:flex;align-items:center;gap:8px}
-  .legend .sw{width:9px;height:9px;border-radius:2px}
-  .legend b{margin-left:auto;font-family:var(--mono);font-weight:600}
-  .registry{border-top:1px solid var(--line);padding:14px 16px;font-size:12.5px;color:var(--muted)}
-  .registry b{color:var(--ink);font-family:var(--mono);font-weight:600}
-  .registry .big{font-size:22px;font-weight:680;color:var(--ink);display:block;margin-bottom:2px}
+/* Nav Modes */
+.nav-modes {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-left: 12px;
+}
+.mode-btn {
+  padding: 7px 15px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.mode-btn:hover { color: #fff; }
+.mode-btn.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(14, 165, 233, 0.35));
+  color: #fff;
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.25);
+}
 
-  /* compare */
-  .states{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  .state-card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px}
-  .state-card h4{font-size:15px;font-weight:650;display:flex;justify-content:space-between;align-items:baseline}
-  .state-card h4 span{font:12px var(--mono);color:var(--muted);font-weight:500}
-  .bars{display:grid;gap:12px;margin-top:16px}
-  .bar-row{display:grid;grid-template-columns:70px 1fr 40px;align-items:center;gap:10px;font-size:12.5px}
-  .bar-track{height:14px;background:#EEF1F4;border-radius:3px;overflow:hidden}
-  .bar-fill{height:100%;border-radius:3px}
-  .avg-line{display:flex;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted)}
-  .avg-line b{font-family:var(--mono);color:var(--ink);font-weight:600}
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.badge-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+}
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+  animation: pulse 1.8s infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
 
-  /* district map */
-  .map-wrap{padding:12px 14px 14px}
-  .map-wrap svg{display:block;width:100%;height:auto}
-  .map-wrap path{cursor:pointer}
-  .map-wrap path:hover{stroke:var(--navy)}
-  .map-tip{position:fixed;z-index:60;display:none;background:var(--navy);color:#fff;padding:8px 11px;border-radius:5px;font-size:12px;line-height:1.5;pointer-events:none;box-shadow:0 6px 18px rgba(12,29,43,.28)}
+.btn-mesh {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-muted);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-mesh:hover { color: #fff; border-color: var(--cyan); }
+.btn-mesh.active { background: rgba(6, 182, 212, 0.2); color: var(--cyan); border-color: var(--cyan); }
 
-  /* drawer */
-  .scrim{position:fixed;inset:0;background:rgba(12,29,43,.45);opacity:0;pointer-events:none;transition:.18s;z-index:40}
-  .drawer{position:fixed;top:0;right:-520px;width:500px;max-width:94vw;height:100vh;background:var(--surface);
-          box-shadow:-12px 0 32px rgba(12,29,43,.14);transition:right .2s ease;z-index:50;display:flex;flex-direction:column}
-  body.open .scrim{opacity:1;pointer-events:auto} body.open .drawer{right:0}
-  .dhead{padding:16px 20px;background:var(--navy);color:#fff}
-  .dhead .t{font-size:16px;font-weight:650}
-  .dhead .m{font-size:12px;opacity:.65;margin-top:2px}
-  .dbody{overflow-y:auto;padding:18px 20px;display:grid;gap:18px}
-  .dsec h5{font-size:11px;font-weight:650;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-  .dtable{width:100%;font-size:12.5px}
-  .dtable td,.dtable th{padding:7px 8px}
-  .pass{color:var(--low);font:10.5px/1 var(--mono);font-weight:700}
-  .exceed{color:var(--crit);font:10.5px/1 var(--mono);font-weight:700}
-  .tl{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:300px}
-  .tl-cell{display:flex;flex-direction:column;align-items:center;gap:3px}
-  .tl-bar{width:100%;height:14px;border-radius:4px;background:#EEF0F3;border:1px solid #E4E7EC}
-  .tl-cell.on .tl-bar{background:rgba(220,104,3,.16);border-color:#DC6803}
-  .tl-year{font:10px/1 var(--mono);color:var(--muted)}
-  .tl-cell.on .tl-year{color:var(--high);font-weight:600}
-  .dstat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .dstat .box{border:1px solid var(--line);border-radius:6px;padding:10px 12px}
-  .dstat .box b{display:block;font-size:19px;font-weight:680}
-  .dstat .box span{font-size:11px;color:var(--muted)}
+/* ─── Floating Panels ─── */
+.panel {
+  position: fixed;
+  z-index: 10;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+}
 
-  footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between}
+/* Left Panel: Overview & Filters */
+.panel-left {
+  top: 84px;
+  left: 20px;
+  width: 320px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: none;
+}
+.panel-left::-webkit-scrollbar { display: none; }
+
+.section-label {
+  font-size: 11px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.kpi-card {
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.kpi-num {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  font-family: var(--mono);
+  line-height: 1.1;
+}
+.kpi-label {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.kpi-card.crit .kpi-num { color: var(--crit); text-shadow: 0 0 16px var(--crit-glow); }
+.kpi-card.high .kpi-num { color: var(--high); text-shadow: 0 0 16px var(--high-glow); }
+.kpi-card.low .kpi-num { color: var(--low); text-shadow: 0 0 16px var(--low-glow); }
+
+/* River Indicator */
+.river-indicator {
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(2, 132, 199, 0.12));
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.river-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(6, 182, 212, 0.2);
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+}
+.river-text h5 { font-size: 12.5px; font-weight: 600; }
+.river-text p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Contaminant Filter Chips */
+.filters-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filter-chip {
+  padding: 6px 11px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-chip:hover { color: #fff; background: rgba(255,255,255,0.07); }
+.filter-chip.active {
+  background: rgba(6, 182, 212, 0.22);
+  border-color: var(--cyan);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Right Panel: Priority Queue */
+.panel-right {
+  top: 84px;
+  right: 20px;
+  width: 360px;
+  max-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+}
+.queue-header {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.queue-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.queue-title-row h3 { font-size: 14px; font-weight: 700; }
+.queue-title-row span { font-size: 11px; color: var(--text-dim); font-family: var(--mono); }
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 12px;
+  outline: none;
+  font-family: inherit;
+}
+.search-input:focus { border-color: var(--cyan); }
+
+.queue-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+.queue-card {
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.queue-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-active);
+  transform: translateY(-1px);
+}
+.q-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.q-village {
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.q-score {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+.q-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 6px;
+}
+.q-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.q-badge {
+  font-size: 9.5px;
+  font-family: var(--mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.q-badge.Critical { background: rgba(239, 68, 68, 0.18); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.35); }
+.q-badge.High { background: rgba(249, 115, 22, 0.18); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.35); }
+.q-badge.Low { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+.q-contam {
+  font-size: 10px;
+  color: var(--cyan);
+  font-family: var(--mono);
+}
+
+/* ─── Bottom Navigation & Controls ─── */
+.hud-bottom {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  height: 52px;
+  z-index: 20;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  justify-content: space-between;
+}
+.legend-group {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 12px;
+}
+.legend-item { display: flex; align-items: center; gap: 7px; }
+.dot-indicator {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.dot-indicator.c { background: var(--crit); box-shadow: 0 0 10px var(--crit-glow); }
+.dot-indicator.h { background: var(--high); box-shadow: 0 0 10px var(--high-glow); }
+.dot-indicator.l { background: var(--low); box-shadow: 0 0 10px var(--low-glow); }
+.dot-indicator.r { background: var(--river); box-shadow: 0 0 10px var(--river); }
+
+.hud-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.action-btn {
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.action-btn:hover {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: var(--cyan);
+}
+.action-btn.primary {
+  background: linear-gradient(135deg, #0284c7, #06b6d4);
+  border: none;
+  box-shadow: 0 0 20px var(--cyan-glow);
+}
+.action-btn.primary:hover {
+  filter: brightness(1.15);
+}
+
+/* ─── Hero Cinematic Banner (On Globe Mode) ─── */
+.hero-overlay {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  text-align: center;
+  max-width: 680px;
+  padding: 24px 32px;
+  border-radius: 20px;
+  transition: all 0.4s ease;
+  pointer-events: auto;
+}
+.hero-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.hero-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.25;
+  margin-bottom: 10px;
+  background: linear-gradient(to right, #fff, #bae6fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero-desc {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 28px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0284c7, #06b6d4);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.45);
+  transition: all 0.25s;
+}
+.hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 40px rgba(6, 182, 212, 0.65);
+}
+
+/* ─── What-If Simulator Drawer ─── */
+.simulator-drawer {
+  position: fixed;
+  top: 84px;
+  bottom: 88px;
+  right: -480px;
+  width: 440px;
+  z-index: 25;
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+}
+.simulator-drawer.open { right: 20px; }
+
+.sim-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.sim-header h3 { font-size: 16px; font-weight: 700; }
+.sim-header p { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+.sim-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+}
+.sim-close:hover { color: #fff; }
+
+.sim-gauge-card {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.gauge-info h4 { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-family: var(--mono); }
+.gauge-score { font-size: 32px; font-weight: 800; font-family: var(--mono); margin-top: 4px; }
+.gauge-badge {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+
+.sim-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sim-slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.slider-param { font-weight: 600; }
+.slider-val { font-family: var(--mono); font-weight: 600; color: var(--cyan); }
+.sim-range {
+  width: 100%;
+  accent-color: var(--cyan);
+  cursor: pointer;
+  background: rgba(255,255,255,0.1);
+  height: 5px;
+  border-radius: 3px;
+}
+.slider-limits {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+.sim-recs {
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.sim-recs strong { color: var(--cyan); display: block; margin-bottom: 4px; }
+
+/* ─── Village Detail Modal (Native Dialog with Glassmorphism) ─── */
+dialog#detail-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(640px, 92vw);
+  max-height: 85vh;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid var(--border-active);
+  color: var(--text);
+  overflow-y: auto;
+  z-index: 50;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+}
+dialog#detail-modal::backdrop {
+  background: rgba(7, 13, 25, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title-wrap h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+.modal-title-wrap p { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-family: var(--mono); }
+.modal-close-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+.modal-close-btn:hover { background: rgba(255,255,255,0.15); }
+
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 16px;
+}
+.modal-table th {
+  text-align: left;
+  padding: 9px 12px;
+  font-size: 10.5px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+.modal-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.modal-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+/* Tooltip */
+.hud-tooltip {
+  position: fixed;
+  pointer-events: none;
+  z-index: 40;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+  transform: translate(-50%, -120%);
+}
+.hud-tooltip h4 { font-size: 13px; font-weight: 700; }
+.hud-tooltip span { font-size: 11px; color: var(--text-muted); }
+.hud-tooltip .score-badge { font-family: var(--mono); font-weight: 700; }
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .panel-left, .panel-right { display: none; }
+  header { margin: 0; left: 10px; right: 10px; }
+  .hud-bottom { left: 10px; right: 10px; }
+}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="hrow">
-    <div class="mark">W</div>
-    <div class="brand">WaterTriage <span>· Priority Console</span></div>
-    <div class="tabs" id="tabs"></div>
-    <div class="hright">
-      <div class="live off" id="live" title="FastAPI at 127.0.0.1:8000"><span class="dot"></span><span id="live-txt">OFFLINE · baked data</span></div>
-      <div class="env">FY 2025–26 · UP + BIHAR</div>
+<!-- Three.js Canvas -->
+<canvas id="webgl"></canvas>
+
+<!-- Top Header Navigation -->
+<header class="glass">
+  <div class="brand" id="brand-home">
+    <div class="logo-gem">
+      <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
     </div>
+    <div class="brand-name">
+      WaterTriage
+      <small>BIS IS 10500</small>
+    </div>
+  </div>
+
+  <div class="nav-modes">
+    <button class="mode-btn active" id="btn-mode-globe">
+      <span>🌍</span> All-India Globe
+    </button>
+    <button class="mode-btn" id="btn-mode-regional">
+      <span>📍</span> UP & Bihar Focus
+    </button>
+  </div>
+
+  <div class="header-right">
+    <div class="badge-status">
+      <div class="pulse-dot"></div>
+      <span id="stat-chip">869 Samples · 100.6k Historical</span>
+    </div>
+    <button class="btn-mesh" id="btn-toggle-mesh" title="Toggle 171MB High-Resolution Earth Model">
+      16K Mesh: OFF
+    </button>
   </div>
 </header>
 
-<div class="shell">
-
-  <section id="view-queue">
-    <section class="kpis" id="kpis" style="margin-bottom:26px"></section>
-    <h2 class="sec">Intervention priority queue — ranked by severity band, then score</h2>
-    <div class="grid">
-      <div class="panel">
-        <h3>Ranked water sources <small id="tbl-note"></small></h3>
-        <table><thead><tr>
-          <th class="rank">#</th><th>Village / Source</th><th>Band</th>
-          <th class="num">Score</th><th style="width:110px">Severity</th>
-          <th>Driver</th><th class="num">Collected</th></tr></thead>
-        <tbody id="qbody"></tbody></table>
-      </div>
-      <aside style="display:grid;gap:20px">
-        <div class="panel"><h3>Severity distribution</h3>
-          <div class="split" id="split"></div><div class="legend" id="legend"></div></div>
-        <div class="panel"><h3>Historical registry</h3><div class="registry" id="registry"></div></div>
-      </aside>
-    </div>
-
-    <h2 class="sec">Chronic hotspots — ≥ 6 registry events, 2009–2012</h2>
-    <div class="panel"><table>
-      <thead><tr><th class="rank">#</th><th>Village</th><th>District</th><th>Parameter</th>
-        <th class="num">Events</th><th class="num">Span</th><th>Status</th></tr></thead>
-      <tbody id="hotspots"></tbody></table></div>
-  </section>
-
-  <section id="view-compare" style="display:none">
-    <h2 class="sec">State comparison — contamination burden by band</h2>
-    <div class="states" id="states"></div>
-    <h2 class="sec">Registry depth by state — where chronic risk lives</h2>
-    <div class="panel"><table id="depth">
-      <thead><tr><th>State</th><th class="num">Registry villages</th><th class="num">Registry events</th><th class="num">Current samples</th><th class="num">Avg score</th></tr></thead>
-      <tbody></tbody></table></div>
-  </section>
-
-  <section id="view-map" style="display:none">
-    <h2 class="sec">District map — current sample coverage across Uttar Pradesh &amp; Bihar</h2>
-    <div class="states">
-      <div class="panel"><h3>Uttar Pradesh<small id="map-meta-up"></small></h3><div class="map-wrap" id="map-up"></div></div>
-      <div class="panel"><h3>Bihar<small id="map-meta-br"></small></h3><div class="map-wrap" id="map-br"></div></div>
-    </div>
-    <div class="panel" style="margin-top:20px"><div class="legend" style="grid-template-columns:auto auto;justify-content:start;gap:28px;padding-top:14px" id="mleg"></div></div>
-  </section>
-
-  <div class="map-tip" id="mtip"></div>
-
+<!-- Hero Overlay (Centered on Globe view) -->
+<div class="hero-overlay glass" id="hero-overlay">
+  <div class="hero-tag">National Water Quality & Hydrological Network</div>
+  <h1 class="hero-title">Interactive Water Triage & Risk Prioritization</h1>
+  <p class="hero-desc">
+    Visualizing India's major river basins, groundwater contamination hotspots, and live village-level chemical telemetry across the Indo-Gangetic plain.
+  </p>
+  <button class="hero-cta" id="btn-hero-explore">
+    <span>Focus UP & Bihar Triage Console</span>
+    <span>→</span>
+  </button>
 </div>
 
-<div class="scrim" onclick="closeDrawer()"></div>
-<aside class="drawer" id="drawer">
-  <div class="dhead"><div class="t" id="dv-name"></div><div class="m" id="dv-meta"></div></div>
-  <div class="dbody" id="dv-body"></div>
-</aside>
-
-<footer class="shell" style="max-width:1240px">
-  <span>Source · WQMIS / DDWS public lab reports · Quality-Affected Habitations registry 2009–2012 · Scored against BIS IS 10500</span>
-  <span id="gen-time"></span>
-</footer>
-
-<script src="assets/up.js"></script>
-<script src="assets/bihar.js"></script>
-<script>
-const DATA = {"kpi": {"samples": 112, "critical": 1, "high": 31, "low": 80}, "priority": [{"rank": 1, "sample_id": 109, "village": "Not Available", "district": "Lucknow", "state": "Uttar Pradesh", "score": 24.35, "band": "Critical", "worst": "e_coli", "ref": "U691097L158S1903", "date": "22 Aug 2022"}, {"rank": 2, "sample_id": 82, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1440", "date": "07 Jul 2022"}, {"rank": 3, "sample_id": 58, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1218", "date": "08 Jul 2022"}, {"rank": 4, "sample_id": 45, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1196", "date": "07 Jul 2022"}, {"rank": 5, "sample_id": 35, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1130", "date": "06 Aug 2022"}, {"rank": 6, "sample_id": 86, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1446", "date": "07 Jul 2022"}, {"rank": 7, "sample_id": 36, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1135", "date": "06 Aug 2022"}, {"rank": 8, "sample_id": 62, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1226", "date": "08 Jul 2022"}, {"rank": 9, "sample_id": 28, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1105", "date": "06 Aug 2022"}, {"rank": 10, "sample_id": 32, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1126", "date": "06 Aug 2022"}, {"rank": 11, "sample_id": 91, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1452", "date": "07 Jul 2022"}, {"rank": 12, "sample_id": 65, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1232", "date": "08 Jul 2022"}, {"rank": 13, "sample_id": 66, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1403", "date": "06 Aug 2022"}, {"rank": 14, "sample_id": 67, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1410", "date": "06 Jul 2022"}, {"rank": 15, "sample_id": 68, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1414", "date": "06 Jul 2022"}, {"rank": 16, "sample_id": 50, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1204", "date": "08 Jul 2022"}, {"rank": 17, "sample_id": 97, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1460", "date": "07 Jul 2022"}, {"rank": 18, "sample_id": 29, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1117", "date": "06 Aug 2022"}, {"rank": 19, "sample_id": 40, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1178", "date": "06 Aug 2022"}, {"rank": 20, "sample_id": 100, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1463", "date": "07 Jul 2022"}, {"rank": 21, "sample_id": 72, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1420", "date": "06 Jul 2022"}, {"rank": 22, "sample_id": 73, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1423", "date": "06 Jul 2022"}, {"rank": 23, "sample_id": 74, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1425", "date": "07 Jul 2022"}, {"rank": 24, "sample_id": 104, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1467", "date": "07 Jul 2022"}, {"rank": 25, "sample_id": 105, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1471", "date": "07 Jul 2022"}, {"rank": 26, "sample_id": 75, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1428", "date": "07 Jul 2022"}, {"rank": 27, "sample_id": 41, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1181", "date": "06 Aug 2022"}, {"rank": 28, "sample_id": 43, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1189", "date": "06 Aug 2022"}, {"rank": 29, "sample_id": 30, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1121", "date": "06 Aug 2022"}, {"rank": 30, "sample_id": 42, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1183", "date": "06 Aug 2022"}, {"rank": 31, "sample_id": 55, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1212", "date": "08 Jul 2022"}, {"rank": 32, "sample_id": 79, "village": "Not Available", "district": "Saran", "state": "Bihar", "score": 7.41, "band": "High", "worst": "ph", "ref": "U708129L238S1435", "date": "07 Jul 2022"}, {"rank": 33, "sample_id": 107, "village": "Not Available", "district": "Arwal", "state": "Bihar", "score": 3.04, "band": "Low", "worst": "tds", "ref": "U709000L408S1816", "date": "25 Jul 2022"}, {"rank": 34, "sample_id": 46, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1197", "date": "03 Aug 2022"}, {"rank": 35, "sample_id": 47, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1200", "date": "03 Aug 2022"}, {"rank": 36, "sample_id": 48, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1201", "date": "04 Aug 2022"}, {"rank": 37, "sample_id": 49, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1203", "date": "04 Aug 2022"}, {"rank": 38, "sample_id": 51, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1205", "date": "04 Aug 2022"}, {"rank": 39, "sample_id": 52, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1207", "date": "04 Aug 2022"}, {"rank": 40, "sample_id": 53, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1209", "date": "04 Aug 2022"}, {"rank": 41, "sample_id": 54, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1211", "date": "04 Aug 2022"}, {"rank": 42, "sample_id": 56, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1214", "date": "04 Aug 2022"}, {"rank": 43, "sample_id": 57, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1217", "date": "04 Aug 2022"}, {"rank": 44, "sample_id": 59, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1219", "date": "04 Aug 2022"}, {"rank": 45, "sample_id": 60, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1222", "date": "04 Aug 2022"}, {"rank": 46, "sample_id": 61, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1225", "date": "04 Aug 2022"}, {"rank": 47, "sample_id": 63, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1227", "date": "04 Aug 2022"}, {"rank": 48, "sample_id": 64, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1229", "date": "04 Aug 2022"}, {"rank": 49, "sample_id": 69, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1415", "date": "04 Aug 2022"}, {"rank": 50, "sample_id": 70, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1417", "date": "04 Aug 2022"}, {"rank": 51, "sample_id": 71, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1419", "date": "04 Aug 2022"}, {"rank": 52, "sample_id": 76, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1430", "date": "04 Aug 2022"}, {"rank": 53, "sample_id": 77, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1432", "date": "04 Aug 2022"}, {"rank": 54, "sample_id": 78, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1434", "date": "04 Aug 2022"}, {"rank": 55, "sample_id": 80, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1437", "date": "04 Aug 2022"}, {"rank": 56, "sample_id": 81, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1439", "date": "04 Aug 2022"}, {"rank": 57, "sample_id": 83, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1442", "date": "04 Aug 2022"}, {"rank": 58, "sample_id": 84, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1444", "date": "04 Aug 2022"}, {"rank": 59, "sample_id": 85, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1445", "date": "04 Aug 2022"}, {"rank": 60, "sample_id": 87, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1448", "date": "04 Aug 2022"}, {"rank": 61, "sample_id": 88, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1449", "date": "04 Aug 2022"}, {"rank": 62, "sample_id": 89, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1450", "date": "04 Aug 2022"}, {"rank": 63, "sample_id": 90, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1451", "date": "04 Aug 2022"}, {"rank": 64, "sample_id": 92, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1454", "date": "04 Aug 2022"}, {"rank": 65, "sample_id": 93, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1456", "date": "04 Aug 2022"}, {"rank": 66, "sample_id": 94, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1457", "date": "04 Aug 2022"}, {"rank": 67, "sample_id": 95, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1458", "date": "04 Aug 2022"}, {"rank": 68, "sample_id": 96, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1459", "date": "04 Aug 2022"}, {"rank": 69, "sample_id": 98, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1461", "date": "05 Aug 2022"}, {"rank": 70, "sample_id": 99, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1462", "date": "05 Aug 2022"}, {"rank": 71, "sample_id": 101, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1464", "date": "05 Aug 2022"}, {"rank": 72, "sample_id": 102, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1465", "date": "05 Aug 2022"}, {"rank": 73, "sample_id": 103, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1466", "date": "05 Aug 2022"}, {"rank": 74, "sample_id": 106, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U727080L390S1800", "date": "02 Aug 2022"}, {"rank": 75, "sample_id": 108, "village": "Not Available", "district": "Arwal", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U3285L408S1837", "date": "23 Aug 2022"}, {"rank": 76, "sample_id": 110, "village": "Not Available", "district": "Jehanabad", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U720403L213S1976", "date": "03 Aug 2022"}, {"rank": 77, "sample_id": 111, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1988", "date": "05 Aug 2022"}, {"rank": 78, "sample_id": 112, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1992", "date": "05 Aug 2022"}, {"rank": 79, "sample_id": 2, "village": "Not Available", "district": "Nalanda", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U725064L488S215", "date": "03 Aug 2022"}, {"rank": 80, "sample_id": 113, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1998", "date": "05 Aug 2022"}, {"rank": 81, "sample_id": 3, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S261", "date": "03 Aug 2022"}, {"rank": 82, "sample_id": 4, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S262", "date": "03 Aug 2022"}, {"rank": 83, "sample_id": 5, "village": "Not Available", "district": "Jehanabad", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U720403L475S303", "date": "05 Aug 2022"}, {"rank": 84, "sample_id": 6, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S615", "date": "03 Aug 2022"}, {"rank": 85, "sample_id": 7, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S617", "date": "03 Aug 2022"}, {"rank": 86, "sample_id": 8, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S619", "date": "03 Aug 2022"}, {"rank": 87, "sample_id": 9, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S620", "date": "03 Aug 2022"}, {"rank": 88, "sample_id": 10, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S621", "date": "03 Aug 2022"}, {"rank": 89, "sample_id": 11, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S622", "date": "03 Aug 2022"}, {"rank": 90, "sample_id": 12, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S623", "date": "03 Aug 2022"}, {"rank": 91, "sample_id": 13, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S624", "date": "03 Aug 2022"}, {"rank": 92, "sample_id": 14, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S625", "date": "03 Aug 2022"}, {"rank": 93, "sample_id": 15, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S626", "date": "03 Aug 2022"}, {"rank": 94, "sample_id": 16, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S627", "date": "03 Aug 2022"}, {"rank": 95, "sample_id": 17, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S628", "date": "03 Aug 2022"}, {"rank": 96, "sample_id": 18, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S629", "date": "03 Aug 2022"}, {"rank": 97, "sample_id": 19, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S630", "date": "03 Aug 2022"}, {"rank": 98, "sample_id": 20, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S631", "date": "03 Aug 2022"}, {"rank": 99, "sample_id": 21, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S632", "date": "03 Aug 2022"}, {"rank": 100, "sample_id": 22, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S633", "date": "03 Aug 2022"}, {"rank": 101, "sample_id": 23, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1083", "date": "04 Aug 2022"}, {"rank": 102, "sample_id": 24, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1086", "date": "04 Aug 2022"}, {"rank": 103, "sample_id": 25, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1089", "date": "04 Aug 2022"}, {"rank": 104, "sample_id": 26, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1091", "date": "04 Aug 2022"}, {"rank": 105, "sample_id": 27, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1093", "date": "04 Aug 2022"}, {"rank": 106, "sample_id": 31, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1123", "date": "04 Aug 2022"}, {"rank": 107, "sample_id": 33, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1127", "date": "04 Aug 2022"}, {"rank": 108, "sample_id": 34, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1128", "date": "04 Aug 2022"}, {"rank": 109, "sample_id": 37, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1137", "date": "04 Aug 2022"}, {"rank": 110, "sample_id": 38, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1153", "date": "04 Aug 2022"}, {"rank": 111, "sample_id": 39, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1156", "date": "04 Aug 2022"}, {"rank": 112, "sample_id": 44, "village": "Not Available", "district": "Bhagalpur", "state": "Bihar", "score": 0.0, "band": "Low", "worst": null, "ref": "U701316L234S1192", "date": "03 Aug 2022"}], "registry": {"villages": 14006, "events": 100690}, "compare": [{"state": "Bihar", "samples": 111, "avg": 2.1}, {"state": "Uttar Pradesh", "samples": 1, "avg": 24.35}], "hotspots": [{"village": "Khokha", "district": "Purnia", "state": "Bihar", "events": 166, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Khunti Dhanaili", "district": "Purnia", "state": "Bihar", "events": 165, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Satkodaria", "district": "Purnia", "state": "Bihar", "events": 156, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Singhia", "district": "Purnia", "state": "Bihar", "events": 153, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Chausa", "district": "Madhepura", "state": "Bihar", "events": 142, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Kajha", "district": "Purnia", "state": "Bihar", "events": 140, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Goasi", "district": "Purnia", "state": "Bihar", "events": 129, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Hardi", "district": "Supaul", "state": "Bihar", "events": 129, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Majra", "district": "Purnia", "state": "Bihar", "events": 128, "first": 2009, "last": 2012, "params": "IRON"}, {"village": "Jhila Dumri", "district": "Supaul", "state": "Bihar", "events": 126, "first": 2009, "last": 2012, "params": "IRON"}], "state_bands": {"Bihar": {"Low": 80, "High": 31}, "Uttar Pradesh": {"Critical": 1}}, "details": {"109": {"village_id": 14014, "readings": [{"param": "E. Coli", "key": "e_coli", "unit": "CFU/100mL", "acceptable": 0.0, "permissible": 0.0, "strategy": "microbial", "value": 20.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.52}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.008}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 1.83}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.5}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 4.0}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 390.0}, {"param": "Arsenic", "key": "arsenic", "unit": "mg/L", "acceptable": 0.01, "permissible": 0.05, "strategy": "threshold", "value": 0.002}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 1.27}], "hist_count": 0, "hist_years": [], "hist_params": []}, "100": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 15.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.4}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 300.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.06}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 1.0}], "hist_count": 0, "hist_years": [], "hist_params": []}, "32": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 24.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.2}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 278.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.21}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.6}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.12}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.98}], "hist_count": 0, "hist_years": [], "hist_params": []}, "66": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 15.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.21}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 310.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.2}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.001}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.96}], "hist_count": 0, "hist_years": [], "hist_params": []}, "79": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 20.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.23}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 326.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.1}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.88}], "hist_count": 0, "hist_years": [], "hist_params": []}, "97": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 20.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.3}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 314.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.1}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.99}], "hist_count": 0, "hist_years": [], "hist_params": []}, "36": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 16.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.4}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 310.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.2}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.09}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.97}], "hist_count": 0, "hist_years": [], "hist_params": []}, "42": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 32.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.2}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 334.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.24}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.8}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.13}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.94}], "hist_count": 0, "hist_years": [], "hist_params": []}, "55": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 10.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.23}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 326.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.08}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.9}], "hist_count": 0, "hist_years": [], "hist_params": []}, "65": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 10.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.23}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 310.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.1}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.08}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.95}], "hist_count": 0, "hist_years": [], "hist_params": []}, "73": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 20.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.21}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 326.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.08}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 1.0}], "hist_count": 0, "hist_years": [], "hist_params": []}, "75": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 20.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.3}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 300.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.09}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.99}], "hist_count": 0, "hist_years": [], "hist_params": []}, "82": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 10.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.23}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 329.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.06}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.91}], "hist_count": 0, "hist_years": [], "hist_params": []}, "91": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 20.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.3}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 326.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.2}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.08}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.12}], "hist_count": 0, "hist_years": [], "hist_params": []}, "43": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 20.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.2}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 322.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.2}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.1}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.98}], "hist_count": 0, "hist_years": [], "hist_params": []}, "35": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 32.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.3}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 322.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.28}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 16.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.16}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.94}], "hist_count": 0, "hist_years": [], "hist_params": []}, "40": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 22.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.23}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 329.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.2}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.07}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.93}], "hist_count": 0, "hist_years": [], "hist_params": []}, "41": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 32.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.2}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 301.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.21}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 10.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.14}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.98}], "hist_count": 0, "hist_years": [], "hist_params": []}, "45": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 15.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.19}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 310.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.07}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.93}], "hist_count": 0, "hist_years": [], "hist_params": []}, "50": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 15.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.23}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 326.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.08}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 1.0}], "hist_count": 0, "hist_years": [], "hist_params": []}, "58": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 10.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.2}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 300.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.09}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.88}], "hist_count": 0, "hist_years": [], "hist_params": []}, "62": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 10.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.21}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 319.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.1}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.88}], "hist_count": 0, "hist_years": [], "hist_params": []}, "68": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 10.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.23}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 329.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.2}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.06}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 1.0}], "hist_count": 0, "hist_years": [], "hist_params": []}, "72": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 10.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.21}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 300.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.2}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.08}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.88}], "hist_count": 0, "hist_years": [], "hist_params": []}, "74": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 10.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.3}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 328.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.1}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 1.0}], "hist_count": 0, "hist_years": [], "hist_params": []}, "28": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 10.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.4}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 329.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.2}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.08}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.99}], "hist_count": 0, "hist_years": [], "hist_params": []}, "29": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 20.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.41}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 295.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.3}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 14.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.09}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.96}], "hist_count": 0, "hist_years": [], "hist_params": []}, "30": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 22.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.26}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 298.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.21}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 5.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.12}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.97}], "hist_count": 0, "hist_years": [], "hist_params": []}, "86": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 20.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.19}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 310.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.08}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.95}], "hist_count": 0, "hist_years": [], "hist_params": []}, "67": {"village_id": 14012, "readings": [{"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 15.0}, {"param": "pH", "key": "ph", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "strategy": "range", "value": 7.23}, {"param": "Total Dissolved Solids", "key": "tds", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "strategy": "threshold", "value": 310.0}, {"param": "Fluoride", "key": "fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "strategy": "threshold", "value": 0.0}, {"param": "Nitrate", "key": "nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": null, "strategy": "threshold", "value": 0.0}, {"param": "Iron", "key": "iron", "unit": "mg/L", "acceptable": 0.3, "permissible": null, "strategy": "threshold", "value": 0.1}, {"param": "Turbidity", "key": "turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "strategy": "threshold", "value": 0.9}], "hist_count": 0, "hist_years": [], "hist_params": []}}, "registry_by_state": {"Bihar": {"villages": 9749, "events": 90794}, "Uttar Pradesh": {"villages": 4257, "events": 9896}}};
-const API = 'http://127.0.0.1:8000';
-const sevColor = {Critical:'#B42318', High:'#DC6803', Low:'#067647'};
-const k = DATA.kpi;
-
-/* live api probe */
-async function ping(){ try{ const r = await fetch(API+'/api/health',{mode:'cors'}); const j=await r.json();
-  document.getElementById('live').className='live on'; document.getElementById('live-txt').textContent='LIVE v'+(j.version||'');
-}catch(e){} }
-ping();
-
-/* tabs */
-const VIEWS=[['queue','Priority Queue'],['compare','State Compare'],['map','District Map']];
-document.getElementById('tabs').innerHTML=VIEWS.map(([id,l])=>`<div class="tab" data-v="${id}" onclick="go('${id}')">${l}</div>`).join('');
-function go(v){ location.hash=v; }
-function route(){
-  const v=(location.hash||'#queue').slice(1);
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));
-  ['queue','compare','map'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'block':'none');
-}
-window.addEventListener('hashchange',route);
-
-/* queue */
-document.getElementById('kpis').innerHTML=`
-  <div class="kpi"><div class="n">${k.samples}</div><div class="l">Lab samples scored</div></div>
-  <div class="kpi"><div class="n" style="color:var(--crit)">${k.critical}</div><div class="l">Critical — immediate action</div></div>
-  <div class="kpi"><div class="n" style="color:var(--high)">${k.high}</div><div class="l">High priority</div></div>
-  <div class="kpi"><div class="n">${DATA.registry.villages.toLocaleString('en-IN')}<em>villages</em></div><div class="l">Historical registry under watch</div></div>`;
-
-function renderQueue(list){
-  const tb=document.getElementById('qbody');
-  tb.innerHTML=list.map(r=>`
-   <tr class="click" onclick="openDetail(${r.sample_id})">
-    <td class="rank">${String(r.rank).padStart(2,'0')}</td>
-    <td><div class="vname">${r.village==='Not Available'?r.district+' — unnamed source':r.village}</div>
-        <div class="vmeta">${r.district}, ${r.state} · ${r.ref||''}</div></td>
-    <td><span class="chip c-${r.band}">${r.band}</span></td>
-    <td class="num"><b>${(+r.score).toFixed(2)}</b></td>
-    <td><span class="score-bar"><i style="width:${Math.min(100,r.score*4)}%;background:${sevColor[r.band]}"></i></span></td>
-    <td>${r.worst?`<span class="param ${r.score>=50?'hot':''}">${String(r.worst).replace('_',' ')}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
-    <td class="num" style="color:var(--muted)">${r.date}</td>
-   </tr>`).join('');
-  document.getElementById('tbl-note').textContent=`showing ${list.length} of ${DATA.priority.length} · band-first ordering`;
-}
-renderQueue(DATA.priority.slice(0,25));
-
-const tot=k.samples||1;
-document.getElementById('split').innerHTML=['Critical','High','Low'].map(b=>`<i style="width:${((k[b.toLowerCase()]||0)/tot*100)}%;background:${sevColor[b]}"></i>`).join('');
-document.getElementById('legend').innerHTML=['Critical','High','Low'].map(b=>`<div class="row"><span class="sw" style="background:${sevColor[b]}"></span>${b}<b>${k[b.toLowerCase()]||0}</b></div>`).join('');
-document.getElementById('registry').innerHTML=`<span class="big">${DATA.registry.events.toLocaleString('en-IN')}</span>contamination events · ${DATA.registry.villages.toLocaleString('en-IN')} villages tracked from the 2009–2012 Quality-Affected Habitations registry (DDWS).`;
-
-/* hotspots */
-document.getElementById('hotspots').innerHTML=DATA.hotspots.map((h,i)=>`
- <tr><td class="rank">${String(i+1).padStart(2,'0')}</td>
-     <td class="vname">${h.village}</td><td>${h.district}, ${h.state}</td>
-     <td><span class="param">${h.params}</span></td>
-     <td class="num"><b>${h.events}</b></td>
-     <td class="num" style="color:var(--muted)">${h.first}–${h.last}</td>
-     <td><span class="verdict">chronic</span></td></tr>`).join('');
-
-/* compare */
-const bands=['Critical','High','Low'];
-document.getElementById('states').innerHTML=Object.entries(DATA.state_bands).map(([st,b])=>{
-  const totS=bands.reduce((a,x)=>a+(b[x]||0),0)||1;
-  return `<div class="state-card"><h4>${st}<span>${totS} samples</span></h4><div class="bars">${
-    bands.map(x=>`<div class="bar-row"><span>${x}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${((b[x]||0)/totS*100).toFixed(1)}%;background:${sevColor[x]}"></div></div>
-      <span class="num"><b>${b[x]||0}</b></span></div>`).join('')}</div></div>`;
-}).join('');
-
-const cmpRows=Object.keys(DATA.state_bands).map(st=>{
-  const c=(DATA.compare.find(x=>x.state===st)||{});
-  const sb=DATA.state_bands[st]||{};
-  const rg=DATA.registry_by_state[st]||{villages:0,events:0};
-  return `<tr><td class="vname">${st}</td>
-    <td class="num">${rg.villages.toLocaleString('en-IN')}</td>
-    <td class="num">${rg.events.toLocaleString('en-IN')}</td>
-    <td class="num">${sb.Critical||0} / ${sb.High||0} / ${sb.Low||0}</td>
-    <td class="num"><b>${c.avg??'—'}</b></td></tr>`;
-}).join('');
-document.querySelector('#depth tbody').innerHTML=cmpRows;
-
-/* district map */
-const DIST={};
-DATA.priority.forEach(p=>{const s=DIST[p.state+'|'+p.district]||(DIST[p.state+'|'+p.district]={n:0,sum:0});s.n++;s.sum+=+p.score;});
-const TEAL_LO=[230,242,241],TEAL_HI=[10,77,74];
-const ramp=t=>`rgb(${TEAL_LO.map((v,i)=>Math.round(v+(TEAL_HI[i]-v)*t)).join(',')})`;
-function drawMap(hostId,metaId,state,geo){
-  const lo=[999,999],hi=[-999,-999];
-  geo.features.forEach(f=>(f.geometry.type==='MultiPolygon'?f.geometry.coordinates:[f.geometry.coordinates])
-    .forEach(po=>po.forEach(r=>r.forEach(([x,y])=>{
-      if(x<lo[0])lo[0]=x; if(x>hi[0])hi[0]=x; if(y<lo[1])lo[1]=y; if(y>hi[1])hi[1]=y;}))));
-  const W=1000,H=Math.round(W*(hi[1]-lo[1])*Math.cos((lo[1]+hi[1])/2*Math.PI/180)/(hi[0]-lo[0]));
-  const maxN=Math.max(...Object.values(DIST).map(s=>s.n));
-  const paths=geo.features.flatMap(f=>{
-    const d=f.properties.district,s=DIST[state+'|'+d];
-    const fill=s?ramp(.22+.78*s.n/maxN):'#EEF1F4';
-    const dd=(f.geometry.type==='MultiPolygon'?f.geometry.coordinates:[f.geometry.coordinates])
-      .map(po=>po.map(r=>'M'+r.map(p=>((p[0]-lo[0])/(hi[0]-lo[0])*W).toFixed(1)+' '+((hi[1]-p[1])/(hi[1]-lo[1])*H).toFixed(1)).join('L')+'Z').join(''));
-    return dd.map(x=>`<path d="${x}" fill="${fill}" stroke="#fff" stroke-width="1" vector-effect="non-scaling-stroke" data-d="${d}" data-n="${s?s.n:''}" data-a="${s?(s.sum/s.n).toFixed(1):''}"/>`);
-  });
-  document.getElementById(hostId).innerHTML=`<svg viewBox="-2 -2 ${W+4} ${H+4}">${paths.join('')}</svg>`;
-  const got=new Set(geo.features.filter(f=>DIST[state+'|'+f.properties.district]).map(f=>f.properties.district));
-  document.getElementById(metaId).textContent=`${got.size}/${geo.features.length} districts sampled`;
-}
-drawMap('map-up','map-meta-up','Uttar Pradesh',GEO_UP);
-drawMap('map-br','map-meta-br','Bihar',GEO_BIHAR);
-document.getElementById('mleg').innerHTML=
- `<div class="row">${[0,.5,1].map(t=>`<span class="sw" style="width:16px;border-radius:0;background:${ramp(t)}"></span>`).join('')}sampled district · darker = more current samples</div>
-  <div class="row"><span class="sw" style="background:#EEF1F4;border:1px solid var(--line)"></span>not yet sampled</div>`;
-const mtip=document.getElementById('mtip');
-document.getElementById('view-map').addEventListener('mousemove',e=>{
-  const t=e.target.closest('path');
-  if(!t){mtip.style.display='none';return}
-  mtip.innerHTML=`<b>${t.dataset.d}</b> district<br>`+(t.dataset.n
-    ?`${t.dataset.n} sample${t.dataset.n>1?'s':''} · avg score <span>${t.dataset.a}</span>`
-    :`<span>no samples yet</span>`);
-  mtip.style.display='block';
-  mtip.style.left=Math.min(innerWidth-190,e.clientX+14)+'px';
-  mtip.style.top=(e.clientY+16)+'px';
-});
-document.getElementById('view-map').addEventListener('mouseleave',()=>mtip.style.display='none');
-
-/* village drawer */
-function closeDrawer(){document.body.classList.remove('open')}
-function openDetail(sampleId){
-  const d=DATA.details[String(sampleId)]||{};
-  const meta=DATA.priority.find(p=>p.sample_id===sampleId)||{};
-  document.getElementById('dv-name').textContent =
-    (meta.village==='Not Available'? meta.district+' — unnamed source' : (meta.village||'Sample '+sampleId));
-  document.getElementById('dv-meta').textContent =
-    `${meta.district||''}, ${meta.state||''} · ref ${meta.ref||sampleId} · collected ${meta.date||''}`;
-  const rowsHtml=(d.readings||[]).map(rd=>{
-    let ok=true;
-    if(rd.strategy==='range') ok=rd.value>=rd.acceptable&&rd.value<=rd.permissible;
-    else if(rd.strategy==='microbial') ok=rd.value<=rd.acceptable;
-    else if(rd.permissible!=null&&rd.permissible>rd.acceptable) ok=rd.value<=rd.acceptable;
-    else ok=rd.value<=rd.acceptable;
-    return `<tr><td style="font-weight:600">${rd.param}</td>
-      <td class="num">${rd.value}</td><td class="num" style="color:var(--muted)">${rd.acceptable}${rd.permissible&&rd.permissible!==rd.acceptable?' – '+rd.permissible:''} ${rd.unit}</td>
-      <td class="num">${ok?'<span class="pass">PASS</span>':'<span class="exceed">EXCEED</span>'}</td></tr>`;
-  }).join('')||'<tr><td colspan="4" style="color:var(--muted)">No readings recorded — pending lab analysis.</td></tr>';
-
-  const HIST_YEARS=[2009,2010,2011,2012];
-  const histSet=new Set(d.hist_years||[]);
-  const histTimeline=HIST_YEARS.map(y=>`<div class="tl-cell${histSet.has(y)?' on':''}"><span class="tl-bar"></span><span class="tl-year">${y}</span></div>`).join('');
-  const histHtml=histSet.size?`<div class="tl">${histTimeline}</div>`
-    :'<span style="color:var(--muted);font-size:12px">No registry matches — first-time detection.</span>';
-  const paramsTxt=(d.hist_params||[]).length?` (${d.hist_params.join(', ').toLowerCase()})`:'';
-  const cls=d.hist_count>=6?'chronic-hotspot':d.hist_count>0?'recurring':'new-detection';
-
-  document.getElementById('dv-body').innerHTML=`
-    <div class="dstat">
-      <div class="box"><b class="chip c-${meta.band}" style="font-size:13px">${meta.band}</b><span>severity band</span></div>
-      <div class="box"><b>${(+meta.score).toFixed(2)}</b><span>composite score / 100</span></div>
-      <div class="box"><b>${d.hist_count}</b><span>registry events (2009–12)</span></div>
-      <div class="box"><b style="text-transform:none">${cls.replace('-',' ')}</b><span>recurrence verdict</span></div>
+<!-- Left Panel: Overview & Contaminant Filters (Active in Regional Mode) -->
+<div class="panel panel-left glass" id="panel-left" style="opacity:0; pointer-events:none;">
+  <div class="section-label">Indo-Gangetic Basin</div>
+  <div class="kpi-grid">
+    <div class="kpi-card crit">
+      <div class="kpi-num" id="kpi-crit">22</div>
+      <div class="kpi-label">Critical (&ge;75)</div>
     </div>
-    <div class="dsec"><h5>Laboratory readings vs BIS IS 10500</h5>
-      <table class="dtable"><thead><tr><th>Parameter</th><th class="num">Result</th><th class="num">Acceptable limit</th><th class="num">Verdict</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
-    <div class="dsec"><h5>Registry history${paramsTxt}</h5>${histHtml}</div>`;
-  document.body.classList.add('open');
+    <div class="kpi-card high">
+      <div class="kpi-num" id="kpi-high">323</div>
+      <div class="kpi-label">High (50-74)</div>
+    </div>
+    <div class="kpi-card low">
+      <div class="kpi-num" id="kpi-low">515</div>
+      <div class="kpi-label">Low (&lt;25)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-num" id="kpi-total">869</div>
+      <div class="kpi-label">Total Tested</div>
+    </div>
+  </div>
+
+  <div class="river-indicator">
+    <div class="river-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c3 0 3-4 6-4s3 4 6 4 3-4 6-4 3 4 6 4M2 18c3 0 3-4 6-4s3 4 6 4 3-4 6-4 3 4 6 4"/></svg>
+    </div>
+    <div class="river-text">
+      <h5>Ganga River Basin</h5>
+      <p>Ganga, Yamuna, Gomti, Gandak, Kosi, Son</p>
+    </div>
+  </div>
+
+  <div class="section-label">Filter Contaminants</div>
+  <div class="filters-wrap" id="contam-filters">
+    <button class="filter-chip active" data-filter="all">All</button>
+    <button class="filter-chip" data-filter="Arsenic">Arsenic (As)</button>
+    <button class="filter-chip" data-filter="Fluoride">Fluoride (F)</button>
+    <button class="filter-chip" data-filter="E. coli">E. Coli</button>
+    <button class="filter-chip" data-filter="Iron">Iron (Fe)</button>
+    <button class="filter-chip" data-filter="Nitrate">Nitrate (NO₃)</button>
+    <button class="filter-chip" data-filter="TDS">TDS / Salinity</button>
+  </div>
+</div>
+
+<!-- Right Panel: Priority Queue (Active in Regional Mode) -->
+<div class="panel panel-right glass" id="panel-right" style="opacity:0; pointer-events:none;">
+  <div class="queue-header">
+    <div class="queue-title-row">
+      <h3>Intervention Priority Queue</h3>
+      <span id="queue-count">869 Villages</span>
+    </div>
+    <input type="text" class="search-input" id="queue-search" placeholder="Search village, district, or parameter...">
+  </div>
+  <div class="queue-list" id="queue-list">
+    <!-- Rendered via JS -->
+  </div>
+</div>
+
+<!-- Bottom Navigation HUD -->
+<div class="hud-bottom glass">
+  <div class="legend-group">
+    <div class="legend-item"><div class="dot-indicator c"></div><span>Critical (&ge;75)</span></div>
+    <div class="legend-item"><div class="dot-indicator h"></div><span>High (50–74)</span></div>
+    <div class="legend-item"><div class="dot-indicator l"></div><span>Low (&lt;25)</span></div>
+    <div class="legend-item"><div class="dot-indicator r"></div><span>Major Rivers</span></div>
+  </div>
+
+  <div class="hud-actions">
+    <button class="action-btn" id="btn-toggle-sim">
+      <span>🔬</span> What-If Simulator
+    </button>
+    <button class="action-btn primary" id="btn-camera-reset">
+      <span>🎯</span> Reset Camera
+    </button>
+  </div>
+</div>
+
+<!-- What-If Simulator Drawer -->
+<div class="simulator-drawer glass" id="simulator-drawer">
+  <div class="sim-header">
+    <div>
+      <h3>What-If BIS 10500 Simulator</h3>
+      <p>Adjust parameter concentrations to observe real-time risk escalation.</p>
+    </div>
+    <button class="sim-close" id="btn-close-sim">&times;</button>
+  </div>
+
+  <div class="sim-gauge-card">
+    <div class="gauge-info">
+      <h4>Composite Severity</h4>
+      <div class="gauge-score" id="sim-score-num">0.0</div>
+    </div>
+    <div class="gauge-badge" id="sim-badge">SAFE (LOW)</div>
+  </div>
+
+  <div class="sim-slider-group">
+    <!-- Arsenic -->
+    <div class="sim-slider-row">
+      <div class="slider-labels">
+        <span class="slider-param">Total Arsenic (As)</span>
+        <span class="slider-val" id="val-arsenic">0.005 mg/L</span>
+      </div>
+      <input type="range" class="sim-range" id="range-arsenic" min="0" max="0.12" step="0.002" value="0.005">
+      <div class="slider-limits"><span>Acc: 0.01</span><span>Perm: 0.05</span><span>Weight: 1.0</span></div>
+    </div>
+
+    <!-- Fluoride -->
+    <div class="sim-slider-row">
+      <div class="slider-labels">
+        <span class="slider-param">Fluoride (F)</span>
+        <span class="slider-val" id="val-fluoride">0.8 mg/L</span>
+      </div>
+      <input type="range" class="sim-range" id="range-fluoride" min="0" max="4.0" step="0.1" value="0.8">
+      <div class="slider-limits"><span>Acc: 1.0</span><span>Perm: 1.5</span><span>Weight: 0.8</span></div>
+    </div>
+
+    <!-- E. coli -->
+    <div class="sim-slider-row">
+      <div class="slider-labels">
+        <span class="slider-param">E. Coli (Microbial)</span>
+        <span class="slider-val" id="val-ecoli">0 MPN</span>
+      </div>
+      <input type="range" class="sim-range" id="range-ecoli" min="0" max="40" step="1" value="0">
+      <div class="slider-limits"><span>Acc: 0 (Zero Tolerance)</span><span>Weight: 0.9</span></div>
+    </div>
+
+    <!-- Nitrate -->
+    <div class="sim-slider-row">
+      <div class="slider-labels">
+        <span class="slider-param">Nitrate (NO₃)</span>
+        <span class="slider-val" id="val-nitrate">25 mg/L</span>
+      </div>
+      <input type="range" class="sim-range" id="range-nitrate" min="0" max="120" step="2" value="25">
+      <div class="slider-limits"><span>Acc: 45.0 (No Relaxation)</span><span>Weight: 0.7</span></div>
+    </div>
+
+    <!-- Iron -->
+    <div class="sim-slider-row">
+      <div class="slider-labels">
+        <span class="slider-param">Iron (Fe)</span>
+        <span class="slider-val" id="val-iron">0.4 mg/L</span>
+      </div>
+      <input type="range" class="sim-range" id="range-iron" min="0" max="3.0" step="0.1" value="0.4">
+      <div class="slider-limits"><span>Acc: 1.0 (Perm: 1.0)</span><span>Weight: 0.4</span></div>
+    </div>
+  </div>
+
+  <div class="sim-recs" id="sim-recs">
+    <strong>Intervention Recommendation:</strong>
+    <span id="sim-rec-text">All simulated parameters are within safe BIS IS 10500 standards. Regular seasonal surveillance recommended.</span>
+  </div>
+</div>
+
+<!-- Village Diagnostic Modal -->
+<dialog id="detail-modal" class="glass">
+  <div class="modal-head">
+    <div class="modal-title-wrap">
+      <h2 id="modal-village-name">Village Name</h2>
+      <p id="modal-village-meta">District, State · Ref ID</p>
+    </div>
+    <button class="modal-close-btn" id="btn-close-modal">&times;</button>
+  </div>
+
+  <div style="margin-top: 16px;">
+    <div class="section-label">BIS IS 10500 Lab Report Telemetry</div>
+    <table class="modal-table">
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>Observed</th>
+          <th>Acceptable</th>
+          <th>Permissible</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="modal-readings-body">
+        <!-- Rendered via JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <div class="section-label">Historical Recurrence (MoJS 2009–2012)</div>
+    <div id="modal-recurrence-info" style="font-size: 12px; line-height: 1.5; color: var(--text-muted); margin-top: 8px;">
+      No chronic recurrence detected in the historical registry.
+    </div>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <div class="section-label">Recommended Remedial Action</div>
+    <div id="modal-intervention-info" style="font-size: 12px; line-height: 1.5; color: var(--cyan); margin-top: 8px;">
+      Deploy local surveillance and scheduled water sample testing.
+    </div>
+  </div>
+</dialog>
+
+<!-- Tooltip Element -->
+<div class="hud-tooltip glass" id="tooltip">
+  <h4 id="tt-title">Title</h4>
+  <span id="tt-sub">Subtitle</span>
+  <div class="score-badge" id="tt-score">Score: 0</div>
+</div>
+
+<!-- Three.js Module Script -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL STATE & ASSET LOAD
+   ═══════════════════════════════════════════════════════════ */
+let DATA = { kpi: { samples: 869, critical: 22, high: 323, low: 515 }, priority: [], details: {} };
+let RIVERS = { ganga_main: [], tributaries: {} };
+let DISTRICT_CENTROIDS = {};
+let NATIONAL_STATS = {};
+let INDIA_STATES = { features: [] };
+
+try {
+  const [rData, rRivers, rCentroids, rStats, rStates] = await Promise.all([
+    fetch('data.json').then(r => r.json()).catch(() => ({})),
+    fetch('assets/rivers_ganga_basin.json').then(r => r.json()).catch(() => ({ ganga_main: [], tributaries: {} })),
+    fetch('assets/district_centroids.json').then(r => r.json()).catch(() => ({})),
+    fetch('assets/national_state_stats.json').then(r => r.json()).catch(() => ({})),
+    fetch('assets/india_states_compact.geojson').then(r => r.json()).catch(() => ({ features: [] }))
+  ]);
+  if (rData.priority) DATA = rData;
+  if (rRivers.ganga_main) RIVERS = rRivers;
+  if (rCentroids) DISTRICT_CENTROIDS = rCentroids;
+  if (rStats) NATIONAL_STATS = rStats;
+  if (rStates.features) INDIA_STATES = rStates;
+} catch (err) {
+  console.warn('Asset loading notice:', err);
 }
 
-document.getElementById('gen-time').textContent='Generated '+new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
-route();
+/* ═══════════════════════════════════════════════════════════
+   THREE.JS SCENE SETUP
+   ═══════════════════════════════════════════════════════════ */
+const canvas = document.getElementById('webgl');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x070d19);
+scene.fog = new THREE.FogExp2(0x070d19, 0.0035);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.25;
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.maxDistance = 300;
+controls.minDistance = 15;
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+scene.add(ambientLight);
+
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.8);
+sunLight.position.set(100, 80, 100);
+scene.add(sunLight);
+
+const blueRimLight = new THREE.DirectionalLight(0x06b6d4, 1.2);
+blueRimLight.position.set(-100, -50, -80);
+scene.add(blueRimLight);
+
+/* ═══════════════════════════════════════════════════════════
+   MODES & GROUPS
+   ═══════════════════════════════════════════════════════════ */
+let CURRENT_MODE = 'globe'; // 'globe' or 'regional'
+const globeGroup = new THREE.Group();
+const regionalGroup = new THREE.Group();
+scene.add(globeGroup);
+scene.add(regionalGroup);
+
+regionalGroup.visible = false;
+
+/* ═══════════════════════════════════════════════════════════
+   1. 3D EARTH GLOBE CREATION (With Atmosphere & India Centered)
+   ═══════════════════════════════════════════════════════════ */
+const GLOBE_RADIUS = 35;
+
+// Earth Surface
+const textureLoader = new THREE.TextureLoader();
+const earthTexture = textureLoader.load(
+  'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
+  () => renderer.render(scene, camera)
+);
+
+const earthGeo = new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64);
+const earthMat = new THREE.MeshStandardMaterial({
+  map: earthTexture,
+  roughness: 0.7,
+  metalness: 0.1,
+});
+const earthMesh = new THREE.Mesh(earthGeo, earthMat);
+globeGroup.add(earthMesh);
+
+// Atmosphere Glow
+const atmoGeo = new THREE.SphereGeometry(GLOBE_RADIUS * 1.025, 64, 64);
+const atmoMat = new THREE.ShaderMaterial({
+  vertexShader: `
+    varying vec3 vNormal;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vNormal;
+    void main() {
+      float intensity = pow(0.72 - dot(vNormal, vec3(0, 0, 1.0)), 2.2);
+      gl_FragColor = vec4(0.02, 0.71, 0.83, 1.0) * intensity;
+    }
+  `,
+  blending: THREE.AdditiveBlending,
+  side: THREE.BackSide,
+  transparent: true
+});
+const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
+globeGroup.add(atmoMesh);
+
+// Starfield Background
+const starGeo = new THREE.BufferGeometry();
+const starCount = 1200;
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount * 3; i++) {
+  starPos[i] = (Math.random() - 0.5) * 600;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const starMat = new THREE.PointsMaterial({ color: 0x94a3b8, size: 0.8, transparent: true, opacity: 0.6 });
+scene.add(new THREE.Points(starGeo, starMat));
+
+// Convert Lat/Lon to 3D Sphere Coordinates
+function latLonToVector3(lat, lon, radius) {
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lon + 180) * (Math.PI / 180);
+  return new THREE.Vector3(
+    -(radius * Math.sin(phi) * Math.cos(theta)),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+// Initial India Facing Orientation (Center of India is ~22°N, 82°E)
+const indiaCenter = latLonToVector3(22.5, 82.5, GLOBE_RADIUS);
+camera.position.set(indiaCenter.x * 2.3, indiaCenter.y * 1.8 + 15, indiaCenter.z * 2.3);
+controls.target.copy(new THREE.Vector3(0, 0, 0));
+
+// Add Glowing River Paths on Globe
+const globeRiversGroup = new THREE.Group();
+globeGroup.add(globeRiversGroup);
+
+function buildGlobeRivers() {
+  const riverMat = new THREE.LineBasicMaterial({
+    color: 0x38bdf8,
+    transparent: true,
+    opacity: 0.9,
+    linewidth: 2
+  });
+
+  // Ganga Stem
+  if (RIVERS.ganga_main) {
+    RIVERS.ganga_main.forEach(line => {
+      const pts = line.map(p => latLonToVector3(p[1], p[0], GLOBE_RADIUS * 1.004));
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      globeRiversGroup.add(new THREE.Line(geom, riverMat));
+    });
+  }
+
+  // Tributaries
+  if (RIVERS.tributaries) {
+    Object.values(RIVERS.tributaries).forEach(coords => {
+      const pts = coords.map(p => latLonToVector3(p[1], p[0], GLOBE_RADIUS * 1.004));
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      globeRiversGroup.add(new THREE.Line(geom, riverMat));
+    });
+  }
+}
+buildGlobeRivers();
+
+// Add Indian State Outlines on Globe
+const globeStatesGroup = new THREE.Group();
+globeGroup.add(globeStatesGroup);
+
+function buildGlobeStates() {
+  const stateMat = new THREE.LineBasicMaterial({
+    color: 0x0ea5e9,
+    transparent: true,
+    opacity: 0.55,
+    linewidth: 1
+  });
+
+  if (INDIA_STATES.features) {
+    INDIA_STATES.features.forEach(feat => {
+      const g = feat.geometry;
+      if (!g) return;
+      const rings = g.type === 'Polygon' ? g.coordinates : g.type === 'MultiPolygon' ? g.coordinates.flat() : [];
+      rings.forEach(ring => {
+        const pts = ring.map(p => latLonToVector3(p[1], p[0], GLOBE_RADIUS * 1.002));
+        const geom = new THREE.BufferGeometry().setFromPoints(pts);
+        globeStatesGroup.add(new THREE.Line(geom, stateMat));
+      });
+    });
+  }
+}
+buildGlobeStates();
+
+/* ═══════════════════════════════════════════════════════════
+   2. REGIONAL INDO-GANGETIC BASIN (UP & Bihar) 3D MAP
+   ═══════════════════════════════════════════════════════════ */
+// Projection helper: Map lat/lon to flat X/Z plane centered around UP & Bihar
+// UP+Bihar bounds: Lat 23.8 to 30.5, Lon 77.0 to 88.2
+function latLonToPlane(lat, lon) {
+  const centerLat = 26.5;
+  const centerLon = 82.5;
+  const scale = 8.5; // units per degree
+  const x = (lon - centerLon) * scale;
+  const z = -(lat - centerLat) * scale;
+  return { x, z };
+}
+
+// Terrain baseplate for UP and Bihar
+const baseGeo = new THREE.PlaneGeometry(110, 65, 32, 32);
+const baseMat = new THREE.MeshStandardMaterial({
+  color: 0x0c192c,
+  roughness: 0.85,
+  metalness: 0.2,
+  transparent: true,
+  opacity: 0.9
+});
+const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+baseMesh.rotation.x = -Math.PI / 2;
+baseMesh.position.y = -0.1;
+regionalGroup.add(baseMesh);
+
+// Grid lines
+const regionalGrid = new THREE.GridHelper(120, 40, 0x1e293b, 0x0f172a);
+regionalGrid.position.y = -0.15;
+regionalGroup.add(regionalGrid);
+
+// Regional Glowing Rivers
+const regionalRiversGroup = new THREE.Group();
+regionalGroup.add(regionalRiversGroup);
+
+function buildRegionalRivers() {
+  const rMat = new THREE.LineBasicMaterial({
+    color: 0x06b6d4,
+    transparent: true,
+    opacity: 0.95,
+    linewidth: 3
+  });
+
+  if (RIVERS.ganga_main) {
+    RIVERS.ganga_main.forEach(line => {
+      const pts = line.map(p => {
+        const { x, z } = latLonToPlane(p[1], p[0]);
+        return new THREE.Vector3(x, 0.15, z);
+      });
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      regionalRiversGroup.add(new THREE.Line(geom, rMat));
+    });
+  }
+
+  if (RIVERS.tributaries) {
+    Object.entries(RIVERS.tributaries).forEach(([name, coords]) => {
+      const pts = coords.map(p => {
+        const { x, z } = latLonToPlane(p[1], p[0]);
+        return new THREE.Vector3(x, 0.15, z);
+      });
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      regionalRiversGroup.add(new THREE.Line(geom, rMat));
+    });
+  }
+}
+buildRegionalRivers();
+
+// 3D Water Sample Pins
+const pinsGroup = new THREE.Group();
+regionalGroup.add(pinsGroup);
+const pinMeshes = [];
+
+const sevColors = {
+  Critical: 0xef4444,
+  High: 0xf97316,
+  Low: 0x10b981
+};
+
+function renderVillagePins(filterContam = 'all') {
+  // Clear existing pins
+  while (pinsGroup.children.length > 0) {
+    const obj = pinsGroup.children[0];
+    pinsGroup.remove(obj);
+    if (obj.geometry) obj.geometry.dispose();
+  }
+  pinMeshes.length = 0;
+
+  if (!DATA.priority) return;
+
+  DATA.priority.forEach(item => {
+    // Apply contaminant filter
+    if (filterContam !== 'all') {
+      const worst = (item.worst || '').toLowerCase();
+      if (!worst.includes(filterContam.toLowerCase())) return;
+    }
+
+    const key = `${item.state}|${item.district}`;
+    const centroid = DISTRICT_CENTROIDS[key] || [26.5 + (Math.random() - 0.5) * 2, 82.5 + (Math.random() - 0.5) * 4];
+    
+    // Add small jitter for villages within the same district
+    const lat = centroid[0] + (Math.random() - 0.5) * 0.45;
+    const lon = centroid[1] + (Math.random() - 0.5) * 0.45;
+    const { x, z } = latLonToPlane(lat, lon);
+
+    const score = parseFloat(item.score) || 0;
+    const height = Math.max(1.2, score / 8);
+    const color = sevColors[item.band] || sevColors.Low;
+
+    // Cylinder pin
+    const pinGeo = new THREE.CylinderGeometry(0.35, 0.5, height, 8);
+    const pinMat = new THREE.MeshStandardMaterial({
+      color: color,
+      emissive: color,
+      emissiveIntensity: item.band === 'Critical' ? 0.6 : 0.25,
+      metalness: 0.2,
+      roughness: 0.4
+    });
+    const pin = new THREE.Mesh(pinGeo, pinMat);
+    pin.position.set(x, height / 2, z);
+    pin.userData = item;
+
+    pinsGroup.add(pin);
+    pinMeshes.push(pin);
+
+    // Glowing base ring for Critical items
+    if (item.band === 'Critical') {
+      const ringGeo = new THREE.RingGeometry(0.6, 1.1, 16);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0xef4444,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(x, 0.05, z);
+      pinsGroup.add(ring);
+    }
+  });
+}
+renderVillagePins();
+
+/* ═══════════════════════════════════════════════════════════
+   3. OPTIONAL 16K MESH GLB LOADER
+   ═══════════════════════════════════════════════════════════ */
+let is16kLoaded = false;
+let highResMesh = null;
+const btnToggleMesh = document.getElementById('btn-toggle-mesh');
+
+btnToggleMesh.addEventListener('click', () => {
+  if (is16kLoaded && highResMesh) {
+    highResMesh.visible = !highResMesh.visible;
+    earthMesh.visible = !highResMesh.visible;
+    btnToggleMesh.textContent = highResMesh.visible ? '16K Mesh: ON' : '16K Mesh: OFF';
+    btnToggleMesh.classList.toggle('active', highResMesh.visible);
+    return;
+  }
+
+  btnToggleMesh.textContent = 'Streaming 16K GLB...';
+  const loader = new GLTFLoader();
+  loader.load(
+    'assets/earth_16k.glb',
+    (gltf) => {
+      highResMesh = gltf.scene;
+      // Normalize scale to match sphere radius
+      const box = new THREE.Box3().setFromObject(highResMesh);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = (GLOBE_RADIUS * 2) / maxDim;
+      highResMesh.scale.set(scale, scale, scale);
+      
+      globeGroup.add(highResMesh);
+      earthMesh.visible = false;
+      is16kLoaded = true;
+      btnToggleMesh.textContent = '16K Mesh: ON';
+      btnToggleMesh.classList.add('active');
+    },
+    (xhr) => {
+      if (xhr.lengthComputable) {
+        const percent = Math.round((xhr.loaded / xhr.total) * 100);
+        btnToggleMesh.textContent = `16K: ${percent}%`;
+      }
+    },
+    (err) => {
+      console.warn('Could not load 16K GLB mesh:', err);
+      btnToggleMesh.textContent = '16K: Failed';
+      setTimeout(() => { btnToggleMesh.textContent = '16K Mesh: OFF'; }, 2000);
+    }
+  );
+});
+
+/* ═══════════════════════════════════════════════════════════
+   4. CAMERA CHOREOGRAPHY & MODE SWITCHING
+   ═══════════════════════════════════════════════════════════ */
+let targetCamPos = camera.position.clone();
+let targetControlsTarget = controls.target.clone();
+let isTransitioning = false;
+let transitionProgress = 1;
+
+function switchMode(mode) {
+  if (mode === CURRENT_MODE && transitionProgress >= 1) return;
+  CURRENT_MODE = mode;
+
+  const btnGlobe = document.getElementById('btn-mode-globe');
+  const btnReg = document.getElementById('btn-mode-regional');
+  const hero = document.getElementById('hero-overlay');
+  const panelLeft = document.getElementById('panel-left');
+  const panelRight = document.getElementById('panel-right');
+
+  if (mode === 'globe') {
+    btnGlobe.classList.add('active');
+    btnReg.classList.remove('active');
+    hero.style.opacity = '1';
+    hero.style.pointerEvents = 'auto';
+    panelLeft.style.opacity = '0';
+    panelLeft.style.pointerEvents = 'none';
+    panelRight.style.opacity = '0';
+    panelRight.style.pointerEvents = 'none';
+
+    globeGroup.visible = true;
+    regionalGroup.visible = false;
+
+    targetCamPos.set(indiaCenter.x * 2.3, indiaCenter.y * 1.8 + 15, indiaCenter.z * 2.3);
+    targetControlsTarget.set(0, 0, 0);
+  } else {
+    btnReg.classList.add('active');
+    btnGlobe.classList.remove('active');
+    hero.style.opacity = '0';
+    hero.style.pointerEvents = 'none';
+    panelLeft.style.opacity = '1';
+    panelLeft.style.pointerEvents = 'auto';
+    panelRight.style.opacity = '1';
+    panelRight.style.pointerEvents = 'auto';
+
+    globeGroup.visible = false;
+    regionalGroup.visible = true;
+
+    targetCamPos.set(0, 52, 58);
+    targetControlsTarget.set(0, 0, 0);
+  }
+
+  isTransitioning = true;
+  transitionProgress = 0;
+}
+
+document.getElementById('btn-mode-globe').addEventListener('click', () => switchMode('globe'));
+document.getElementById('btn-mode-regional').addEventListener('click', () => switchMode('regional'));
+document.getElementById('btn-hero-explore').addEventListener('click', () => switchMode('regional'));
+document.getElementById('brand-home').addEventListener('click', () => switchMode('globe'));
+
+document.getElementById('btn-camera-reset').addEventListener('click', () => {
+  if (CURRENT_MODE === 'globe') {
+    targetCamPos.set(indiaCenter.x * 2.3, indiaCenter.y * 1.8 + 15, indiaCenter.z * 2.3);
+    targetControlsTarget.set(0, 0, 0);
+  } else {
+    targetCamPos.set(0, 52, 58);
+    targetControlsTarget.set(0, 0, 0);
+  }
+  isTransitioning = true;
+  transitionProgress = 0;
+});
+
+// Raycasting for Interactivity
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const tooltip = document.getElementById('tooltip');
+
+window.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  if (CURRENT_MODE === 'regional') {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(pinMeshes);
+    if (intersects.length > 0) {
+      const data = intersects[0].object.userData;
+      tooltip.style.display = 'flex';
+      tooltip.style.left = `${e.clientX}px`;
+      tooltip.style.top = `${e.clientY}px`;
+      document.getElementById('tt-title').textContent = data.village;
+      document.getElementById('tt-sub').textContent = `${data.district}, ${data.state}`;
+      const ttScore = document.getElementById('tt-score');
+      ttScore.textContent = `Score: ${data.score} (${data.band})`;
+      ttScore.style.color = data.band === 'Critical' ? '#ef4444' : data.band === 'High' ? '#f97316' : '#10b981';
+      document.body.style.cursor = 'pointer';
+    } else {
+      tooltip.style.display = 'none';
+      document.body.style.cursor = 'default';
+    }
+  }
+});
+
+window.addEventListener('click', (e) => {
+  if (CURRENT_MODE === 'regional') {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(pinMeshes);
+    if (intersects.length > 0) {
+      openDetailModal(intersects[0].object.userData);
+    }
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   5. PRIORITY QUEUE UI & FILTERS
+   ═══════════════════════════════════════════════════════════ */
+const queueListEl = document.getElementById('queue-list');
+const queueSearchEl = document.getElementById('queue-search');
+
+function renderQueue(items) {
+  queueListEl.innerHTML = '';
+  document.getElementById('queue-count').textContent = `${items.length} Villages`;
+
+  items.slice(0, 100).forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'queue-card';
+    card.innerHTML = `
+      <div class="q-row-top">
+        <span class="q-village" title="${item.village}">${item.village}</span>
+        <span class="q-score" style="color:${item.band === 'Critical' ? '#ef4444' : item.band === 'High' ? '#f97316' : '#10b981'}">
+          ${item.score}
+        </span>
+      </div>
+      <div class="q-meta">${item.district} · ${item.state}</div>
+      <div class="q-tags">
+        <span class="q-badge ${item.band}">${item.band}</span>
+        <span class="q-contam">${item.worst || 'Normal'}</span>
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      openDetailModal(item);
+      // Pan camera towards district
+      const key = `${item.state}|${item.district}`;
+      if (DISTRICT_CENTROIDS[key]) {
+        const [lat, lon] = DISTRICT_CENTROIDS[key];
+        const { x, z } = latLonToPlane(lat, lon);
+        targetCamPos.set(x, 24, z + 28);
+        targetControlsTarget.set(x, 0, z);
+        isTransitioning = true;
+        transitionProgress = 0;
+      }
+    });
+    queueListEl.appendChild(card);
+  });
+}
+
+if (DATA.priority) renderQueue(DATA.priority);
+
+// Search Filtering
+queueSearchEl.addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase().trim();
+  if (!DATA.priority) return;
+  const filtered = DATA.priority.filter(p => 
+    (p.village || '').toLowerCase().includes(q) ||
+    (p.district || '').toLowerCase().includes(q) ||
+    (p.worst || '').toLowerCase().includes(q)
+  );
+  renderQueue(filtered);
+});
+
+// Contaminant Filter Buttons
+const filterChips = document.querySelectorAll('.filter-chip');
+filterChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    filterChips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    const filter = chip.getAttribute('data-filter');
+    renderVillagePins(filter);
+
+    if (!DATA.priority) return;
+    const filtered = filter === 'all' 
+      ? DATA.priority 
+      : DATA.priority.filter(p => (p.worst || '').toLowerCase().includes(filter.toLowerCase()));
+    renderQueue(filtered);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   6. WHAT-IF PARAMETER SIMULATOR
+   ═══════════════════════════════════════════════════════════ */
+const drawer = document.getElementById('simulator-drawer');
+document.getElementById('btn-toggle-sim').addEventListener('click', () => {
+  drawer.classList.toggle('open');
+});
+document.getElementById('btn-close-sim').addEventListener('click', () => {
+  drawer.classList.remove('open');
+});
+
+const simInputs = {
+  arsenic: document.getElementById('range-arsenic'),
+  fluoride: document.getElementById('range-fluoride'),
+  ecoli: document.getElementById('range-ecoli'),
+  nitrate: document.getElementById('range-nitrate'),
+  iron: document.getElementById('range-iron')
+};
+
+function calculateSimulation() {
+  const as = parseFloat(simInputs.arsenic.value);
+  const f = parseFloat(simInputs.fluoride.value);
+  const ec = parseFloat(simInputs.ecoli.value);
+  const no3 = parseFloat(simInputs.nitrate.value);
+  const fe = parseFloat(simInputs.iron.value);
+
+  document.getElementById('val-arsenic').textContent = `${as.toFixed(3)} mg/L`;
+  document.getElementById('val-fluoride').textContent = `${f.toFixed(1)} mg/L`;
+  document.getElementById('val-ecoli').textContent = `${Math.round(ec)} MPN`;
+  document.getElementById('val-nitrate').textContent = `${Math.round(no3)} mg/L`;
+  document.getElementById('val-iron').textContent = `${fe.toFixed(1)} mg/L`;
+
+  // BIS 10500 Severity calculation
+  // Arsenic: acc 0.01, perm 0.05, weight 1.0
+  const sevAs = as <= 0.01 ? 0 : as >= 0.05 ? 1.0 : (as - 0.01) / 0.04;
+  // Fluoride: acc 1.0, perm 1.5, weight 0.8
+  const sevF = f <= 1.0 ? 0 : f >= 1.5 ? 1.0 : (f - 1.0) / 0.5;
+  // E. coli: acc 0, weight 0.9
+  const sevEc = ec > 0 ? 1.0 : 0;
+  // Nitrate: acc 45, perm 45, weight 0.7
+  const sevNo3 = no3 <= 45 ? 0 : 1.0;
+  // Iron: acc 1.0, weight 0.4
+  const sevFe = fe <= 1.0 ? 0 : 1.0;
+
+  const weights = 1.0 + 0.8 + 0.9 + 0.7 + 0.4;
+  const weightedSum = (sevAs * 1.0) + (sevF * 0.8) + (sevEc * 0.9) + (sevNo3 * 0.7) + (sevFe * 0.4);
+  let score = Math.round((weightedSum / weights) * 100);
+
+  // Acute hazard escalation
+  if (sevEc > 0 || as >= 0.05) {
+    score = Math.max(score, 75);
+  } else if (sevF >= 1.0 || sevNo3 >= 1.0) {
+    score = Math.max(score, 50);
+  }
+
+  const scoreEl = document.getElementById('sim-score-num');
+  const badgeEl = document.getElementById('sim-badge');
+  const recEl = document.getElementById('sim-rec-text');
+
+  scoreEl.textContent = score.toFixed(1);
+
+  if (score >= 75) {
+    scoreEl.style.color = '#ef4444';
+    badgeEl.textContent = 'CRITICAL RISK';
+    badgeEl.style.background = 'rgba(239, 68, 68, 0.2)';
+    badgeEl.style.color = '#ef4444';
+    badgeEl.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+    recEl.textContent = sevEc > 0 
+      ? 'IMMEDIATE HAZARD: Bacterial contamination detected. Issue boil-water advisory and initiate sodium hypochlorite shock-chlorination.'
+      : 'ACUTE TOXICITY: Arsenic levels exceed permissible threshold. Deploy Adsorptive Coagulation / Arsenic-Removal Unit & switch to deep aquifers.';
+  } else if (score >= 50) {
+    scoreEl.style.color = '#f97316';
+    badgeEl.textContent = 'HIGH RISK';
+    badgeEl.style.background = 'rgba(249, 115, 22, 0.2)';
+    badgeEl.style.color = '#f97316';
+    badgeEl.style.border = '1px solid rgba(249, 115, 22, 0.4)';
+    recEl.textContent = sevF >= 1.0 
+      ? 'Fluoride exceedance detected. High risk of dental/skeletal fluorosis. Deploy Nalgonda defluoridation plant or activated alumina filter.'
+      : 'Elevated chemical contaminants. Prioritize community filtration and source blending.';
+  } else {
+    scoreEl.style.color = '#10b981';
+    badgeEl.textContent = 'SAFE (LOW)';
+    badgeEl.style.background = 'rgba(16, 185, 129, 0.15)';
+    badgeEl.style.color = '#10b981';
+    badgeEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+    recEl.textContent = 'All simulated parameters are within safe BIS IS 10500 standards. Regular seasonal surveillance recommended.';
+  }
+}
+
+Object.values(simInputs).forEach(inp => inp.addEventListener('input', calculateSimulation));
+calculateSimulation();
+
+/* ═══════════════════════════════════════════════════════════
+   7. VILLAGE DETAIL MODAL
+   ═══════════════════════════════════════════════════════════ */
+const detailModal = document.getElementById('detail-modal');
+document.getElementById('btn-close-modal').addEventListener('click', () => detailModal.close());
+
+function openDetailModal(item) {
+  document.getElementById('modal-village-name').textContent = item.village || 'Unknown Village';
+  document.getElementById('modal-village-meta').textContent = `${item.district}, ${item.state} · Sample ID: ${item.ref || item.sample_id}`;
+
+  const readingsBody = document.getElementById('modal-readings-body');
+  readingsBody.innerHTML = '';
+
+  const details = DATA.details && DATA.details[String(item.sample_id)];
+  if (details && details.readings && details.readings.length > 0) {
+    details.readings.forEach(r => {
+      const isExceeded = r.permissible ? (r.value > r.permissible) : (r.acceptable ? r.value > r.acceptable : false);
+      const isSafe = r.acceptable ? r.value <= r.acceptable : true;
+      const statusText = isExceeded ? 'EXCEEDED' : (isSafe ? 'SAFE' : 'ACCEPTABLE');
+      const statusColor = isExceeded ? '#ef4444' : (isSafe ? '#10b981' : '#f97316');
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-weight:600;">${r.parameter_key}</td>
+        <td style="font-family:var(--mono); color:#fff;">${r.value} <small style="color:var(--text-dim);">${r.unit || ''}</small></td>
+        <td style="font-family:var(--mono); color:var(--text-muted);">${r.acceptable ?? '—'}</td>
+        <td style="font-family:var(--mono); color:var(--text-muted);">${r.permissible ?? 'No relaxation'}</td>
+        <td style="font-family:var(--mono); font-weight:700; color:${statusColor}">${statusText}</td>
+      `;
+      readingsBody.appendChild(tr);
+    });
+  } else {
+    readingsBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-dim); padding:16px;">Telemetry records mapped to district aggregation (${item.worst || 'Normal'}).</td></tr>`;
+  }
+
+  // Recurrence Info
+  const recEl = document.getElementById('modal-recurrence-info');
+  if (details && details.hist_count > 0) {
+    recEl.innerHTML = `
+      <span style="color:#f87171; font-weight:600;">Chronic Recurrence Flagged:</span> Detected in ${details.hist_count} previous testing cycles across years [${details.hist_years.join(', ')}]. Contaminants: <strong>${details.hist_params.join(', ')}</strong>.
+    `;
+  } else {
+    recEl.textContent = 'No previous recurring contamination recorded in the 2009–2012 baseline registry.';
+  }
+
+  // Action Recommendation
+  const actionEl = document.getElementById('modal-intervention-info');
+  const worst = (item.worst || '').toLowerCase();
+  if (worst.includes('arsenic')) {
+    actionEl.innerHTML = '<strong>Action Required:</strong> Immediate installation of community-scale Adsorptive Media Arsenic Removal Plant (AMARP) and exploratory deep aquifer tube-well drilling beyond 120m.';
+  } else if (worst.includes('fluoride')) {
+    actionEl.innerHTML = '<strong>Action Required:</strong> Deployment of CSIR-NEERI Nalgonda defluoridation filter or Activated Alumina unit. Distribute safe drinking water tankers in affected school habitations.';
+  } else if (worst.includes('coli')) {
+    actionEl.innerHTML = '<strong>Action Required:</strong> Immediate sanitary survey for pit-latrine seepage. Perform shock chlorination at source and install automated inline chemical chlorinator.';
+  } else if (worst.includes('iron')) {
+    actionEl.innerHTML = '<strong>Action Required:</strong> Install aeration-cum-sand-gravel Iron Removal Plant (IRP) at source hand-pump.';
+  } else {
+    actionEl.innerHTML = '<strong>Surveillance Mode:</strong> Parameters comply with Bureau of Indian Standards (BIS IS 10500). Maintain scheduled post-monsoon testing protocol.';
+  }
+
+  detailModal.showModal();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   8. ANIMATION & RENDER LOOP
+   ═══════════════════════════════════════════════════════════ */
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+
+  // Smooth Camera Interpolation
+  if (isTransitioning) {
+    transitionProgress += delta * 1.5;
+    if (transitionProgress >= 1) {
+      transitionProgress = 1;
+      isTransitioning = false;
+    }
+    const t = 0.5 - 0.5 * Math.cos(transitionProgress * Math.PI); // easeInOut
+    camera.position.lerpVectors(camera.position, targetCamPos, 0.12);
+    controls.target.lerp(targetControlsTarget, 0.12);
+  }
+
+  // Subtle Globe rotation when in Globe Mode (idle)
+  if (CURRENT_MODE === 'globe' && controls.state === -1) {
+    globeGroup.rotation.y += 0.0006;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ESC Key closes simulator or modal
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    drawer.classList.remove('open');
+    detailModal.close();
+  }
+});
 </script>
 </body>
 </html>
