@@ -1,0 +1,454 @@
+{
+  "Uttar Pradesh|Amroha": [
+    28.8031,
+    78.3605
+  ],
+  "Uttar Pradesh|Hapur": [
+    28.7167,
+    77.8711
+  ],
+  "Uttar Pradesh|Bareilly": [
+    28.4608,
+    79.456
+  ],
+  "Uttar Pradesh|Pilibhit": [
+    28.4972,
+    79.9368
+  ],
+  "Uttar Pradesh|Bulandshahr": [
+    28.3211,
+    78.0308
+  ],
+  "Uttar Pradesh|Gautam Buddha Nagar": [
+    28.367,
+    77.5483
+  ],
+  "Uttar Pradesh|Lakhimpur Kheri": [
+    28.0748,
+    80.7041
+  ],
+  "Uttar Pradesh|Budaun": [
+    28.0922,
+    79.0701
+  ],
+  "Uttar Pradesh|Bahraich": [
+    27.6327,
+    81.5309
+  ],
+  "Uttar Pradesh|Shahjahanpur": [
+    27.9377,
+    79.8044
+  ],
+  "Uttar Pradesh|Aligarh": [
+    27.9185,
+    78.0499
+  ],
+  "Uttar Pradesh|Kasganj": [
+    27.7635,
+    78.8388
+  ],
+  "Uttar Pradesh|Mathura": [
+    27.5583,
+    77.6752
+  ],
+  "Uttar Pradesh|Shrawasti": [
+    27.6699,
+    81.8907
+  ],
+  "Uttar Pradesh|Sitapur": [
+    27.4962,
+    80.9313
+  ],
+  "Uttar Pradesh|Hathras": [
+    27.5634,
+    78.129
+  ],
+  "Uttar Pradesh|Etah": [
+    27.4995,
+    78.7321
+  ],
+  "Uttar Pradesh|Hardoi": [
+    27.3228,
+    80.186
+  ],
+  "Uttar Pradesh|Farrukhabad": [
+    27.449,
+    79.442
+  ],
+  "Uttar Pradesh|Firozabad": [
+    27.1471,
+    78.5327
+  ],
+  "Uttar Pradesh|Siddharthnagar": [
+    27.2259,
+    82.789
+  ],
+  "Uttar Pradesh|Mainpuri": [
+    27.1686,
+    79.0242
+  ],
+  "Uttar Pradesh|Maharajganj": [
+    27.1319,
+    83.5141
+  ],
+  "Uttar Pradesh|Agra": [
+    27.0219,
+    78.0969
+  ],
+  "Uttar Pradesh|Gonda": [
+    27.114,
+    82.0942
+  ],
+  "Uttar Pradesh|Barabanki": [
+    26.9728,
+    81.3264
+  ],
+  "Uttar Pradesh|Kushinagar": [
+    26.9086,
+    83.8888
+  ],
+  "Uttar Pradesh|Kannauj": [
+    26.9967,
+    79.6908
+  ],
+  "Uttar Pradesh|Lucknow": [
+    26.8558,
+    80.8947
+  ],
+  "Uttar Pradesh|Basti": [
+    26.8699,
+    82.6691
+  ],
+  "Uttar Pradesh|Gorakhpur": [
+    26.729,
+    83.3428
+  ],
+  "Uttar Pradesh|Sant Kabir Nagar": [
+    26.8313,
+    83.0437
+  ],
+  "Uttar Pradesh|Unnao": [
+    26.6253,
+    80.6203
+  ],
+  "Uttar Pradesh|Etawah": [
+    26.7638,
+    79.0682
+  ],
+  "Uttar Pradesh|Kanpur Nagar": [
+    26.4691,
+    80.1324
+  ],
+  "Uttar Pradesh|Auraiya": [
+    26.6872,
+    79.476
+  ],
+  "Uttar Pradesh|Ayodhya": [
+    26.6219,
+    81.9811
+  ],
+  "Uttar Pradesh|Kanpur Dehat": [
+    26.4504,
+    79.8951
+  ],
+  "Uttar Pradesh|Deoria": [
+    26.4092,
+    83.8283
+  ],
+  "Uttar Pradesh|Sultanpur": [
+    26.2448,
+    82.2797
+  ],
+  "Uttar Pradesh|Ambedkar Nagar": [
+    26.3809,
+    82.6588
+  ],
+  "Uttar Pradesh|Rae Bareli": [
+    26.2602,
+    81.1251
+  ],
+  "Uttar Pradesh|Jalaun": [
+    26.0795,
+    79.3854
+  ],
+  "Uttar Pradesh|Azamgarh": [
+    26.0691,
+    83.0401
+  ],
+  "Uttar Pradesh|Mau": [
+    26.0058,
+    83.5732
+  ],
+  "Uttar Pradesh|Fatehpur": [
+    25.8456,
+    80.7774
+  ],
+  "Uttar Pradesh|Ballia": [
+    25.8424,
+    84.0761
+  ],
+  "Uttar Pradesh|Jaunpur": [
+    25.7463,
+    82.5863
+  ],
+  "Uttar Pradesh|Jhansi": [
+    25.4494,
+    78.8853
+  ],
+  "Uttar Pradesh|Banda": [
+    25.3483,
+    80.492
+  ],
+  "Uttar Pradesh|Ghazipur": [
+    25.5966,
+    83.5797
+  ],
+  "Uttar Pradesh|Kaushambi": [
+    25.513,
+    81.4192
+  ],
+  "Uttar Pradesh|Prayagraj": [
+    25.3551,
+    81.963
+  ],
+  "Uttar Pradesh|Varanasi": [
+    25.3741,
+    82.8951
+  ],
+  "Uttar Pradesh|Chitrakoot": [
+    25.1601,
+    81.0821
+  ],
+  "Uttar Pradesh|Chandauli": [
+    25.124,
+    83.2662
+  ],
+  "Uttar Pradesh|Bhadohi": [
+    25.3661,
+    82.4416
+  ],
+  "Uttar Pradesh|Mirzapur": [
+    24.9779,
+    82.5536
+  ],
+  "Uttar Pradesh|Lalitpur": [
+    24.61,
+    78.581
+  ],
+  "Uttar Pradesh|Sonbhadra": [
+    24.5238,
+    83.0231
+  ],
+  "Uttar Pradesh|Amethi": [
+    26.3057,
+    81.6607
+  ],
+  "Uttar Pradesh|Ghaziabad": [
+    28.7575,
+    77.4504
+  ],
+  "Uttar Pradesh|Sambhal": [
+    28.4712,
+    78.5823
+  ],
+  "Uttar Pradesh|Mahoba": [
+    25.3208,
+    79.652
+  ],
+  "Uttar Pradesh|Saharanpur": [
+    29.9386,
+    77.5516
+  ],
+  "Uttar Pradesh|Bijnor": [
+    29.3408,
+    78.447
+  ],
+  "Uttar Pradesh|Muzaffarnagar": [
+    29.4439,
+    77.72
+  ],
+  "Uttar Pradesh|Baghpat": [
+    29.0431,
+    77.3201
+  ],
+  "Uttar Pradesh|Meerut": [
+    29.0119,
+    77.7435
+  ],
+  "Uttar Pradesh|Moradabad": [
+    28.8688,
+    78.7912
+  ],
+  "Uttar Pradesh|Rampur": [
+    28.82,
+    79.0905
+  ],
+  "Uttar Pradesh|Shamli": [
+    29.489,
+    77.2827
+  ],
+  "Uttar Pradesh|Balrampur": [
+    27.3808,
+    82.4229
+  ],
+  "Uttar Pradesh|Hamirpur": [
+    25.7658,
+    79.8477
+  ],
+  "Uttar Pradesh|Pratapgarh": [
+    25.8889,
+    81.8739
+  ],
+  "Bihar|West Champaran": [
+    27.0322,
+    84.2943
+  ],
+  "Bihar|East Champaran": [
+    26.5847,
+    84.9871
+  ],
+  "Bihar|Sitamarhi": [
+    26.4919,
+    85.5271
+  ],
+  "Bihar|Sheohar": [
+    26.481,
+    85.3044
+  ],
+  "Bihar|Gopalganj": [
+    26.422,
+    84.4123
+  ],
+  "Bihar|Samastipur": [
+    25.7757,
+    85.9205
+  ],
+  "Bihar|Katihar": [
+    25.5561,
+    87.6952
+  ],
+  "Bihar|Khagaria": [
+    25.532,
+    86.5633
+  ],
+  "Bihar|Bhojpur": [
+    25.5166,
+    84.4977
+  ],
+  "Bihar|Buxar": [
+    25.4713,
+    84.0858
+  ],
+  "Bihar|Darbhanga": [
+    26.0955,
+    86.0316
+  ],
+  "Bihar|Saharsa": [
+    25.8192,
+    86.5535
+  ],
+  "Bihar|Kaimur": [
+    25.0768,
+    83.6106
+  ],
+  "Bihar|Rohtas": [
+    24.9849,
+    83.9596
+  ],
+  "Bihar|Jamui": [
+    24.7859,
+    86.2585
+  ],
+  "Bihar|Banka": [
+    24.8334,
+    86.7944
+  ],
+  "Bihar|Nawada": [
+    24.8294,
+    85.6306
+  ],
+  "Bihar|Gaya": [
+    24.6902,
+    84.9034
+  ],
+  "Bihar|Munger": [
+    25.2208,
+    86.5281
+  ],
+  "Bihar|Vaishali": [
+    25.7864,
+    85.4077
+  ],
+  "Bihar|Begusarai": [
+    25.5263,
+    86.1495
+  ],
+  "Bihar|Bhagalpur": [
+    25.3026,
+    87.0685
+  ],
+  "Bihar|Lakhisarai": [
+    25.156,
+    86.0781
+  ],
+  "Bihar|Sheikhpura": [
+    25.1191,
+    85.8314
+  ],
+  "Bihar|Arwal": [
+    25.1823,
+    84.6902
+  ],
+  "Bihar|Jehanabad": [
+    25.1684,
+    85.046
+  ],
+  "Bihar|Nalanda": [
+    25.2289,
+    85.4965
+  ],
+  "Bihar|Patna": [
+    25.411,
+    85.3257
+  ],
+  "Bihar|Saran": [
+    25.9002,
+    84.8084
+  ],
+  "Bihar|Siwan": [
+    26.1922,
+    84.3554
+  ],
+  "Bihar|Muzaffarpur": [
+    26.2047,
+    85.358
+  ],
+  "Bihar|Madhepura": [
+    25.7628,
+    86.8956
+  ],
+  "Bihar|Araria": [
+    26.197,
+    87.3331
+  ],
+  "Bihar|Supaul": [
+    26.2251,
+    86.7478
+  ],
+  "Bihar|Madhubani": [
+    26.3288,
+    86.1852
+  ],
+  "Bihar|Purnia": [
+    25.8303,
+    87.4701
+  ],
+  "Bihar|Kishanganj": [
+    26.2556,
+    87.9491
+  ],
+  "Bihar|Aurangabad": [
+    24.7614,
+    84.4371
+  ]
+}

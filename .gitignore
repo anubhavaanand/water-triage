@@ -18,3 +18,10 @@ data/*.db
 # bulk data files stay local, not in git
 data/raw/**/*.csv
 !data/raw/**/README.md
+
+# Large 3D Assets & heavy GeoJSON
+*.glb
+dashboard/assets/*.glb
+dashboard/assets/india_states.geojson
+*.log
+
