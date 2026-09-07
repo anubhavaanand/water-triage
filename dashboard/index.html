@@ -1009,7 +1009,13 @@ let INDIA_STATES = { features: [] };
 
 try {
   const [rData, rRivers, rCentroids, rStats, rStates] = await Promise.all([
-    fetch('data.json').then(r => r.json()).catch(() => ({})),
+    fetch('/api/dashboard-data').then(r => {
+      if (!r.ok) throw new Error('API unreachable');
+      return r.json();
+    }).catch(e => {
+      console.warn('Live API unavailable, falling back to static data.json', e);
+      return fetch('data.json').then(r => r.json()).catch(() => ({}));
+    }),
     fetch('assets/rivers_ganga_basin.json').then(r => r.json()).catch(() => ({ ganga_main: [], tributaries: {} })),
     fetch('assets/district_centroids.json').then(r => r.json()).catch(() => ({})),
     fetch('assets/national_state_stats.json').then(r => r.json()).catch(() => ({})),

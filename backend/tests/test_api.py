@@ -62,3 +62,20 @@ def test_recompute_idempotent(db, client):
     compute_scores(db)
     after = client.get("/api/priority").json()[0]
     assert before["score"] == after["score"]
+
+
+def test_dashboard_data_endpoint(client):
+    res = client.get("/api/dashboard-data")
+    assert res.status_code == 200
+    data = res.json()
+    assert "kpi" in data
+    assert "priority" in data
+    assert "details" in data
+    assert "state_bands" in data
+    assert "compare" in data
+    assert data["kpi"]["samples"] >= len(data["priority"])
+    if data["priority"]:
+        first_pid = str(data["priority"][0]["sample_id"])
+        assert first_pid in data["details"]
+        assert "readings" in data["details"][first_pid]
+
