@@ -1,0 +1,25 @@
+{
+  "name": "water-triage",
+  "version": "1.0.0",
+  "description": "**A Data-Driven Water Quality Risk Scoring and Intervention Prioritization System for Uttar Pradesh and Bihar**",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anubhavaanand/water-triage.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/anubhavaanand/water-triage/issues"
+  },
+  "homepage": "https://github.com/anubhavaanand/water-triage#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.5.0"
+  }
+}

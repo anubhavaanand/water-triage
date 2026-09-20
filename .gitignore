@@ -25,3 +25,12 @@ dashboard/assets/*.glb
 dashboard/assets/india_states.geojson
 *.log
 
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+# Playwright CLI output (may contain credentials)
+.playwright-cli/

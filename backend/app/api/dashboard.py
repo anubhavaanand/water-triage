@@ -115,7 +115,7 @@ def get_dashboard_data(db: Session = Depends(get_session)):
         state_bands[r.state][band] += r.cnt
 
     compare_rows = db.execute(text("""
-        SELECT s.name as state, COUNT(rs.id) as samples, ROUND(AVG(rs.score)::numeric, 2) as avg_score
+        SELECT s.name as state, COUNT(rs.id) as samples, ROUND(CAST(AVG(rs.score) AS NUMERIC), 2) as avg_score
         FROM risk_scores rs
         JOIN water_samples ws ON rs.sample_id = ws.id
         JOIN villages v ON ws.village_id = v.id
