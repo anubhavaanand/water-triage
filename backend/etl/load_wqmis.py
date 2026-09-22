@@ -4,6 +4,7 @@ Run: cd backend && DATABASE_URL=... uv run python -m etl.load_wqmis
 """
 
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -31,17 +32,23 @@ PARAM_ALIASES = {
     "e.coli": "e_coli",
     "e coli": "e_coli",
     "total coliform": "total_coliform",
+    "sulphate": "sulphate",
+    "sulfate": "sulphate",
 }
+
+_PARENTHETICAL = re.compile(r"\([^)]*\)")
+
+
+def normalize_param(label: str) -> str:
+    """Lowercase, drop assay markers and the '(as XX)' analyte qualifier."""
+    norm = _PARENTHETICAL.sub(" ", label.lower().replace("*", " "))
+    return re.sub(r"\s+", " ", norm).strip()
 
 
 def map_param(label: str | None) -> str | None:
     if not label:
         return None
-    norm = label.lower().replace("*", "").strip()
-    for alias, key in PARAM_ALIASES.items():
-        if alias in norm:
-            return key
-    return None
+    return PARAM_ALIASES.get(normalize_param(label))
 
 
 def parse_dt(value):

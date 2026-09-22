@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_session
-from ..engine.recurrence_service import list_recurrent_villages, village_recurrence
+from ..engine.recurrence_service import list_recurrent_districts, village_recurrence
 
 router = APIRouter(prefix="/recurrence", tags=["recurrence"])
 
@@ -30,7 +30,7 @@ def get_village_recurrence(village_id: int, db: Session = Depends(get_session)):
 def list_recurrent(
     limit: int = Query(50, le=200), db: Session = Depends(get_session)
 ):
-    rows = list_recurrent_villages(db, limit=limit)
+    rows = list_recurrent_districts(db, limit=limit)
     return [
         {
             "village_id": r.village_id,

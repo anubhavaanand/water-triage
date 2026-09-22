@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaterTriage // Methodology</title>
+    <link rel="stylesheet" href="css/tactical-core.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        aviation: '#FF2A2A',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-[100dvh] flex flex-col p-4 md:p-8 selection:bg-aviation selection:text-white">
+    
+    <div class="noise-overlay"></div>
+    <div class="scanlines"></div>
+
+    <header class="w-full flex justify-between items-end mb-12 relative z-10 border-b border-white/10 pb-4">
+        <div>
+            <h1 class="text-3xl md:text-5xl font-bold tracking-tighter uppercase">Methodology</h1>
+        </div>
+        <div class="absolute -top-4 right-0">
+            <a href="index.html" class="tactical-btn">
+                RETURN TO HUB
+                <span class="btn-icon">→</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl mx-auto w-full relative z-10 fade-up">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <div class="flex flex-col gap-6">
+                <h2 class="text-xl font-bold text-aviation border-b border-white/10 pb-2">BIS IS 10500 Scoring Model</h2>
+                <p class="text-sm text-white/70 leading-relaxed">
+                    The core algorithmic engine derives its severity model from the Bureau of Indian Standards (BIS IS 10500). Parameters are heavily weighted based on acute physiological hazard.
+                </p>
+                <div class="doppelrand">
+                    <div class="doppelrand-inner p-6">
+                        <ul class="text-sm space-y-3">
+                            <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-white/50">Arsenic</span> <span class="font-bold text-aviation">1.0</span></li>
+                            <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-white/50">E. coli</span> <span class="font-bold text-aviation">0.9</span></li>
+                            <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-white/50">Fluoride</span> <span class="font-bold text-white">0.8</span></li>
+                            <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-white/50">Nitrate</span> <span class="font-bold text-white">0.7</span></li>
+                            <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-white/50">Iron</span> <span class="font-bold text-white">0.4</span></li>
+                            <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-white/50">Turbidity / TDS</span> <span class="font-bold text-white/70">0.3</span></li>
+                            <li class="flex justify-between"><span class="text-white/50">pH</span> <span class="font-bold text-white/70">0.2</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-6">
+                <h2 class="text-xl font-bold text-white/80 border-b border-white/10 pb-2">Data Acquisition & Pipeline</h2>
+                <p class="text-sm text-white/70 leading-relaxed">
+                    The backend relies on a highly-optimized, multi-threaded WQMIS crawler extracting live water quality laboratory reports across Uttar Pradesh and Bihar.
+                </p>
+                
+                <div class="doppelrand h-full">
+                    <div class="doppelrand-inner p-6 flex flex-col justify-center gap-4 text-center">
+                        <div class="text-3xl font-bold tracking-tighter">90,000+</div>
+                        <div class="text-[10px] uppercase text-white/40 tracking-widest">Projected Sample Capacity</div>
+                        
+                        <div class="w-full h-px bg-white/10 my-4 relative">
+                            <div class="absolute left-1/2 -translate-x-1/2 -top-2 bg-black px-2 text-[10px] text-aviation">ETL PIPELINE</div>
+                        </div>
+
+                        <div class="text-xs text-left text-white/60 space-y-2">
+                            <p>▹ Continuous range enumeration across 1.5M IDs</p>
+                            <p>▹ Exponential backoff & throttling protocols</p>
+                            <p>▹ PostgreSQL district-level aggregation</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>
