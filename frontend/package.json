@@ -16,5 +16,9 @@
     "svelte": "^5.57.0",
     "tailwindcss": "^4.3.3",
     "vite": "^8.3.0"
+  },
+  "dependencies": {
+    "@chenglou/pretext": "^0.0.9",
+    "three": "^0.186.0"
   }
 }

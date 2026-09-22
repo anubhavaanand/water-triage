@@ -1,0 +1,281 @@
+{
+  "Andhra Pradesh": {
+    "total_affected_habitations": 2888,
+    "districts_affected": 21,
+    "dominant_contaminant": "Fluoride",
+    "parameters": {
+      "Fluoride": 2193,
+      "Salinity": 695
+    }
+  },
+  "Arunachal Pradesh": {
+    "total_affected_habitations": 612,
+    "districts_affected": 9,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 612
+    }
+  },
+  "Assam": {
+    "total_affected_habitations": 79910,
+    "districts_affected": 25,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 74098,
+      "Arsenic": 4775,
+      "Fluoride": 1037
+    }
+  },
+  "Bihar": {
+    "total_affected_habitations": 92336,
+    "districts_affected": 28,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 69970,
+      "Fluoride": 16150,
+      "Arsenic": 6215,
+      "Nitrate": 1
+    }
+  },
+  "Chattisgarh": {
+    "total_affected_habitations": 25062,
+    "districts_affected": 17,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 24439,
+      "Salinity": 346,
+      "Fluoride": 257,
+      "Arsenic": 12,
+      "Nitrate": 8
+    }
+  },
+  "Chhattisgarh": {
+    "total_affected_habitations": 8815,
+    "districts_affected": 24,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 8339,
+      "Fluoride": 313,
+      "Salinity": 163
+    }
+  },
+  "Gujarat": {
+    "total_affected_habitations": 2092,
+    "districts_affected": 19,
+    "dominant_contaminant": "Fluoride",
+    "parameters": {
+      "Fluoride": 804,
+      "Nitrate": 714,
+      "Salinity": 573,
+      "Iron": 1
+    }
+  },
+  "Haryana": {
+    "total_affected_habitations": 262,
+    "districts_affected": 8,
+    "dominant_contaminant": "Fluoride",
+    "parameters": {
+      "Fluoride": 244,
+      "Salinity": 18
+    }
+  },
+  "Himachal Pradesh": {
+    "total_affected_habitations": 88,
+    "districts_affected": 3,
+    "dominant_contaminant": "Salinity",
+    "parameters": {
+      "Salinity": 72,
+      "Iron": 8,
+      "Arsenic": 8
+    }
+  },
+  "Jammu And Kashmir": {
+    "total_affected_habitations": 67,
+    "districts_affected": 12,
+    "dominant_contaminant": "Salinity",
+    "parameters": {
+      "Salinity": 40,
+      "Iron": 23,
+      "Fluoride": 4
+    }
+  },
+  "Jharkhand": {
+    "total_affected_habitations": 3913,
+    "districts_affected": 24,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 3254,
+      "Fluoride": 626,
+      "Arsenic": 28,
+      "Nitrate": 4,
+      "Salinity": 1
+    }
+  },
+  "Karnataka": {
+    "total_affected_habitations": 30824,
+    "districts_affected": 29,
+    "dominant_contaminant": "Fluoride",
+    "parameters": {
+      "Fluoride": 13156,
+      "Iron": 9896,
+      "Nitrate": 3858,
+      "Salinity": 3798,
+      "Arsenic": 116
+    }
+  },
+  "Kerala": {
+    "total_affected_habitations": 4800,
+    "districts_affected": 14,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 3161,
+      "Salinity": 906,
+      "Fluoride": 496,
+      "Nitrate": 237
+    }
+  },
+  "Madhya Pradesh": {
+    "total_affected_habitations": 14449,
+    "districts_affected": 27,
+    "dominant_contaminant": "Fluoride",
+    "parameters": {
+      "Fluoride": 12762,
+      "Salinity": 1239,
+      "Iron": 435,
+      "Nitrate": 13
+    }
+  },
+  "Maharashtra": {
+    "total_affected_habitations": 12480,
+    "districts_affected": 32,
+    "dominant_contaminant": "Fluoride",
+    "parameters": {
+      "Fluoride": 4184,
+      "Nitrate": 3707,
+      "Iron": 2751,
+      "Salinity": 1837,
+      "Arsenic": 1
+    }
+  },
+  "Manipur": {
+    "total_affected_habitations": 14,
+    "districts_affected": 2,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 14
+    }
+  },
+  "Meghalaya": {
+    "total_affected_habitations": 427,
+    "districts_affected": 5,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 425,
+      "Fluoride": 2
+    }
+  },
+  "Nagaland": {
+    "total_affected_habitations": 618,
+    "districts_affected": 5,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 618
+    }
+  },
+  "Orissa": {
+    "total_affected_habitations": 68620,
+    "districts_affected": 30,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 59905,
+      "Salinity": 6368,
+      "Fluoride": 2212,
+      "Nitrate": 133,
+      "Arsenic": 2
+    }
+  },
+  "Puducherry": {
+    "total_affected_habitations": 17,
+    "districts_affected": 1,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 16,
+      "Salinity": 1
+    }
+  },
+  "Punjab": {
+    "total_affected_habitations": 1056,
+    "districts_affected": 15,
+    "dominant_contaminant": "Salinity",
+    "parameters": {
+      "Salinity": 894,
+      "Fluoride": 102,
+      "Iron": 60
+    }
+  },
+  "Rajasthan": {
+    "total_affected_habitations": 131417,
+    "districts_affected": 32,
+    "dominant_contaminant": "Salinity",
+    "parameters": {
+      "Salinity": 87137,
+      "Fluoride": 40417,
+      "Nitrate": 3513,
+      "Iron": 263,
+      "Arsenic": 87
+    }
+  },
+  "Tamil Nadu": {
+    "total_affected_habitations": 3164,
+    "districts_affected": 29,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 2119,
+      "Salinity": 852,
+      "Nitrate": 116,
+      "Fluoride": 77
+    }
+  },
+  "Tripura": {
+    "total_affected_habitations": 26235,
+    "districts_affected": 8,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 26235
+    }
+  },
+  "Uttar Pradesh": {
+    "total_affected_habitations": 9918,
+    "districts_affected": 65,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 3376,
+      "Fluoride": 2646,
+      "Arsenic": 2069,
+      "Salinity": 1808,
+      "Nitrate": 19
+    }
+  },
+  "Uttarakhand": {
+    "total_affected_habitations": 57,
+    "districts_affected": 4,
+    "dominant_contaminant": "Iron",
+    "parameters": {
+      "Iron": 35,
+      "Arsenic": 10,
+      "Fluoride": 6,
+      "Nitrate": 6
+    }
+  },
+  "West Bengal": {
+    "total_affected_habitations": 30101,
+    "districts_affected": 25,
+    "dominant_contaminant": "Arsenic",
+    "parameters": {
+      "Arsenic": 12382,
+      "Iron": 12191,
+      "Fluoride": 3353,
+      "Salinity": 2175
+    }
+  }
+}
