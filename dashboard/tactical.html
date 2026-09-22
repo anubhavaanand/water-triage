@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaterTriage // Tactical Command</title>
+    <link rel="stylesheet" href="css/tactical-core.css">
+    <!-- JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS (CDN for standalone) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        crt: '#050505',
+                        grid: '#1A1A1A',
+                        phosphor: '#EAEAEA',
+                        muted: '#71717A',
+                        aviation: '#FF2A2A',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-[100dvh] flex flex-col p-4 md:p-8 selection:bg-aviation selection:text-white">
+    
+    <div class="noise-overlay"></div>
+    <div class="scanlines"></div>
+
+    <!-- Header -->
+    <header class="w-full flex justify-between items-end mb-8 relative z-10 border-b border-white/10 pb-4">
+        <div class="absolute -top-4 right-0">
+            <a href="index.html" class="tactical-btn">
+                RETURN TO HUB
+                <span class="btn-icon">→</span>
+            </a>
+        </div>
+        <div>
+            <div class="text-[10px] text-aviation uppercase tracking-[0.2em] font-bold mb-2 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-aviation animate-pulse"></span>
+                System // Active
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold tracking-tighter uppercase">WaterTriage<span class="text-muted">_Radar</span></h1>
+        </div>
+        <div class="text-right text-muted text-xs uppercase tracking-widest flex flex-col items-end">
+            <span>Grid: UP_BIHAR_SEC_01</span>
+            <span id="live-clock">00:00:00</span>
+        </div>
+    </header>
+
+    <!-- Asymmetric CSS Grid Layout -->
+    <main class="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 relative z-10 h-full">
+        
+        <!-- Left Panel: Threat Feed (col-span-3) -->
+        <aside class="md:col-span-3 flex flex-col gap-4">
+            <div class="text-xs uppercase tracking-widest text-muted border-b border-white/5 pb-2">
+                /// Threat Feed
+            </div>
+            <div class="doppelrand flex-1">
+                <div class="doppelrand-inner p-4 flex flex-col gap-2 overflow-y-auto max-h-[70vh]" id="threat-feed">
+                    <div class="text-muted text-xs flex items-center gap-2">
+                        Intercepting signal<span class="cursor-blink">_</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Panel: WebGL Radar (col-span-6) -->
+        <section class="md:col-span-6 flex flex-col gap-4">
+            <div class="text-xs uppercase tracking-widest text-muted border-b border-white/5 pb-2 flex justify-between">
+                <span>/// Geospatial Telemetry</span>
+                <span class="text-aviation glitch-hover cursor-pointer" onclick="fetchData()">[ REFRESH ]</span>
+            </div>
+            <div class="doppelrand flex-1 min-h-[500px] webgl-container">
+                <div class="doppelrand-inner relative overflow-hidden bg-black">
+                    <!-- Crosshairs -->
+                    <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-10 opacity-20">
+                        <div class="w-full h-px bg-white absolute"></div>
+                        <div class="h-full w-px bg-white absolute"></div>
+                        <div class="w-32 h-32 border border-white rounded-full absolute"></div>
+                    </div>
+                    <!-- The Map iframe -->
+                    <iframe id="map-frame" src="map.html?mode=regionalsrc="index.html?mode=regional&embed=true"embed=true" class="w-full h-full border-0 radar-filter absolute inset-0"></iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Recurrence Radar (col-span-3) -->
+        <aside class="md:col-span-3 flex flex-col gap-4">
+            <div class="text-xs uppercase tracking-widest text-muted border-b border-white/5 pb-2">
+                /// Chronic Hotspots
+            </div>
+            <div class="doppelrand flex-1">
+                <div class="doppelrand-inner p-4 flex flex-col gap-2 overflow-y-auto max-h-[70vh]" id="recurrence-feed">
+                    <div class="text-muted text-xs flex items-center gap-2">
+                        Scanning registry<span class="cursor-blink">_</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <script>
+        // Live Clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').textContent = now.toISOString().split('T')[1].split('.')[0] + ' UTC';
+        }, 1000);
+
+        // Modern Web Guidance: Efficient Background Processing
+        const mapContainer = document.querySelector('.webgl-container');
+        const mapFrame = document.getElementById('map-frame');
+        
+        if ('contentVisibility' in document.documentElement.style) {
+            mapContainer.addEventListener('contentvisibilityautostatechange', (event) => {
+                if (event.skipped) {
+                    // Frame is off-screen, pause it by removing src or posting message
+                    // We'll post a message to the iframe to pause Three.js (if supported)
+                    // For now, it naturally saves rendering pipeline just by content-visibility
+                }
+            });
+        }
+
+        // Generate Threat Feed Item
+        function createThreatItem(item, delayIndex) {
+            const isCrit = item.band === 'Critical';
+            return `
+                <div class="p-3 border border-white/5 bg-black/40 hover:bg-white/5 transition-colors duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] fade-up cursor-pointer glitch-hover group" style="animation-delay: ${delayIndex * 50}ms">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-xs font-bold ${isCrit ? 'text-aviation' : 'text-phosphor'}">
+                            ${item.district.substring(0,12)}
+                        </span>
+                        <span class="text-[10px] bg-white/10 px-1 rounded-sm">${item.score}</span>
+                    </div>
+                    <div class="text-[10px] text-muted truncate">
+                        Loc: ${item.village || 'N/A'}
+                    </div>
+                    <div class="text-[9px] text-muted mt-2 flex justify-between border-t border-white/5 pt-1">
+                        <span>P: ${item.primary_param || 'UNK'}</span>
+                        <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">&gt;&gt;</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate Recurrence Item
+        function createRecurrenceItem(item, delayIndex) {
+            const isChronic = item.verdict === 'chronic-hotspot';
+            return `
+                <div class="p-3 border ${isChronic ? 'border-aviation/30' : 'border-white/5'} bg-black/40 hover:bg-white/5 transition-colors duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] fade-up cursor-pointer group" style="animation-delay: ${delayIndex * 50}ms">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-xs font-bold ${isChronic ? 'text-aviation' : 'text-phosphor'}">
+                            ${item.district}
+                        </span>
+                        <span class="text-[10px] ${isChronic ? 'bg-aviation/20 text-aviation' : 'bg-white/10'} px-1 rounded-sm">${item.recurrence_score}</span>
+                    </div>
+                    <div class="text-[10px] text-muted truncate">
+                        State: ${item.state}
+                    </div>
+                    <div class="text-[9px] text-muted mt-2 border-t border-white/5 pt-1">
+                        Persistent: ${item.persistent_params.join(', ') || 'None'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fetch Data (Modern Web Guidance: Deprioritize Background Fetches)
+        async function fetchData() {
+            const feed = document.getElementById('threat-feed');
+            const recFeed = document.getElementById('recurrence-feed');
+            
+            feed.innerHTML = `<div class="text-muted text-xs">Intercepting...<span class="cursor-blink">_</span></div>`;
+            recFeed.innerHTML = `<div class="text-muted text-xs">Scanning...<span class="cursor-blink">_</span></div>`;
+
+            try {
+                // Priority: 'low' prevents network contention
+                const [prioRes, recRes] = await Promise.all([
+                    fetch('http://localhost:8000/api/priority?limit=20', { priority: 'low' }),
+                    fetch('http://localhost:8000/api/recurrence?limit=10', { priority: 'low' })
+                ]);
+
+                const prioData = await prioRes.json();
+                const recData = await recRes.json();
+
+                // Mount Threat Feed
+                feed.innerHTML = '';
+                if (prioData.length === 0) {
+                    feed.innerHTML = `<div class="text-muted text-xs">No threats detected.</div>`;
+                } else {
+                    prioData.forEach((item, i) => {
+                        feed.innerHTML += createThreatItem(item, i);
+                    });
+                }
+
+                // Mount Recurrence Feed
+                recFeed.innerHTML = '';
+                if (recData.length === 0) {
+                    recFeed.innerHTML = `<div class="text-muted text-xs">No chronic data found.</div>`;
+                } else {
+                    recData.forEach((item, i) => {
+                        recFeed.innerHTML += createRecurrenceItem(item, i);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                feed.innerHTML = `<div class="text-aviation text-xs">[ ERROR ] CONNECTION FAILED</div>`;
+                recFeed.innerHTML = `<div class="text-aviation text-xs">[ ERROR ] CONNECTION FAILED</div>`;
+            }
+        }
+
+        // Initial Boot
+        setTimeout(fetchData, 800);
+    </script>
+</body>
+</html>
