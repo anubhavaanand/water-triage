@@ -1,4 +1,5 @@
 <script>
+    import { onMount } from 'svelte';
     import WebGLRadar from './lib/components/WebGLRadar.svelte';
     import ThreatFeed from './lib/components/ThreatFeed.svelte';
     import Landing from './lib/pages/Landing.svelte';
@@ -8,7 +9,6 @@
     let currentPage = 'home'; // home, radar, methodology, findings
 
     function navigate(page) {
-        // use document.startViewTransition if available for smooth SPA routing
         if (document.startViewTransition) {
             document.startViewTransition(() => {
                 currentPage = page;
@@ -18,10 +18,20 @@
         }
     }
 
-    let dummyItems = [
-        { id: 1, district: 'PATNA', state: 'BIHAR', score: 82.5 },
-        { id: 2, district: 'LUCKNOW', state: 'UTTAR PRADESH', score: 45.0 }
+    let feedItems = [
+        // Dummy items shown briefly until the API loads
+        { id: 1, district: 'CONNECTING...', state: 'SYSTEM', score: 0.0 }
     ];
+
+    onMount(() => {
+        const handleDataLoaded = (e) => {
+            if (e.detail && e.detail.priority) {
+                feedItems = e.detail.priority;
+            }
+        };
+        window.addEventListener('triage-data-loaded', handleDataLoaded);
+        return () => window.removeEventListener('triage-data-loaded', handleDataLoaded);
+    });
 </script>
 
 <div class="noise-overlay"></div>
@@ -43,7 +53,7 @@
 
         <div class="flex flex-1 gap-4 overflow-hidden">
             <div class="w-96 pointer-events-auto h-full">
-                <ThreatFeed items={dummyItems} />
+                <ThreatFeed items={feedItems} />
             </div>
             <div class="flex-1 rounded border border-white/10 relative overflow-hidden pointer-events-auto h-full">
                 <WebGLRadar />

@@ -28,6 +28,7 @@ try {
   ]);
   if (rData.priority) {
     DATA = rData;
+    window.dispatchEvent(new CustomEvent("triage-data-loaded", { detail: DATA }));
     const nf = new Intl.NumberFormat('en-IN');
     if (DATA.kpi) {
       const elTotal = document.getElementById('kpi-total');
