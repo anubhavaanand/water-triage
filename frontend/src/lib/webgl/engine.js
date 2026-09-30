@@ -14,10 +14,9 @@ let NATIONAL_STATS = {};
 let INDIA_STATES = { features: [] };
 
 try {
-  const isStaticHost = window.location.port !== '8000';
-  const dataFetchPromise = isStaticHost
-    ? fetch('data.json').then(r => r.json()).catch(() => ({}))
-    : fetch('/api/dashboard-data').then(r => r.ok ? r.json() : fetch('data.json').then(res => res.json())).catch(() => fetch('data.json').then(res => res.json()));
+  const dataFetchPromise = fetch('/api/dashboard-data')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .catch(() => fetch('data.json').then(r => r.json()).catch(() => ({})));
 
   const [rData, rRivers, rCentroids, rStats, rStates] = await Promise.all([
     dataFetchPromise,
