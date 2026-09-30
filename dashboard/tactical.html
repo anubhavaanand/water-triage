@@ -89,7 +89,7 @@
                         <div class="w-32 h-32 border border-white rounded-full absolute"></div>
                     </div>
                     <!-- The Map iframe -->
-                    <iframe id="map-frame" src="map.html?mode=regionalsrc="index.html?mode=regional&embed=true"embed=true" class="w-full h-full border-0 radar-filter absolute inset-0"></iframe>
+                    <iframe id="map-frame" src="map.html?mode=regional&embed=true" class="w-full h-full border-0 radar-filter absolute inset-0"></iframe>
                 </div>
             </div>
         </section>
@@ -145,10 +145,10 @@
                     <div class="text-[10px] text-muted truncate">
                         Loc: ${item.village || 'N/A'}
                     </div>
-                    <div class="text-[9px] text-muted mt-2 flex justify-between border-t border-white/5 pt-1">
-                        <span>P: ${item.primary_param || 'UNK'}</span>
-                        <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">&gt;&gt;</span>
-                    </div>
+                <div class="text-[9px] text-muted mt-2 flex justify-between border-t border-white/5 pt-1">
+                    <span>P: ${item.worst || item.worst_parameter || 'UNK'}</span>
+                    <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">&gt;&gt;</span>
+                </div>
                 </div>
             `;
         }
@@ -183,14 +183,22 @@
             recFeed.innerHTML = `<div class="text-muted text-xs">Scanning...<span class="cursor-blink">_</span></div>`;
 
             try {
-                // Priority: 'low' prevents network contention
-                const [prioRes, recRes] = await Promise.all([
-                    fetch('http://localhost:8000/api/priority?limit=20', { priority: 'low' }),
-                    fetch('http://localhost:8000/api/recurrence?limit=10', { priority: 'low' })
-                ]);
+                const isLocalBackend = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                let prioData = [];
+                let recData = [];
 
-                const prioData = await prioRes.json();
-                const recData = await recRes.json();
+                if (isLocalBackend) {
+                    const [prioRes, recRes] = await Promise.all([
+                        fetch('/api/priority?limit=20', { priority: 'low' }),
+                        fetch('/api/recurrence?limit=10', { priority: 'low' })
+                    ]);
+                    prioData = await prioRes.json();
+                    recData = await recRes.json();
+                } else {
+                    const baked = await fetch('data.json').then(r => r.json()).catch(() => ({}));
+                    prioData = (baked.priority || []).slice(0, 20);
+                    recData = baked.recurrence || [];
+                }
 
                 // Mount Threat Feed
                 feed.innerHTML = '';
