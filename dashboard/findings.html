@@ -40,10 +40,10 @@
         
         <!-- Top Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="doppelrand"><div class="doppelrand-inner p-4 text-center"><div class="text-2xl font-bold">1,741</div><div class="text-[10px] text-white/50 uppercase">Scored Samples</div></div></div>
-            <div class="doppelrand"><div class="doppelrand-inner p-4 text-center"><div class="text-2xl font-bold text-aviation">89</div><div class="text-[10px] text-white/50 uppercase">Critical (≥75)</div></div></div>
-            <div class="doppelrand"><div class="doppelrand-inner p-4 text-center"><div class="text-2xl font-bold text-white/80">392</div><div class="text-[10px] text-white/50 uppercase">High (50-74)</div></div></div>
-            <div class="doppelrand"><div class="doppelrand-inner p-4 text-center"><div class="text-2xl font-bold text-white/40">100,690</div><div class="text-[10px] text-white/50 uppercase">Historical Events</div></div></div>
+            <div class="doppelrand"><div class="doppelrand-inner p-4 text-center"><div class="text-2xl font-bold" id="f-samples">1,741</div><div class="text-[10px] text-white/50 uppercase">Scored Samples</div></div></div>
+            <div class="doppelrand"><div class="doppelrand-inner p-4 text-center"><div class="text-2xl font-bold text-aviation" id="f-critical">89</div><div class="text-[10px] text-white/50 uppercase">Critical (≥75)</div></div></div>
+            <div class="doppelrand"><div class="doppelrand-inner p-4 text-center"><div class="text-2xl font-bold text-white/80" id="f-high">392</div><div class="text-[10px] text-white/50 uppercase">High (50-74)</div></div></div>
+            <div class="doppelrand"><div class="doppelrand-inner p-4 text-center"><div class="text-2xl font-bold text-white/40" id="f-events">100,690</div><div class="text-[10px] text-white/50 uppercase">Historical Events</div></div></div>
         </div>
 
         <!-- State Comparison -->
@@ -53,13 +53,13 @@
             <div class="doppelrand">
                 <div class="doppelrand-inner p-8">
                     <h2 class="text-2xl font-bold mb-6 flex justify-between border-b border-white/10 pb-2">
-                        Uttar Pradesh <span class="text-white/40">N=966</span>
+                        Uttar Pradesh <span class="text-white/40" id="f-up-n">N=966</span>
                     </h2>
                     
                     <div class="space-y-6">
                         <div>
                             <div class="text-[10px] uppercase text-white/50 mb-1">Mean Composite Risk Score</div>
-                            <div class="text-4xl font-bold">12.68</div>
+                            <div class="text-4xl font-bold" id="f-up-avg">12.68</div>
                         </div>
 
                         <div>
@@ -75,13 +75,13 @@
             <div class="doppelrand">
                 <div class="doppelrand-inner p-8">
                     <h2 class="text-2xl font-bold mb-6 flex justify-between border-b border-white/10 pb-2">
-                        Bihar <span class="text-white/40">N=775</span>
+                        Bihar <span class="text-white/40" id="f-bi-n">N=775</span>
                     </h2>
                     
                     <div class="space-y-6">
                         <div>
                             <div class="text-[10px] uppercase text-white/50 mb-1">Mean Composite Risk Score</div>
-                            <div class="text-4xl font-bold text-aviation">18.36</div>
+                            <div class="text-4xl font-bold text-aviation" id="f-bi-avg">18.36</div>
                             <p class="text-[10px] mt-1 text-aviation/80">Significantly higher aggregate risk than UP.</p>
                         </div>
 
@@ -97,6 +97,46 @@
         </div>
 
     </main>
+
+    <script>
+        async function loadFindings() {
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            let data = {};
+            try {
+                if (isLocal) {
+                    const r = await fetch('/api/dashboard-data');
+                    if (r.ok) data = await r.json();
+                }
+                if (!data.kpi) {
+                    const r = await fetch('data.json');
+                    if (r.ok) data = await r.json();
+                }
+            } catch {}
+
+            const nf = new Intl.NumberFormat('en-IN');
+            const kpi = data.kpi || {};
+            const compare = data.compare || [];
+
+            const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+            setText('f-samples', nf.format(kpi.samples || 1741));
+            setText('f-critical', nf.format(kpi.critical || 89));
+            setText('f-high', nf.format(kpi.high || 392));
+            setText('f-events', nf.format(data.registry?.events || 100690));
+
+            const up = compare.find(s => s.state === 'Uttar Pradesh');
+            const bihar = compare.find(s => s.state === 'Bihar');
+            if (up) {
+                setText('f-up-n', nf.format(up.samples));
+                setText('f-up-avg', up.avg != null ? up.avg.toFixed(2) : '12.68');
+            }
+            if (bihar) {
+                setText('f-bi-n', nf.format(bihar.samples));
+                setText('f-bi-avg', bihar.avg != null ? bihar.avg.toFixed(2) : '18.36');
+            }
+        }
+        loadFindings();
+    </script>
 
 </body>
 </html>
