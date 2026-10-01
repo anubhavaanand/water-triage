@@ -4,7 +4,7 @@ services:
     container_name: watertriage-db
     environment:
       POSTGRES_USER: jjm_user
-      POSTGRES_PASSWORD: jjm_password
+      POSTGRES_PASSWORD: D0hL5JJbc8JazKfcXKI8
       POSTGRES_DB: jjm_triage
     ports:
       - "5432:5432"
@@ -22,7 +22,7 @@ services:
       dockerfile: backend/Dockerfile
     container_name: watertriage-backend
     environment:
-      DATABASE_URL: postgresql://jjm_user:jjm_password@postgres:5432/jjm_triage
+      DATABASE_URL: postgresql://jjm_user:D0hL5JJbc8JazKfcXKI8@postgres:5432/jjm_triage
     ports:
       - "8000:8000"
     depends_on:
