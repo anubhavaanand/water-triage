@@ -1302,7 +1302,7 @@ dialog#detail-modal::backdrop {
     </div>
     <div class="badge-status" role="status" aria-live="polite">
       <div class="pulse-dot" aria-hidden="true"></div>
-      <span id="stat-chip">869 Samples · 100,690 Historical</span>
+      <span id="stat-chip">1,741 Samples · 100,690 Historical</span>
     </div>
     <button type="button" class="btn-mesh" id="btn-toggle-mesh" aria-label="Toggle 16K high-resolution Earth mesh model" title="Toggle 16K High-Resolution Earth Model">
       16K&nbsp;Mesh: OFF
@@ -1333,19 +1333,19 @@ dialog#detail-modal::backdrop {
   <h2 class="section-label">Indo-Gangetic Basin</h2>
   <div class="kpi-grid" role="region" aria-label="Risk Severity KPIs">
     <div class="kpi-card crit">
-      <div class="kpi-num" id="kpi-crit">22</div>
+      <div class="kpi-num" id="kpi-crit">89</div>
       <div class="kpi-label">Critical (&ge;75)</div>
     </div>
     <div class="kpi-card high">
-      <div class="kpi-num" id="kpi-high">323</div>
+      <div class="kpi-num" id="kpi-high">392</div>
       <div class="kpi-label">High (50–74)</div>
     </div>
     <div class="kpi-card low">
-      <div class="kpi-num" id="kpi-low">515</div>
+      <div class="kpi-num" id="kpi-low">1,232</div>
       <div class="kpi-label">Low (&lt;25)</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-num" id="kpi-total">869</div>
+      <div class="kpi-num" id="kpi-total">1,741</div>
       <div class="kpi-label">Total Tested</div>
     </div>
   </div>
@@ -1744,17 +1744,16 @@ import { prepare, layout } from '@chenglou/pretext';
 /* ═══════════════════════════════════════════════════════════
    GLOBAL STATE & ASSET LOAD
    ═══════════════════════════════════════════════════════════ */
-let DATA = { kpi: { samples: 869, critical: 22, high: 323, low: 515 }, priority: [], details: {} };
+let DATA = { kpi: { samples: 1741, critical: 89, high: 392, low: 1232 }, priority: [], details: {} };
 let RIVERS = { ganga_main: [], tributaries: {} };
 let DISTRICT_CENTROIDS = {};
 let NATIONAL_STATS = {};
 let INDIA_STATES = { features: [] };
 
 try {
-  const isStaticHost = window.location.port !== '8000';
-  const dataFetchPromise = isStaticHost
-    ? fetch('data.json').then(r => r.json()).catch(() => ({}))
-    : fetch('/api/dashboard-data').then(r => r.ok ? r.json() : fetch('data.json').then(res => res.json())).catch(() => fetch('data.json').then(res => res.json()));
+  const dataFetchPromise = fetch('/api/dashboard-data')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .catch(() => fetch('data.json').then(r => r.json()).catch(() => ({})));
 
   const [rData, rRivers, rCentroids, rStats, rStates] = await Promise.all([
     dataFetchPromise,
@@ -2732,8 +2731,7 @@ function flyCameraTo(targetPos, targetLookAt, duration = 1.2) {
 }
 
 function updateURLParams() {
-  let params_embed = new URLSearchParams(window.location.search);
-  params.set('mode', CURRENT_MODE);
+  const params = new URLSearchParams(window.location.search);
 
   const activeChip = document.querySelector('.filter-chip.active');
   const activeFilter = activeChip ? activeChip.getAttribute('data-filter') : 'all';
