@@ -3,5 +3,6 @@ from .priority import router as priority_router
 from .recurrence import router as recurrence_router
 from .samples import router as samples_router
 from .dashboard import router as dashboard_router
+from .meta import router as meta_router
 
-all_routers = [dashboard_router, samples_router, districts_router, priority_router, recurrence_router]
+all_routers = [meta_router, dashboard_router, samples_router, districts_router, priority_router, recurrence_router]
