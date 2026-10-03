@@ -58,7 +58,7 @@ def get_metadata(db: Session = Depends(get_db)):
     for state_id, state_name in states:
         state_samples = db.execute(text("""
             SELECT ws.id, rs.score, rs.band,
-                   (SELECT COUNT(*) FROM readings r WHERE r.sample_id = ws.id) as n_params
+                   (SELECT COUNT(*) FROM readings r JOIN bis_parameters bp ON r.parameter_key = bp.key WHERE r.sample_id = ws.id AND bp.weight > 0) as n_scored_params
             FROM water_samples ws
             JOIN risk_scores rs ON rs.sample_id = ws.id
             JOIN villages v ON ws.village_id = v.id
@@ -99,7 +99,16 @@ def get_metadata(db: Session = Depends(get_db)):
         param_rates = db.execute(text("""
             SELECT r.parameter_key,
                    COUNT(r.id) as tested,
-                   SUM(CASE WHEN r.value > bp.acceptable_limit THEN 1 ELSE 0 END) as exceeding
+                   SUM(CASE WHEN 
+                       (bp.strategy = 'range' AND (r.value < bp.acceptable_limit OR r.value > COALESCE(bp.permissible_limit, 8.5)))
+                       OR (bp.strategy != 'range' AND r.value > bp.acceptable_limit)
+                   THEN 1 ELSE 0 END) as exceeding_acceptable,
+                   SUM(CASE WHEN 
+                       bp.permissible_limit IS NOT NULL AND 
+                       ((bp.strategy = 'range' AND (r.value < bp.acceptable_limit OR r.value > bp.permissible_limit))
+                        OR (bp.strategy != 'range' AND r.value > bp.permissible_limit))
+                   THEN 1 ELSE 0 END) as exceeding_permissible,
+                   MAX(CASE WHEN bp.permissible_limit IS NULL THEN 1 ELSE 0 END) as no_permissible
             FROM readings r
             JOIN water_samples ws ON r.sample_id = ws.id
             JOIN villages v ON ws.village_id = v.id
@@ -114,7 +123,8 @@ def get_metadata(db: Session = Depends(get_db)):
             prates.append({
                 "parameter_key": pr[0],
                 "tested": pr[1],
-                "exceeding": pr[2]
+                "exceeding_acceptable": pr[2],
+                "exceeding_permissible": "n/a" if pr[4] else pr[3]
             })
         
         state_comparison.append({
@@ -134,7 +144,10 @@ def get_metadata(db: Session = Depends(get_db)):
     # Overall top parameters
     top_params = db.execute(text("""
         SELECT s.name as state, r.parameter_key, COUNT(r.id) as tested,
-               SUM(CASE WHEN r.value > bp.acceptable_limit THEN 1 ELSE 0 END) as exceeding
+               SUM(CASE WHEN 
+                   (bp.strategy = 'range' AND (r.value < bp.acceptable_limit OR r.value > COALESCE(bp.permissible_limit, 8.5)))
+                   OR (bp.strategy != 'range' AND r.value > bp.acceptable_limit)
+               THEN 1 ELSE 0 END) as exceeding
         FROM readings r
         JOIN water_samples ws ON r.sample_id = ws.id
         JOIN villages v ON ws.village_id = v.id
@@ -200,7 +213,7 @@ def get_metadata(db: Session = Depends(get_db)):
             {
                 "id": "panel-size-bias",
                 "title": "Panel size drives score",
-                "detail": "Composite score depends on how many parameters were tested; one-parameter samples can reach 100 if that one parameter exceeds limits.",
+                "detail": "Composite score depends on how many parameters were tested; the artifact is concentrated in single-parameter iron samples rather than a monotone trend. one-parameter samples can reach 100 if that one parameter exceeds limits.",
                 "status": "accepted"
             },
             {
