@@ -91,3 +91,14 @@ def test_bands():
     assert band_for(60) == "High"
     assert band_for(30) == "Medium"
     assert band_for(24.99) == "Low"
+
+def test_iron_above_limit_escalates_to_high():
+    iron_fail = {
+        "iron": (0.35, BIS_10500["iron"]),
+        "ph": (7.0, BIS_10500["ph"])
+    }
+    score, band, worst = composite_score(iron_fail)
+    assert worst == "iron"
+    # An iron exceedance saturates severity at 1.0, 
+    # and any 1.0 severity bumps the floor band to High (or Critical for acute hazards).
+    assert band in {"High", "Critical"}
