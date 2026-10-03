@@ -119,12 +119,16 @@ def get_metadata(db: Session = Depends(get_db)):
         """), {"state_id": state_id}).fetchall()
         
         prates = []
+        no_relax = ["iron", "nitrate", "ph", "e_coli"]
         for pr in param_rates:
+            key = pr[0]
+            is_no_relax = key in no_relax
             prates.append({
-                "parameter_key": pr[0],
+                "parameter_key": key,
                 "tested": pr[1],
                 "exceeding_acceptable": pr[2],
-                "exceeding_permissible": "n/a" if pr[4] else pr[3]
+                "exceeding_permissible": None if is_no_relax else pr[3],
+                "has_permissible": not is_no_relax
             })
         
         state_comparison.append({
@@ -213,19 +217,43 @@ def get_metadata(db: Session = Depends(get_db)):
             {
                 "id": "panel-size-bias",
                 "title": "Panel size drives score",
-                "detail": "Composite score depends on how many parameters were tested; the artifact is concentrated in single-parameter iron samples rather than a monotone trend. one-parameter samples can reach 100 if that one parameter exceeds limits.",
+                "detail": "Composite score depends on how many parameters were tested; the artifact is concentrated in single-parameter iron samples rather than a monotone trend.",
                 "status": "accepted"
             },
             {
                 "id": "missing-district",
                 "title": "Unassigned samples",
-                "detail": f"{unassigned_dict.get('Uttar Pradesh', 0)} samples in UP are missing district identifiers (marked 'Not available').",
+                "detail": f"{unassigned_dict.get('Uttar Pradesh', 0) + unassigned_dict.get('Bihar', 0)} samples ({round((unassigned_dict.get('Uttar Pradesh', 0) + unassigned_dict.get('Bihar', 0)) / max(samples, 1) * 100, 1)}%) are missing district identifiers (marked 'Not available').",
                 "status": "open"
             },
             {
                 "id": "village-identifiability",
                 "title": "Village names unavailable",
-                "detail": "Over 98% of WQMIS samples lack a traceable village or gram panchayat name.",
+                "detail": f"Village names exist for {round((v_named / max(samples, 1)) * 100, 2)}% of samples.",
+                "status": "accepted"
+            },
+            {
+                "id": "non-random-crawl",
+                "title": "Non-random crawl",
+                "detail": "The crawl is non-random and the corpus covers 2022 only.",
+                "status": "accepted"
+            },
+            {
+                "id": "microbial-coverage",
+                "title": "Microbial coverage is thin",
+                "detail": "E. coli was tested in 45 samples (2.6%). The acute-hazard rule that forces Critical rests heavily on this.",
+                "status": "open"
+            },
+            {
+                "id": "iron-saturation",
+                "title": "Iron saturation design",
+                "detail": "IS 10500:2012 defines iron's acceptable limit at 0.3 mg/L with no relaxation, so any exceedance assigns full 1.0 severity.",
+                "status": "accepted"
+            },
+            {
+                "id": "medium-band-empty",
+                "title": "Near-empty Medium band",
+                "detail": "The step function makes scores bimodal; the Medium band contains only 1.6% of samples, meaning the four-band scheme behaves like three bands.",
                 "status": "accepted"
             }
         ],
