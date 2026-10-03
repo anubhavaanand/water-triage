@@ -1302,7 +1302,7 @@ dialog#detail-modal::backdrop {
     </div>
     <div class="badge-status" role="status" aria-live="polite">
       <div class="pulse-dot" aria-hidden="true"></div>
-      <span id="stat-chip">1,741 Samples · 100,690 Historical</span>
+      <span id="stat-chip">-- Samples · 100,690 Historical</span>
     </div>
     <button type="button" class="btn-mesh" id="btn-toggle-mesh" aria-label="Toggle 16K high-resolution Earth mesh model" title="Toggle 16K High-Resolution Earth Model">
       16K&nbsp;Mesh: OFF
@@ -1333,11 +1333,11 @@ dialog#detail-modal::backdrop {
   <h2 class="section-label">Indo-Gangetic Basin</h2>
   <div class="kpi-grid" role="region" aria-label="Risk Severity KPIs">
     <div class="kpi-card crit">
-      <div class="kpi-num" id="kpi-crit">89</div>
+      <div class="kpi-num" id="kpi-crit">--</div>
       <div class="kpi-label">Critical (&ge;75)</div>
     </div>
     <div class="kpi-card high">
-      <div class="kpi-num" id="kpi-high">392</div>
+      <div class="kpi-num" id="kpi-high">--</div>
       <div class="kpi-label">High (50–74)</div>
     </div>
     <div class="kpi-card low">
@@ -1345,7 +1345,7 @@ dialog#detail-modal::backdrop {
       <div class="kpi-label">Low (&lt;25)</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-num" id="kpi-total">1,741</div>
+      <div class="kpi-num" id="kpi-total">--</div>
       <div class="kpi-label">Total Tested</div>
     </div>
   </div>
@@ -1744,7 +1744,7 @@ import { prepare, layout } from '@chenglou/pretext';
 /* ═══════════════════════════════════════════════════════════
    GLOBAL STATE & ASSET LOAD
    ═══════════════════════════════════════════════════════════ */
-let DATA = { kpi: { samples: 1741, critical: 89, high: 392, low: 1232 }, priority: [], details: {} };
+let DATA = { kpi: { samples: 0, critical: 0, high: 0, low: 0 }, priority: [], details: {} };
 let RIVERS = { ganga_main: [], tributaries: {} };
 let DISTRICT_CENTROIDS = {};
 let NATIONAL_STATS = {};
@@ -2263,7 +2263,7 @@ const RIVER_DATA = {
     meanScore: '20.1 / 100',
     primaryHazard: 'TDS / Salinity &amp; Fluoride',
     badge: 'SW Tributary',
-    overview: 'Semi-arid interfluve with elevated groundwater salinity and localized fluoride dissolution in Agra, Mathura, and Etawah zones.',
+    overview: 'Semi-arid interfluve with elevated groundwater salinity and localized fluoride dissolution.',
     districts: ['Agra', 'Mathura', 'Firozabad', 'Etawah', 'Auraiya', 'Jalaun', 'Hamirpur', 'Banda', 'Baghpat', 'Ghaziabad', 'Gautam Buddha Nagar', 'Saharanpur', 'Shamli', 'Muzaffarnagar', 'Etah', 'Kaushambi'],
     labelPos: { lat: 27.2, lon: 78.2, sub: '1,376 km · SW Tributary' },
     cam: { x: -28, y: 28, z: 22, tx: -26, ty: 0, tz: -4 },
