@@ -2,7 +2,7 @@
 
 **Generated on:** 2026-10-04  
 **Audit Source:** `reports/facts.json` (queried live against PostgreSQL `watertriage-db` / `jjm_triage`)  
-**Git Commit:** `96d2803e0adf1195f64e03a420c67963b3d84d63` (`final-frontend-cleanup`)  
+**Git Commit:** `212e297` (`final-frontend-cleanup`)  
 
 ---
 
@@ -38,7 +38,7 @@
 - WPR-6 used an early crawl snapshot (755 samples).
 - WPR-7, WPR-8, and the originally submitted WPR-9 used an intermediate 1,245-sample snapshot that included 114 synthetic `SYN-*` demonstration rows and preceded crawler completion.
 - Once crawler reached ID 1,100,118 and synthetic rows were pruned, the verified canonical corpus stabilized at **1,741 real laboratory reports**.
-- A brief hallucination of a 47,243-row bulk table in Postgres was investigated, identified as an unverified external bulk insert, and purged via `TRUNCATE` and full reload from `records.jsonl`.
+- 47,243 rows were excluded: no traceable source file, and purged via `TRUNCATE` and full reload from `records.jsonl`.
 - `dashboard/data.json` had temporarily held 47,243 rows but was completely rebuilt to the canonical 1,741 rows in commit `96d2803`.
 
 ### Defect 3: The Recurrence Disconnect & Khokha Hotspot Claim
