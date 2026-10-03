@@ -18,6 +18,7 @@ class RiskScoreOut(BaseModel):
     score: float
     band: str
     worst_parameter: str | None
+    n_scored_params: int = 0
     computed_at: datetime
 
 
@@ -57,6 +58,7 @@ class PriorityItem(BaseModel):
     score: float
     band: str
     worst_parameter: str | None
+    n_scored_params: int = 0
     collected_on: datetime
 
 

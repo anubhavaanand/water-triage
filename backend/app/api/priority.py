@@ -11,29 +11,35 @@ router = APIRouter(tags=["scoring"])
 
 
 def priority_items(db: Session) -> list[PriorityItem]:
-    rows = (
-        db.query(RiskScore, WaterSample, Village, District, State)
-        .join(WaterSample, RiskScore.sample_id == WaterSample.id)
-        .join(Village, WaterSample.village_id == Village.id)
-        .join(District, Village.district_id == District.id)
-        .join(State, District.state_id == State.id)
-        .order_by(desc(RiskScore.score))
-        .all()
-    )
+    from sqlalchemy import text
+    query = text("""
+        SELECT ws.id as sample_id, v.name as village, v.block, d.name as district, s.name as state,
+               rs.score, rs.band, rs.worst_parameter, ws.collected_on,
+               (SELECT COUNT(*) FROM readings r JOIN bis_parameters bp ON r.parameter_key = bp.key WHERE r.sample_id = ws.id AND bp.weight > 0) as n_scored_params
+        FROM risk_scores rs
+        JOIN water_samples ws ON rs.sample_id = ws.id
+        JOIN villages v ON ws.village_id = v.id
+        JOIN districts d ON v.district_id = d.id
+        JOIN states s ON d.state_id = s.id
+        ORDER BY rs.score DESC
+    """)
+    rows = db.execute(query).fetchall()
+    
     items = [
         PriorityItem(
             rank=0,
-            sample_id=rs.sample_id,
-            village=village.name,
-            block=village.block,
-            district=district.name,
-            state=state.name,
-            score=rs.score,
-            band=rs.band,
-            worst_parameter=rs.worst_parameter,
-            collected_on=sample.collected_on,
+            sample_id=row[0],
+            village=row[1] or "Unknown",
+            block=row[2],
+            district=row[3],
+            state=row[4],
+            score=row[5],
+            band=row[6],
+            worst_parameter=row[7],
+            collected_on=row[8],
+            n_scored_params=row[9]
         )
-        for (rs, sample, village, district, state) in rows
+        for row in rows
     ]
     band_rank = {"Critical": 3, "High": 2, "Medium": 1, "Low": 0}
     items.sort(key=lambda i: (band_rank[i.band], i.score), reverse=True)
