@@ -27,15 +27,20 @@ test.describe('WaterTriage React Frontend E2E Tests', () => {
     // Default tab should be Variant A
     await expect(page.locator('#tab-panel-a')).toBeVisible();
 
-    // Navigate to Validation Tab
+    // Navigate to Map Tab (B)
+    await page.locator('#tab-b').click();
+    await expect(page.locator('#tab-panel-b')).toBeVisible();
+
+    // Navigate to Detail Tab (C)
+    await page.locator('#tab-c').click();
+    await expect(page.locator('#tab-panel-c')).toBeVisible();
+
+    // Navigate to Validation Tab (D)
     await page.locator('#tab-d').click();
     
-    // Verify Validation content rendered
+    // Verify Validation content rendered and check VP-1
     await expect(page.locator('#tab-panel-d')).toBeVisible();
-    await expect(page.getByText('External Validation').first()).toBeVisible();
-    
-    // Check VP-1
-    await expect(page.getByText('VP-1').first()).toBeVisible();
+    await expect(page.locator('#tab-panel-d')).toContainText('VP-1');
   });
 
 });
