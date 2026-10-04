@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wireframe Sketch · Designer's Whiteboard</title>
+  <style>
+    /* ─── tokens (seed-bound, Bugatti-adjacent for dark monochrome sketch) ─ */
+    :root {
+      --bg:      #f4f0e8;   /* aged graph-paper */
+      --surface: #faf7f0;   /* slightly lifted surface */
+      --fg:      #1c1812;   /* ink/marker near-black */
+      --muted:   #7a6e5a;   /* pencil mid-tone */
+      --border:  #c8b89a;   /* pencil stroke border */
+      --accent:  #2b6cb0;   /* one marker blue — used at most 2× per screen */
+
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft:     color-mix(in oklch, var(--fg) 6%, transparent);
+
+      /* sketch-specific tokens (all derived, no raw hex leaks) */
+      --ink:       color-mix(in oklch, var(--fg) 90%, transparent);
+      --pencil:    color-mix(in oklch, var(--muted) 60%, transparent);
+      --grid-line: color-mix(in oklch, var(--border) 45%, transparent);
+      --hatch:     color-mix(in oklch, var(--fg) 20%, transparent);
+      --yellow-note: #fef08a;   /* sticky note yellow — intentional single warm accent */
+      --pink-note:   #fda4af;   /* sticky note pink */
+      --green-note:  #86efac;   /* sticky note green */
+
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, 'Times New Roman', serif;
+      --font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono:    ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+      /* sketch hand font stack */
+      --font-sketch: 'Segoe Print', 'Comic Sans MS', 'Chalkboard SE', cursive;
+
+      --fs-h1: clamp(38px, 5vw, 62px);
+      --fs-h2: clamp(26px, 3.5vw, 40px);
+      --fs-h3: 20px;
+      --fs-lead: 17px;
+      --fs-body: 15px;
+      --fs-meta: 12px;
+
+      --gap-xs: 8px;
+      --gap-sm: 12px;
+      --gap-md: 20px;
+      --gap-lg: 32px;
+      --gap-xl: 52px;
+      --gap-2xl: 88px;
+      --container: 1080px;
+      --gutter: 32px;
+
+      --radius: 4px;
+      --radius-lg: 6px;
+      /* sketch uses intentionally imperfect borders via filter */
+    }
+
+    /* ─── reset ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: var(--fs-body);
+      line-height: 1.55;
+    }
+    img, svg { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; }
+    p { text-wrap: pretty; margin: 0; }
+    h1, h2, h3, h4 { text-wrap: balance; }
+
+    /* ─── graph-paper background ─────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(color-mix(in oklch, var(--grid-line) 35%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in oklch, var(--grid-line) 35%, transparent) 1px, transparent 1px);
+      background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+      background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+    }
+    body > * { position: relative; z-index: 1; }
+
+    /* ─── SVG sketch filter ──────────────────────────────────── */
+    .sketch-filter { filter: url(#sketch); }
+
+    /* ─── layout primitives ──────────────────────────────────── */
+    .container {
+      max-width: var(--container);
+      margin-inline: auto;
+      padding-inline: var(--gutter);
+    }
+    .section {
+      padding-block: clamp(40px, 7vw, var(--gap-2xl));
+    }
+    .section + .section {
+      border-top: 2px dashed var(--border);
+    }
+    .stack { display: flex; flex-direction: column; }
+    .stack > * + * { margin-top: var(--gap-md); }
+    .row { display: flex; align-items: center; gap: var(--gap-md); }
+    .row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--gap-md); }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap-lg); }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap-lg); }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap-md); }
+    .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap-xl); align-items: start; }
+    .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: var(--gap-xl); align-items: start; }
+    @media (max-width: 920px) {
+      .grid-2, .grid-3, .grid-4, .grid-2-1, .grid-1-2 { grid-template-columns: 1fr; }
+    }
+
+    /* ─── type ────────────────────────────────────────────────── */
+    .h1, h1 { font-family: var(--font-sketch); font-size: var(--fs-h1); line-height: 1.1; letter-spacing: -0.01em; margin: 0; }
+    .h2, h2 { font-family: var(--font-sketch); font-size: var(--fs-h2); line-height: 1.15; letter-spacing: -0.008em; margin: 0; }
+    .h3, h3 { font-family: var(--font-sketch); font-size: var(--fs-h3); font-weight: 600; line-height: 1.3; margin: 0; }
+    .lead   { font-family: var(--font-sketch); font-size: var(--fs-lead); line-height: 1.6; color: var(--muted); max-width: 60ch; margin: 0; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 var(--gap-md);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .eyebrow::before { content: '//'; opacity: 0.5; }
+    .meta { font-family: var(--font-mono); font-size: var(--fs-meta); color: var(--muted); }
+    .num  { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    /* ─── sketch chrome: nav ─────────────────────────────────── */
+    .topnav {
+      position: sticky; top: 0; z-index: 10;
+      background: color-mix(in oklch, var(--bg) 94%, transparent);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid var(--fg);
+    }
+    .topnav-inner { display: flex; align-items: center; justify-content: space-between; padding-block: 13px; }
+    .topnav .logo {
+      font-family: var(--font-sketch);
+      font-size: 18px;
+      letter-spacing: 0.02em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .topnav .logo::before {
+      content: '';
+      display: block; width: 28px; height: 28px;
+      border: 2px solid var(--fg);
+      border-radius: 3px;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent, transparent 3px,
+        var(--hatch) 3px, var(--hatch) 4px
+      );
+    }
+    .topnav nav { display: flex; gap: var(--gap-lg); }
+    .topnav nav a {
+      font-family: var(--font-sketch);
+      font-size: 13px;
+      color: var(--muted);
+      padding: 4px 0;
+      border-bottom: 2px dashed transparent;
+    }
+    .topnav nav a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+    .pagefoot {
+      padding-block: var(--gap-xl);
+      color: var(--muted);
+      font-family: var(--font-sketch);
+      font-size: 13px;
+      border-top: 2px solid var(--fg);
+      margin-top: 0;
+    }
+    .pagefoot .row-between { flex-wrap: wrap; gap: var(--gap-md); }
+
+    /* ─── buttons ────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      border-radius: 2px;
+      border: 2px solid transparent;
+      font-family: var(--font-sketch);
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      transition: transform 0.06s ease, background 0.12s ease;
+      position: relative;
+    }
+    .btn:active { transform: translateY(1px); }
+    /* imperfect corner via pseudo element */
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1px dashed color-mix(in oklch, var(--fg) 25%, transparent);
+      border-radius: 3px;
+      pointer-events: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--surface);
+      border-color: var(--accent);
+    }
+    .btn-primary:hover {
+      background: color-mix(in oklch, var(--accent) 85%, black);
+      border-color: color-mix(in oklch, var(--accent) 85%, black);
+    }
+    .btn-primary:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--fg);
+      border: 2px solid var(--fg);
+    }
+    .btn-secondary:hover { background: var(--fg-soft); }
+    .btn-secondary:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg);
+      border-color: transparent;
+      padding-inline: 8px;
+    }
+    .btn-ghost:hover { color: var(--accent); }
+    .btn-ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .btn-arrow::after { content: ' →'; }
+
+    /* ─── sketch box (rough rect with imperfect border) ──────── */
+    .sketch-box {
+      background: var(--surface);
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+      padding: 24px;
+      position: relative;
+    }
+    .sketch-box::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 1px dashed var(--border);
+      border-radius: 1px;
+      pointer-events: none;
+    }
+
+    /* ─── hatched fill box ───────────────────────────────────── */
+    .hatch-box {
+      background:
+        repeating-linear-gradient(
+          -45deg,
+          transparent, transparent 5px,
+          var(--hatch) 5px, var(--hatch) 6px
+        );
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+    }
+    .hatch-box-light {
+      background:
+        repeating-linear-gradient(
+          45deg,
+          transparent, transparent 8px,
+          var(--hatch) 8px, var(--hatch) 9px
+        );
+      border: 1px solid var(--border);
+      border-radius: 2px;
+    }
+
+    /* ─── tab component ──────────────────────────────────────── */
+    .tab-row {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--fg);
+      margin-bottom: 0;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      font-family: var(--font-sketch);
+      font-size: 13px;
+      background: transparent;
+      border: 2px solid var(--fg);
+      border-bottom: none;
+      border-radius: 3px 3px 0 0;
+      padding: 9px 20px;
+      color: var(--muted);
+      cursor: pointer;
+      margin-right: -2px;
+      position: relative;
+      transition: background 0.1s ease, color 0.1s ease;
+    }
+    .tab-btn:hover { background: var(--fg-soft); color: var(--fg); }
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--fg);
+      border-bottom: 2px solid var(--surface);
+      z-index: 2;
+      font-weight: 600;
+    }
+    /* little ear fold on active tab */
+    .tab-btn.active::before {
+      content: '▸ ';
+      font-size: 10px;
+      color: var(--accent);
+    }
+    .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .tab-panel {
+      display: none;
+      border: 2px solid var(--fg);
+      border-top: none;
+      padding: 28px;
+      background: var(--surface);
+      position: relative;
+    }
+    .tab-panel.active { display: block; }
+    /* annotation arrow from panel */
+    .tab-panel::before {
+      content: attr(data-note);
+      position: absolute;
+      top: 12px; right: -140px;
+      width: 130px;
+      font-family: var(--font-sketch);
+      font-size: 11px;
+      color: var(--muted);
+      white-space: normal;
+      line-height: 1.4;
+      padding-left: 12px;
+      border-left: 1px dashed var(--border);
+    }
+
+    /* ─── feature cells ──────────────────────────────────────── */
+    .feature { position: relative; }
+    .feature .feature-mark {
+      width: 40px; height: 40px;
+      display: grid; place-items: center;
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+      color: var(--accent);
+      margin-bottom: var(--gap-md);
+      background: repeating-linear-gradient(
+        45deg,
+        transparent, transparent 4px,
+        var(--hatch) 4px, var(--hatch) 5px
+      );
+    }
+    .feature .feature-mark svg { width: 18px; height: 18px; }
+    .feature h3 { margin-bottom: 6px; }
+    .feature p  { margin: 0; color: var(--muted); font-family: var(--font-sketch); font-size: 14px; }
+    .feature-card {
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+      padding: 22px;
+      background: var(--surface);
+      position: relative;
+    }
+    /* corner dog-ear */
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 16px; height: 16px;
+      background: var(--bg);
+      border-left: 2px solid var(--fg);
+      border-bottom: 2px solid var(--fg);
+    }
+
+    /* ─── sticky notes ───────────────────────────────────────── */
+    .sticky {
+      padding: 18px 20px;
+      font-family: var(--font-sketch);
+      font-size: 13px;
+      line-height: 1.5;
+      border-radius: 1px;
+      box-shadow: 3px 4px 0 color-mix(in oklch, var(--fg) 14%, transparent);
+      position: relative;
+      overflow: visible;
+    }
+    .sticky-title {
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed color-mix(in oklch, var(--fg) 30%, transparent);
+    }
+    .sticky-yellow { background: var(--yellow-note); transform: rotate(-1.2deg); }
+    .sticky-pink   { background: var(--pink-note);   transform: rotate(0.8deg); }
+    .sticky-green  { background: var(--green-note);  transform: rotate(-0.5deg); }
+    /* top tape strip */
+    .sticky::after {
+      content: '';
+      position: absolute;
+      top: -8px; left: 50%; transform: translateX(-50%);
+      width: 48px; height: 16px;
+      background: color-mix(in oklch, var(--yellow-note) 60%, transparent);
+      border: 1px solid color-mix(in oklch, var(--fg) 15%, transparent);
+      border-radius: 1px;
+    }
+    .sticky-pink::after { background: color-mix(in oklch, var(--pink-note) 60%, transparent); }
+    .sticky-green::after { background: color-mix(in oklch, var(--green-note) 60%, transparent); }
+
+    /* ─── scribble chart ─────────────────────────────────────── */
+    .chart-wrap {
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+      padding: 20px;
+      background: var(--surface);
+      position: relative;
+    }
+    .chart-label-x {
+      font-family: var(--font-sketch);
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 6px;
+    }
+    .chart-label-y {
+      font-family: var(--font-sketch);
+      font-size: 11px;
+      color: var(--muted);
+      writing-mode: vertical-lr;
+      transform: rotate(180deg);
+      position: absolute;
+      left: 8px; top: 50%; transform: translateY(-50%) rotate(180deg);
+    }
+    .chart-title {
+      font-family: var(--font-sketch);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      padding-left: 28px;
+    }
+
+    /* ─── stat (wireframe-style) ─────────────────────────────── */
+    .stat .stat-num {
+      font-family: var(--font-sketch);
+      font-size: clamp(48px, 7vw, 80px);
+      line-height: 0.95;
+      color: var(--accent);
+    }
+    .stat .stat-label { color: var(--muted); font-family: var(--font-sketch); font-size: 13px; margin-top: 8px; max-width: 24ch; }
+    .stat .stat-unit  { font-size: 0.5em; opacity: 0.7; margin-left: 2px; }
+
+    /* ─── pill / badge / tag ─────────────────────────────────── */
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 2px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .tag {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: 2px;
+      font-family: var(--font-sketch);
+      font-size: 12px;
+    }
+
+    /* ─── form field ─────────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-family: var(--font-sketch); font-size: 13px; color: var(--muted); }
+    .input, .textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: 2px;
+      background: var(--surface);
+      color: var(--fg);
+      font: inherit;
+      font-family: var(--font-sketch);
+      font-size: 14px;
+    }
+    .input:focus, .textarea:focus {
+      outline: 2px solid var(--accent-soft);
+      border-color: var(--accent);
+    }
+    .textarea { min-height: 96px; resize: vertical; line-height: 1.55; }
+
+    /* ─── table ──────────────────────────────────────────────── */
+    .ds-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ds-table th, .ds-table td { padding: 11px 14px; text-align: left; border-bottom: 1px dashed var(--border); }
+    .ds-table th { color: var(--muted); font-weight: 600; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .ds-table tbody tr:hover { background: var(--fg-soft); }
+    .ds-table .num-col { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+
+    /* ─── image placeholder ──────────────────────────────────── */
+    .ph-img {
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--fg-soft), var(--fg-soft) 6px,
+        var(--surface) 6px, var(--surface) 12px
+      );
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+      aspect-ratio: 16 / 10;
+      display: grid; place-items: center;
+      color: var(--muted);
+      font-family: var(--font-sketch);
+      font-size: 13px;
+    }
+    .ph-img.square   { aspect-ratio: 1 / 1; }
+    .ph-img.portrait { aspect-ratio: 3 / 4; }
+    .ph-img.wide     { aspect-ratio: 16 / 9; }
+    /* X through placeholder */
+    .ph-img-x {
+      position: relative;
+      overflow: hidden;
+    }
+    .ph-img-x::before,
+    .ph-img-x::after {
+      content: '';
+      position: absolute;
+      background: color-mix(in oklch, var(--fg) 20%, transparent);
+      width: 2px;
+      height: 141.4%;
+      top: -20%; left: 50%;
+      transform-origin: center;
+    }
+    .ph-img-x::before { transform: translateX(-50%) rotate(-45deg); }
+    .ph-img-x::after  { transform: translateX(-50%) rotate(45deg); }
+
+    /* ─── rule ───────────────────────────────────────────────── */
+    .rule       { border: 0; border-top: 1px dashed var(--border); margin: 0; }
+    .rule-strong{ border: 0; border-top: 2px solid var(--fg); margin: 0; }
+
+    /* ─── hero ───────────────────────────────────────────────── */
+    .hero        { padding-block: clamp(64px, 10vw, 140px); }
+    .hero-center { text-align: center; max-width: 32ch; margin-inline: auto; }
+    .hero h1     { margin-bottom: var(--gap-md); }
+    .hero .lead  { margin-bottom: var(--gap-lg); }
+    .hero-cta    { display: inline-flex; gap: var(--gap-sm); flex-wrap: wrap; }
+    .hero-center .hero-cta { justify-content: center; }
+    .hero-split  { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-2xl); align-items: center; }
+    @media (max-width: 920px) { .hero-split { grid-template-columns: 1fr; } }
+
+    /* ─── log row ────────────────────────────────────────────── */
+    .log-row { display: grid; grid-template-columns: 120px 1fr 100px; gap: var(--gap-lg); padding: 20px 0; border-top: 1px dashed var(--border); align-items: baseline; }
+    .log-row .meta { color: var(--muted); }
+    .log-row h3 { font-size: 18px; }
+    .log-row .pull { text-align: right; }
+
+    /* ─── annotation callout ─────────────────────────────────── */
+    .callout {
+      font-family: var(--font-sketch);
+      font-size: 12px;
+      color: var(--muted);
+      padding: 8px 12px;
+      border-left: 3px solid var(--border);
+      margin: 0;
+      font-style: italic;
+    }
+
+    /* ─── sketch section label ───────────────────────────────── */
+    .sketch-section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      position: absolute;
+      top: -10px; left: 16px;
+      background: var(--bg);
+      padding: 0 6px;
+    }
+
+    /* ─── measurements overlay ───────────────────────────────── */
+    .measure-line {
+      display: flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .measure-line::before,
+    .measure-line::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: currentColor;
+    }
+
+    /* ─── flow arrow ─────────────────────────────────────────── */
+    .flow-arrow {
+      font-size: 24px;
+      color: var(--muted);
+      text-align: center;
+      font-family: var(--font-sketch);
+      line-height: 1;
+      margin: 4px 0;
+    }
+
+    /* ─── progress bar placeholder ───────────────────────────── */
+    .prog-track {
+      height: 12px;
+      border: 1px solid var(--fg);
+      border-radius: 2px;
+      background: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    .prog-fill {
+      position: absolute;
+      inset-block: 0; left: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--accent), var(--accent) 4px,
+        color-mix(in oklch, var(--accent) 60%, transparent) 4px,
+        color-mix(in oklch, var(--accent) 60%, transparent) 8px
+      );
+    }
+
+    /* ─── responsive ─────────────────────────────────────────── */
+    @media (max-width: 920px) {
+      body::before { background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px; }
+      .tab-panel::before { display: none; }
+      .sticky { transform: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- hidden SVG filter for sketch wobble -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <filter id="sketch" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- ═══════════════════════════════════════════════════════════ NAV -->
+  <header class="topnav" data-od-id="topnav">
+    <div class="container topnav-inner">
+      <span class="logo">Design Sketch</span>
+      <nav>
+        <a href="#">Overview</a>
+        <a href="#">Variants</a>
+        <a href="#">Notes</a>
+      </nav>
+      <button class="btn btn-primary">↓ Export</button>
+    </div>
+  </header>
+
+  <main id="content">
+
+    <!-- ════════════════════════════════════════════════════ SECTION 1: HERO + TAB SWITCHER -->
+    <section class="section hero" data-od-id="hero" style="padding-bottom: 0;">
+      <div class="container">
+
+        <!-- heading block -->
+        <div style="max-width: 600px; margin-bottom: 40px;">
+          <p class="eyebrow">v0.1 Wireframe · Dashboard App · Oct 2026</p>
+          <h1 style="font-size: clamp(36px, 5vw, 58px);">Sketch Explorations</h1>
+          <p class="lead" style="margin-top: 16px;">
+            Three layout variants for the main dashboard view — rough in on structure before committing pixels. Tap a tab to switch variants.
+          </p>
+        </div>
+
+        <!-- ──── TAB SWITCHER ──── -->
+        <div id="tab-system" aria-label="Layout variants">
+          <div class="tab-row" role="tablist">
+            <button class="tab-btn active" role="tab" aria-selected="true"  aria-controls="tab-panel-a" id="tab-a" onclick="switchTab('a')">Variant A — List</button>
+            <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-panel-b" id="tab-b" onclick="switchTab('b')">Variant B — Card Grid</button>
+            <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-panel-c" id="tab-c" onclick="switchTab('c')">Variant C — Split Panel</button>
+          </div>
+
+          <!-- ── Panel A: List layout ── -->
+          <div class="tab-panel active" id="tab-panel-a" role="tabpanel" aria-labelledby="tab-a" data-note="← sidebar nav + wide list view — good for dense data">
+            <div class="grid-2-1">
+              <!-- sidebar sketch -->
+              <div>
+                <div class="callout" style="margin-bottom: 16px;">List-dominant layout: sidebar nav left, content rows fill the main column.</div>
+                <div style="display: grid; gap: 10px;">
+                  <!-- fake list rows -->
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px dashed var(--border); border-radius: 2px; background: var(--surface);">
+                    <div class="hatch-box-light" style="width: 36px; height: 36px; flex-shrink: 0;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                      <div style="height: 12px; background: var(--border); border-radius: 1px; width: 55%;"></div>
+                      <div style="height: 10px; background: var(--grid-line); border-radius: 1px; width: 80%;"></div>
+                    </div>
+                    <span class="tag">Draft</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid var(--fg); border-radius: 2px; background: var(--accent-soft);">
+                    <div class="hatch-box" style="width: 36px; height: 36px; flex-shrink: 0;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                      <div style="height: 12px; background: color-mix(in oklch, var(--accent) 40%, transparent); border-radius: 1px; width: 65%;"></div>
+                      <div style="height: 10px; background: color-mix(in oklch, var(--accent) 20%, transparent); border-radius: 1px; width: 45%;"></div>
+                    </div>
+                    <span class="pill">Active</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px dashed var(--border); border-radius: 2px; background: var(--surface);">
+                    <div class="hatch-box-light" style="width: 36px; height: 36px; flex-shrink: 0;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                      <div style="height: 12px; background: var(--border); border-radius: 1px; width: 40%;"></div>
+                      <div style="height: 10px; background: var(--grid-line); border-radius: 1px; width: 70%;"></div>
+                    </div>
+                    <span class="tag">Review</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px dashed var(--border); border-radius: 2px; background: var(--surface);">
+                    <div class="hatch-box-light" style="width: 36px; height: 36px; flex-shrink: 0;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                      <div style="height: 12px; background: var(--border); border-radius: 1px; width: 72%;"></div>
+                      <div style="height: 10px; background: var(--grid-line); border-radius: 1px; width: 35%;"></div>
+                    </div>
+                    <span class="tag">Done</span>
+                  </div>
+                  <!-- progress bars -->
+                  <div style="padding: 14px; border: 1px dashed var(--border); background: var(--surface); border-radius: 2px;">
+                    <div style="font-family: var(--font-sketch); font-size: 11px; color: var(--muted); margin-bottom: 10px;">Completion progress</div>
+                    <div style="display: grid; gap: 8px;">
+                      <div>
+                        <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-bottom: 3px;"><span>Module A</span><span>72%</span></div>
+                        <div class="prog-track"><div class="prog-fill" style="width: 72%"></div></div>
+                      </div>
+                      <div>
+                        <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-bottom: 3px;"><span>Module B</span><span>41%</span></div>
+                        <div class="prog-track"><div class="prog-fill" style="width: 41%"></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- sidebar nav sketch -->
+              <div>
+                <div class="sketch-box" style="height: 100%;">
+                  <span class="sketch-section-label">Sidebar nav</span>
+                  <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
+                    <div style="padding: 8px 12px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 1px; font-family: var(--font-sketch); font-size: 13px; color: var(--accent);">● Dashboard</div>
+                    <div style="padding: 8px 12px; font-family: var(--font-sketch); font-size: 13px; color: var(--muted);">○ Projects</div>
+                    <div style="padding: 8px 12px; font-family: var(--font-sketch); font-size: 13px; color: var(--muted);">○ Analytics</div>
+                    <div style="padding: 8px 12px; font-family: var(--font-sketch); font-size: 13px; color: var(--muted);">○ Team</div>
+                    <div style="padding: 8px 12px; font-family: var(--font-sketch); font-size: 13px; color: var(--muted);">○ Settings</div>
+                    <hr class="rule" style="margin: 8px 0;">
+                    <div class="measure-line" style="margin: 6px 0;">nav width</div>
+                    <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-align: center;">240px fixed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Panel B: Card Grid ── -->
+          <div class="tab-panel" id="tab-panel-b" role="tabpanel" aria-labelledby="tab-b" data-note="← card grid for visual browsing — less data density">
+            <div class="callout" style="margin-bottom: 20px;">Card-grid layout: equal cells, thumbnail-first hierarchy. Better for image-heavy content.</div>
+            <div class="grid-3">
+              <!-- card 1 -->
+              <div class="feature-card">
+                <div class="ph-img ph-img-x wide" style="margin-bottom: 14px; aspect-ratio: 4/3;" aria-label="Card thumbnail placeholder">[ thumb ]</div>
+                <div style="height: 13px; background: var(--border); border-radius: 1px; width: 70%; margin-bottom: 6px;"></div>
+                <div style="height: 10px; background: var(--grid-line); border-radius: 1px; width: 90%; margin-bottom: 10px;"></div>
+                <div class="row" style="gap: 8px;">
+                  <span class="tag">Design</span>
+                  <span class="meta" style="margin-left: auto;">Apr 12</span>
+                </div>
+              </div>
+              <!-- card 2 (active / highlighted) -->
+              <div class="feature-card" style="border-color: var(--accent); background: var(--accent-soft);">
+                <div class="hatch-box" style="height: 100px; margin-bottom: 14px; display: grid; place-items: center; font-family: var(--font-sketch); font-size: 11px; color: var(--muted);">[ thumb ]</div>
+                <div style="height: 13px; background: color-mix(in oklch, var(--accent) 40%, transparent); border-radius: 1px; width: 55%; margin-bottom: 6px;"></div>
+                <div style="height: 10px; background: color-mix(in oklch, var(--accent) 25%, transparent); border-radius: 1px; width: 80%; margin-bottom: 10px;"></div>
+                <div class="row" style="gap: 8px;">
+                  <span class="pill">Selected</span>
+                  <span class="meta" style="margin-left: auto;">May 01</span>
+                </div>
+              </div>
+              <!-- card 3 -->
+              <div class="feature-card">
+                <div class="ph-img ph-img-x wide" style="margin-bottom: 14px; aspect-ratio: 4/3;" aria-label="Card thumbnail placeholder">[ thumb ]</div>
+                <div style="height: 13px; background: var(--border); border-radius: 1px; width: 82%; margin-bottom: 6px;"></div>
+                <div style="height: 10px; background: var(--grid-line); border-radius: 1px; width: 60%; margin-bottom: 10px;"></div>
+                <div class="row" style="gap: 8px;">
+                  <span class="tag">Dev</span>
+                  <span class="meta" style="margin-left: auto;">Apr 28</span>
+                </div>
+              </div>
+            </div>
+            <!-- add button sketch -->
+            <div style="text-align: center; padding: 20px; border: 2px dashed var(--border); border-radius: 2px; margin-top: 16px; font-family: var(--font-sketch); font-size: 13px; color: var(--muted);">
+              + Add new item
+            </div>
+          </div>
+
+          <!-- ── Panel C: Split Panel ── -->
+          <div class="tab-panel" id="tab-panel-c" role="tabpanel" aria-labelledby="tab-c" data-note="← master-detail split — good for sequential workflows">
+            <div class="callout" style="margin-bottom: 20px;">Split-panel layout: left list acting as master, right detail pane. Pairs well with keyboard navigation.</div>
+            <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 0; border: 2px solid var(--fg);">
+              <!-- master list -->
+              <div style="border-right: 2px solid var(--fg);">
+                <div style="padding: 12px 14px; border-bottom: 1px dashed var(--border); background: var(--fg-soft); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Items (12)</div>
+                <div style="display: flex; flex-direction: column;">
+                  <div style="padding: 11px 14px; border-bottom: 1px dashed var(--border); font-family: var(--font-sketch); font-size: 13px; color: var(--muted);">Item 01 — User Research</div>
+                  <div style="padding: 11px 14px; border-bottom: 1px dashed var(--border); background: var(--accent-soft); border-left: 3px solid var(--accent); font-family: var(--font-sketch); font-size: 13px; color: var(--fg);">Item 02 — Wireframes ← selected</div>
+                  <div style="padding: 11px 14px; border-bottom: 1px dashed var(--border); font-family: var(--font-sketch); font-size: 13px; color: var(--muted);">Item 03 — Prototype</div>
+                  <div style="padding: 11px 14px; border-bottom: 1px dashed var(--border); font-family: var(--font-sketch); font-size: 13px; color: var(--muted);">Item 04 — Testing</div>
+                  <div style="padding: 11px 14px; font-family: var(--font-sketch); font-size: 13px; color: var(--muted);">Item 05 — Handoff</div>
+                </div>
+              </div>
+              <!-- detail pane -->
+              <div style="padding: 20px;">
+                <div style="font-family: var(--font-sketch); font-size: 18px; font-weight: 700; margin-bottom: 14px;">Item 02 — Wireframes</div>
+                <div style="display: grid; gap: 8px; margin-bottom: 16px;">
+                  <div style="height: 11px; background: var(--border); border-radius: 1px; width: 90%;"></div>
+                  <div style="height: 11px; background: var(--border); border-radius: 1px; width: 75%;"></div>
+                  <div style="height: 11px; background: var(--border); border-radius: 1px; width: 85%;"></div>
+                </div>
+                <div class="hatch-box" style="height: 100px; display: grid; place-items: center; font-family: var(--font-sketch); font-size: 11px; color: var(--muted); margin-bottom: 16px;">[ Detail image ]</div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <button class="btn btn-primary">Save changes</button>
+                  <button class="btn btn-secondary">Discard</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><!-- /#tab-system -->
+
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════ SECTION 2: FEATURES (HATCHED) -->
+    <section class="section" data-od-id="features">
+      <div class="container stack" style="gap: 48px;">
+        <div style="max-width: 40ch;">
+          <p class="eyebrow">Component Inventory</p>
+          <h2>Key UI blocks for v1 scope</h2>
+          <p class="lead" style="margin-top: 12px;">Each component gets one sketch pass — no polish yet, just structure and decision points annotated.</p>
+        </div>
+
+        <div class="grid-3" style="gap: 20px;">
+          <!-- Feature 1 -->
+          <div class="feature feature-card">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 21V9"/></svg>
+            </div>
+            <h3>Data Table</h3>
+            <p>Sortable columns, row selection, inline pagination. Mono numerics, hairline borders. High density.</p>
+            <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="height: 10px; background: color-mix(in oklch, var(--fg) 15%, transparent); border-radius: 1px;"></div>
+              <div style="height: 10px; background: var(--grid-line); border-radius: 1px;"></div>
+              <div style="height: 10px; background: var(--grid-line); border-radius: 1px;"></div>
+              <div style="height: 10px; background: var(--grid-line); border-radius: 1px;"></div>
+            </div>
+            <div class="callout" style="margin-top: 12px;">→ needs sticky header on scroll</div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="feature feature-card">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg>
+            </div>
+            <h3>Timeline / Feed</h3>
+            <p>Chronological activity feed with date separators, actor avatar slots, and action verbs.</p>
+            <!-- mini timeline sketch -->
+            <div style="margin-top: 14px; padding-left: 14px; border-left: 2px solid var(--fg); display: flex; flex-direction: column; gap: 12px;">
+              <div style="position: relative;">
+                <div style="width: 8px; height: 8px; border: 2px solid var(--accent); border-radius: 50%; background: var(--bg); position: absolute; left: -19px; top: 2px;"></div>
+                <div style="height: 10px; background: var(--border); border-radius: 1px; width: 80%; margin-bottom: 4px;"></div>
+                <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted);">2 min ago</div>
+              </div>
+              <div style="position: relative;">
+                <div style="width: 8px; height: 8px; border: 2px solid var(--border); border-radius: 50%; background: var(--bg); position: absolute; left: -19px; top: 2px;"></div>
+                <div style="height: 10px; background: var(--grid-line); border-radius: 1px; width: 60%; margin-bottom: 4px;"></div>
+                <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted);">1 hr ago</div>
+              </div>
+            </div>
+            <div class="callout" style="margin-top: 12px;">→ real-time updates via WS?</div>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="feature feature-card">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20V10M18 20V4M6 20v-6"/></svg>
+            </div>
+            <h3>Metric Sparkline</h3>
+            <p>A KPI number with a mini inline chart under it — no axes, just the trend shape. Compact, embeddable.</p>
+            <!-- mini bar chart sketch -->
+            <div style="margin-top: 14px; display: flex; align-items: flex-end; gap: 4px; height: 44px; padding: 0 4px;">
+              <div style="flex: 1; background: repeating-linear-gradient(-45deg, var(--accent), var(--accent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 6px); height: 30%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex: 1; background: repeating-linear-gradient(-45deg, var(--accent), var(--accent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 6px); height: 55%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex: 1; background: repeating-linear-gradient(-45deg, var(--accent), var(--accent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 6px); height: 40%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex: 1; background: repeating-linear-gradient(-45deg, var(--accent), var(--accent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 6px); height: 70%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex: 1; background: repeating-linear-gradient(-45deg, var(--accent), var(--accent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 6px); height: 50%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex: 1; background: repeating-linear-gradient(-45deg, var(--accent), var(--accent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 6px); height: 90%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex: 1; background: repeating-linear-gradient(-45deg, var(--accent), var(--accent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 3px, color-mix(in oklch, var(--accent) 50%, transparent) 6px); height: 75%; border-radius: 1px 1px 0 0;"></div>
+            </div>
+            <div class="callout" style="margin-top: 8px;">→ 7-day rolling average</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════ SECTION 3: SCRIBBLED CHARTS -->
+    <section class="section" data-od-id="charts" style="background: color-mix(in oklch, var(--surface) 80%, transparent);">
+      <div class="container">
+        <div style="max-width: 40ch; margin-bottom: 40px;">
+          <p class="eyebrow">Data Visualization Sketches</p>
+          <h2>Chart explorations</h2>
+          <p class="lead" style="margin-top: 12px;">Rough chart structures — axes, fills, and data shape before any real data is wired in.</p>
+        </div>
+
+        <div class="grid-2" style="gap: 24px;">
+
+          <!-- Bar chart -->
+          <div class="chart-wrap" data-od-id="chart-bar">
+            <div class="chart-title">Monthly Active Users</div>
+            <div style="position: relative; padding-left: 32px;">
+              <span class="chart-label-y">Users</span>
+              <!-- y axis lines -->
+              <div style="display: flex; flex-direction: column-reverse; gap: 0; border-left: 2px solid var(--fg); border-bottom: 2px solid var(--fg); padding: 8px 0 0 12px;">
+                <!-- bars -->
+                <div style="display: flex; align-items: flex-end; gap: 8px; height: 140px; padding: 0 8px;">
+                  <div style="display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; height: 100%;">
+                    <div style="flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
+                      <div style="height: 45%; background: repeating-linear-gradient(-45deg, var(--muted) 0, var(--muted) 2px, transparent 2px, transparent 5px); border: 1px solid var(--fg); border-radius: 1px 1px 0 0;"></div>
+                    </div>
+                    <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">Jan</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; height: 100%;">
+                    <div style="flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
+                      <div style="height: 62%; background: repeating-linear-gradient(-45deg, var(--muted) 0, var(--muted) 2px, transparent 2px, transparent 5px); border: 1px solid var(--fg); border-radius: 1px 1px 0 0;"></div>
+                    </div>
+                    <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">Feb</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; height: 100%;">
+                    <div style="flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
+                      <div style="height: 58%; background: repeating-linear-gradient(-45deg, var(--muted) 0, var(--muted) 2px, transparent 2px, transparent 5px); border: 1px solid var(--fg); border-radius: 1px 1px 0 0;"></div>
+                    </div>
+                    <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">Mar</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; height: 100%;">
+                    <div style="flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
+                      <div style="height: 80%; background: repeating-linear-gradient(-45deg, var(--accent) 0, var(--accent) 2px, color-mix(in oklch, var(--accent) 45%, transparent) 2px, color-mix(in oklch, var(--accent) 45%, transparent) 5px); border: 2px solid var(--accent); border-radius: 1px 1px 0 0;"></div>
+                    </div>
+                    <span style="font-family: var(--font-mono); font-size: 9px; color: var(--accent);">Apr ↑</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; height: 100%;">
+                    <div style="flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
+                      <div style="height: 71%; background: repeating-linear-gradient(-45deg, var(--muted) 0, var(--muted) 2px, transparent 2px, transparent 5px); border: 1px solid var(--fg); border-radius: 1px 1px 0 0;"></div>
+                    </div>
+                    <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">May</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; height: 100%;">
+                    <div style="flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
+                      <div style="height: 88%; background: repeating-linear-gradient(-45deg, var(--muted) 0, var(--muted) 2px, transparent 2px, transparent 5px); border: 1px solid var(--fg); border-radius: 1px 1px 0 0;"></div>
+                    </div>
+                    <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">Jun</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="chart-label-x">Month (2026)</p>
+            <p class="callout" style="margin-top: 10px;">→ Apr spike = campaign launch — confirm with analytics team</p>
+          </div>
+
+          <!-- Pie / donut sketch -->
+          <div class="chart-wrap" data-od-id="chart-donut">
+            <div class="chart-title">Traffic Sources</div>
+            <div style="display: flex; align-items: center; gap: 28px;">
+              <!-- hand-drawn donut via SVG -->
+              <svg width="140" height="140" viewBox="0 0 140 140" aria-label="Donut chart placeholder showing traffic source breakdown">
+                <!-- outer circle -->
+                <circle cx="70" cy="70" r="58" fill="none" stroke="var(--fg)" stroke-width="2"/>
+                <!-- segments (rough hatching via SVG patterns) -->
+                <defs>
+                  <pattern id="hatch1" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="2"/>
+                  </pattern>
+                  <pattern id="hatch2" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+                    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--muted)" stroke-width="1.5"/>
+                  </pattern>
+                  <pattern id="hatch3" width="6" height="6" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="0" x2="6" y2="0" stroke="var(--muted)" stroke-width="1" opacity="0.5"/>
+                  </pattern>
+                  <clipPath id="donut-clip">
+                    <path d="M70 70 m-58,0 a58,58 0 1,1 116,0 a58,58 0 1,1 -116,0 Z M70 70 m-36,0 a36,36 0 1,0 72,0 a36,36 0 1,0 -72,0 Z"/>
+                  </clipPath>
+                </defs>
+                <!-- segment fills using arc approach -->
+                <!-- Segment 1: ~42% (organic) — 0 to 151deg -->
+                <path d="M70,70 L70,12 A58,58 0 0,1 120.3,99 Z" fill="url(#hatch1)" stroke="var(--fg)" stroke-width="1.5" clip-path="url(#donut-clip)"/>
+                <!-- Segment 2: ~28% (direct) — 151 to 252deg -->
+                <path d="M70,70 L120.3,99 A58,58 0 0,1 27.8,111.6 Z" fill="url(#hatch2)" stroke="var(--fg)" stroke-width="1.5" clip-path="url(#donut-clip)"/>
+                <!-- Segment 3: ~30% (referral) — 252 to 360deg -->
+                <path d="M70,70 L27.8,111.6 A58,58 0 0,1 70,12 Z" fill="url(#hatch3)" stroke="var(--fg)" stroke-width="1.5" clip-path="url(#donut-clip)"/>
+                <!-- inner hole -->
+                <circle cx="70" cy="70" r="36" fill="var(--surface)" stroke="var(--fg)" stroke-width="2"/>
+                <!-- center label -->
+                <text x="70" y="66" text-anchor="middle" font-family="var(--font-sketch), cursive" font-size="12" fill="var(--fg)">Total</text>
+                <text x="70" y="82" text-anchor="middle" font-family="var(--font-mono)" font-size="13" fill="var(--fg)" font-weight="600">3,184</text>
+              </svg>
+              <!-- legend -->
+              <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 10px; font-family: var(--font-sketch); font-size: 13px;">
+                  <div style="width: 14px; height: 14px; border: 1.5px solid var(--fg); background: url(#hatch1); background: repeating-linear-gradient(45deg, var(--accent) 0, var(--accent) 2px, transparent 2px, transparent 5px);"></div>
+                  <span>Organic Search</span>
+                  <span class="num" style="margin-left: auto; font-size: 12px;">42%</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; font-family: var(--font-sketch); font-size: 13px;">
+                  <div style="width: 14px; height: 14px; border: 1.5px solid var(--fg); background: repeating-linear-gradient(-45deg, var(--muted) 0, var(--muted) 2px, transparent 2px, transparent 5px);"></div>
+                  <span>Direct</span>
+                  <span class="num" style="margin-left: auto; font-size: 12px;">28%</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; font-family: var(--font-sketch); font-size: 13px;">
+                  <div style="width: 14px; height: 14px; border: 1.5px solid var(--fg); background: repeating-linear-gradient(0deg, var(--muted) 0, var(--muted) 1px, transparent 1px, transparent 5px); opacity: 0.5;"></div>
+                  <span>Referral</span>
+                  <span class="num" style="margin-left: auto; font-size: 12px;">30%</span>
+                </div>
+              </div>
+            </div>
+            <p class="callout" style="margin-top: 14px;">→ placeholder %s — swap with live source data before dev handoff</p>
+          </div>
+
+          <!-- Line chart / scribble trend -->
+          <div class="chart-wrap" data-od-id="chart-line" style="grid-column: 1 / -1;">
+            <div class="chart-title">Revenue Trend vs. Target — scribbled path</div>
+            <svg width="100%" height="120" viewBox="0 0 800 120" preserveAspectRatio="none" aria-label="Line chart sketch showing revenue vs target trend">
+              <!-- grid lines -->
+              <line x1="0" y1="30"  x2="800" y2="30"  stroke="var(--grid-line)" stroke-width="1" stroke-dasharray="4,4"/>
+              <line x1="0" y1="60"  x2="800" y2="60"  stroke="var(--grid-line)" stroke-width="1" stroke-dasharray="4,4"/>
+              <line x1="0" y1="90"  x2="800" y2="90"  stroke="var(--grid-line)" stroke-width="1" stroke-dasharray="4,4"/>
+              <!-- target line (dashed) -->
+              <line x1="0" y1="45" x2="800" y2="45" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="6,4"/>
+              <text x="808" y="48" font-family="var(--font-sketch), cursive" font-size="10" fill="var(--muted)">Target</text>
+              <!-- actual revenue line (scribbled fill below) -->
+              <path d="M0,90 C40,88 80,82 130,78 C180,74 220,80 270,65 C320,50 360,55 400,48 C440,41 480,38 520,32 C560,26 600,30 650,22 C700,14 750,18 800,15 L800,120 L0,120 Z"
+                    fill="repeating-linear-gradient(-45deg, color-mix(in oklch, var(--accent) 20%, transparent) 0, color-mix(in oklch, var(--accent) 20%, transparent) 3px, transparent 3px, transparent 7px)"
+                    stroke="none"/>
+              <path d="M0,90 C40,88 80,82 130,78 C180,74 220,80 270,65 C320,50 360,55 400,48 C440,41 480,38 520,32 C560,26 600,30 650,22 C700,14 750,18 800,15"
+                    fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- data point markers -->
+              <circle cx="270" cy="65" r="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+              <circle cx="520" cy="32" r="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+              <!-- y axis labels -->
+              <text x="2" y="28"  font-family="var(--font-mono)" font-size="9" fill="var(--muted)">$120k</text>
+              <text x="2" y="58"  font-family="var(--font-mono)" font-size="9" fill="var(--muted)">$80k</text>
+              <text x="2" y="88"  font-family="var(--font-mono)" font-size="9" fill="var(--muted)">$40k</text>
+            </svg>
+            <div style="display: flex; justify-content: space-between; padding: 0 4px; margin-top: 4px;">
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">Jan</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">Feb</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">Mar</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">Apr</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">May</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--muted);">Jun</span>
+            </div>
+            <p class="callout" style="margin-top: 10px;">→ trend line only — real data from Stripe webhook before dev handoff</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════ SECTION 4: STICKY NOTE ANNOTATIONS -->
+    <section class="section" data-od-id="sticky-notes">
+      <div class="container">
+        <div style="max-width: 40ch; margin-bottom: 40px;">
+          <p class="eyebrow">Designer Notes</p>
+          <h2>Open questions + decisions</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 32px; align-items: start;">
+
+          <div class="sticky sticky-yellow">
+            <div class="sticky-title">🔑 Auth Flow</div>
+            <p>SSO first or email+password? Ask PM. If SSO — which provider? Google + GitHub minimum.</p>
+          </div>
+
+          <div class="sticky sticky-pink">
+            <div class="sticky-title">⚡ Performance</div>
+            <p>Table with 10k+ rows — needs virtualisation. Tanstack Virtual? Check bundle size impact before committing.</p>
+          </div>
+
+          <div class="sticky sticky-green">
+            <div class="sticky-title">📱 Mobile scope</div>
+            <p>Variant A collapses well. B is questionable at 375px. C (split panel) — probably desktop-only for v1.</p>
+          </div>
+
+          <div class="sticky sticky-yellow" style="transform: rotate(1deg);">
+            <div class="sticky-title">🎨 Design system</div>
+            <p>Confirm accent color with brand before building. Blue placeholder only — client may want their own.</p>
+          </div>
+
+          <div class="sticky sticky-pink" style="transform: rotate(-0.6deg);">
+            <div class="sticky-title">♿ A11y</div>
+            <p>Tab panels need keyboard nav. Focus ring must be visible at 3:1 ratio min. Run axe-core before QA sign-off.</p>
+          </div>
+
+          <div class="sticky sticky-green" style="transform: rotate(0.9deg);">
+            <div class="sticky-title">🗓 Timeline</div>
+            <p>Wireframe review — this Friday. Prototype — 2 weeks. Dev handoff — end of month. Aim for Oct 31.</p>
+          </div>
+
+        </div>
+
+        <!-- flow diagram sketch -->
+        <div style="margin-top: 56px; padding: 24px; border: 2px solid var(--fg); border-radius: 2px; background: var(--surface); position: relative;">
+          <span class="sketch-section-label">User flow — abbreviated</span>
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
+            <div style="padding: 10px 18px; border: 2px solid var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 13px; background: var(--surface);">Login</div>
+            <div class="flow-arrow">→</div>
+            <div style="padding: 10px 18px; border: 2px solid var(--accent); border-radius: 2px; font-family: var(--font-sketch); font-size: 13px; background: var(--accent-soft); color: var(--accent);">Dashboard</div>
+            <div class="flow-arrow">→</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="padding: 8px 14px; border: 1px dashed var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 12px;">View list</div>
+              <div style="padding: 8px 14px; border: 1px dashed var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 12px;">Open detail</div>
+              <div style="padding: 8px 14px; border: 1px dashed var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 12px;">Edit & save</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div style="padding: 10px 18px; border: 2px solid var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 13px; background: var(--surface);">Confirm</div>
+          </div>
+          <p class="callout" style="margin-top: 16px;">→ error states not mapped yet — add before dev handoff</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════ SECTION 5: CTA STRIP -->
+    <section class="section" data-od-id="cta-strip" style="text-align: center;">
+      <div class="container" style="max-width: 580px;">
+        <p class="eyebrow" style="justify-content: center;">Next step</p>
+        <h2>Ready for feedback?</h2>
+        <p class="lead" style="margin: 16px auto 32px; text-align: center;">Share this sketch with the team — annotate directly, pick a variant, and let's move to hi-fi by Friday.</p>
+        <div style="display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+          <button class="btn btn-primary">Share for review</button>
+          <button class="btn btn-secondary">Export as PDF</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="pagefoot" data-od-id="footer">
+    <div class="container row-between">
+      <span>Design Sketch · v0.1 · Oct 2026</span>
+      <span class="meta">Internal exploration — not for distribution · designer@example.com</span>
+    </div>
+  </footer>
+
+  <script>
+    // Tab switcher — no scrollIntoView
+    function switchTab(id) {
+      const allBtns   = document.querySelectorAll('.tab-btn');
+      const allPanels = document.querySelectorAll('.tab-panel');
+
+      allBtns.forEach(btn => {
+        const isTarget = btn.id === 'tab-' + id;
+        btn.classList.toggle('active', isTarget);
+        btn.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+      });
+      allPanels.forEach(panel => {
+        panel.classList.toggle('active', panel.id === 'tab-panel-' + id);
+      });
+
+      // persist selection
+      try { localStorage.setItem('wf-tab', id); } catch(e) {}
+    }
+
+    // Restore tab on load
+    (function() {
+      try {
+        const saved = localStorage.getItem('wf-tab');
+        if (saved && ['a','b','c'].includes(saved)) switchTab(saved);
+      } catch(e) {}
+    })();
+
+    // Keyboard nav for tabs
+    document.querySelector('.tab-row').addEventListener('keydown', function(e) {
+      const tabs = Array.from(this.querySelectorAll('.tab-btn'));
+      const idx  = tabs.indexOf(document.activeElement);
+      if (idx === -1) return;
+      if (e.key === 'ArrowRight') {
+        const next = tabs[(idx + 1) % tabs.length];
+        next.focus();
+        switchTab(next.id.replace('tab-', ''));
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft') {
+        const prev = tabs[(idx - 1 + tabs.length) % tabs.length];
+        prev.focus();
+        switchTab(prev.id.replace('tab-', ''));
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>

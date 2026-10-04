@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "wireframe-sketch.html",
+  "entry": "wireframe-sketch.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-10-04T01:49:25.309Z",
+  "updatedAt": "2026-10-04T01:49:25.309Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}
