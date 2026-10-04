@@ -1,7 +1,7 @@
 <script>
     import DoppelrandCard from '../components/DoppelrandCard.svelte';
     import TacticalButton from '../components/TacticalButton.svelte';
-    export let navigate; // function to change page
+    let { navigate } = $props(); // function to change page
 </script>
 
 <main class="flex flex-col justify-center max-w-7xl mx-auto w-full relative z-10 py-24 animate-[fadeUpAnim_0.8s_cubic-bezier(0.32,0.72,0,1)_forwards]">
@@ -23,6 +23,7 @@
 
             <div class="flex gap-4 mt-4">
                 <TacticalButton label="LAUNCH RADAR" icon="↘" onClick={() => navigate('radar')} />
+                <TacticalButton label="PRIORITY QUEUE" icon="≡" onClick={() => navigate('queue')} />
             </div>
         </div>
 
@@ -40,12 +41,12 @@
                 </DoppelrandCard>
             </button>
 
-            <button on:click={() => navigate('findings')} class="text-left group cursor-pointer block h-48 border-none bg-transparent p-0">
+            <button on:click={() => navigate('overview')} class="text-left group cursor-pointer block h-48 border-none bg-transparent p-0">
                 <DoppelrandCard extraClass="h-full transition-colors duration-500 group-hover:bg-white/5">
                     <div class="flex flex-col justify-between h-full">
                         <div class="text-xs uppercase tracking-widest text-white/40 group-hover:text-white/80 transition-colors">02 // Analytics</div>
                         <div>
-                            <h3 class="text-xl font-bold mb-2">Findings</h3>
+                            <h3 class="text-xl font-bold mb-2">Overview</h3>
                             <p class="text-[10px] text-white/50">Canonical State Matrix</p>
                         </div>
                     </div>
