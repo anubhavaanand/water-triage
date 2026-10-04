@@ -36,3 +36,10 @@ node_modules/
 .playwright-cli/
 docs/evidence/
 data/raw/official/
+.claude/
+.serena/
+.stitch/
+playwright-report/
+backend.log
+test-results/
+replacements.txt
