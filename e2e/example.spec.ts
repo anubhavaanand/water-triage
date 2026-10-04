@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('WaterTriage Svelte Frontend E2E Tests', () => {
+test.describe('WaterTriage React Frontend E2E Tests', () => {
 
-  test('loads Premium Dashboard cleanly', async ({ page }) => {
+  test('loads Engineering Notebook Dashboard cleanly', async ({ page }) => {
     await page.goto('/');
     
     // Check Top Nav
@@ -12,27 +12,30 @@ test.describe('WaterTriage Svelte Frontend E2E Tests', () => {
     await expect(page.locator('.status-pill')).toBeVisible();
 
     // Check main title
-    await expect(page.locator('h1')).toContainText('Priority Queue & Triangulation');
+    await expect(page.locator('h1')).toContainText('Dashboard Layout Explorations');
     
     // Check interactive system tabs
-    await expect(page.locator('text=Variant A')).toBeVisible();
-    await expect(page.locator('text=Variant B')).toBeVisible();
-    await expect(page.locator('text=Variant D')).toBeVisible();
+    await expect(page.locator('#tab-a')).toContainText('Variant A');
+    await expect(page.locator('#tab-b')).toContainText('Variant B');
+    await expect(page.locator('#tab-c')).toContainText('Variant C');
+    await expect(page.locator('#tab-d')).toContainText('Variant D');
   });
 
-  test('verifies sticky notes and 4-way triangulation rendering', async ({ page }) => {
+  test('verifies tab navigation and data loading', async ({ page }) => {
     await page.goto('/');
     
-    // Check that backend items are marked as FIXED/CLOSED
-    await expect(page.locator('text=✓ data.json state')).toBeVisible();
-    await expect(page.locator('text=✓ DB Startup')).toBeVisible();
+    // Default tab should be Variant A
+    await expect(page.locator('#tab-panel-a')).toBeVisible();
 
     // Navigate to Validation Tab
-    await page.locator('text=Variant D').click();
+    await page.locator('#tab-d').click();
     
     // Verify Validation content rendered
-    await expect(page.locator('text=External Validation')).toBeVisible();
-    await expect(page.locator('text=4-Way Triangulation Pass')).toBeVisible();
+    await expect(page.locator('#tab-panel-d')).toBeVisible();
+    await expect(page.getByText('External Validation').first()).toBeVisible();
+    
+    // Check VP-1
+    await expect(page.getByText('VP-1').first()).toBeVisible();
   });
 
 });
