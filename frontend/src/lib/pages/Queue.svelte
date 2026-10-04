@@ -8,8 +8,9 @@
     let selectedSampleId = $state(null);
 
     $effect(() => {
-        fetch('http://localhost:8000/api/priority/top/100')
-            .then(r => r.json())
+        fetch('/api/priority/top/100')
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .catch(() => fetch(`${import.meta.env.BASE_URL}priority.json`).then(r => r.json()).then(d => d.slice(0, 100)))
             .then(data => {
                 items = data;
                 loading = false;

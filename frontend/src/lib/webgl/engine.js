@@ -16,7 +16,7 @@ let INDIA_STATES = { features: [] };
 try {
   const dataFetchPromise = fetch('/api/dashboard-data')
       .then(r => r.ok ? r.json() : Promise.reject())
-      .catch(() => fetch('data.json').then(r => r.json()).catch(() => ({})));
+      .catch(() => fetch(`${import.meta.env.BASE_URL}dashboard-data.json`).then(r => r.json()).catch(() => ({})));
 
   const [rData, rRivers, rCentroids, rStats, rStates] = await Promise.all([
     dataFetchPromise,

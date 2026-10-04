@@ -13,16 +13,20 @@
 
   onMount(async () => {
     try {
-      const res = await fetch('/api/priority');
-      if (res.ok) {
-        const data = await res.json();
-        priorityList = Array.isArray(data) ? data : (data.priority || []);
-        kpi = data.kpi || {};
-      } else {
-        error = 'Failed to load /api/priority';
-      }
+      let res = await fetch('/api/priority');
+      if (!res.ok) throw new Error('API unavailable');
+      const data = await res.json();
+      priorityList = Array.isArray(data) ? data : (data.priority || []);
+      kpi = data.kpi || {};
     } catch (e) {
-      error = e.message;
+      // Fallback to baked static data
+      try {
+        const res = await fetch(`${import.meta.env.BASE_URL}priority.json`);
+        const data = await res.json();
+        priorityList = Array.isArray(data) ? data : [];
+      } catch (e2) {
+        error = 'Failed to load priority data';
+      }
     } finally {
       loading = false;
     }

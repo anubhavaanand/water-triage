@@ -21,17 +21,25 @@
     }
 
     // Check Health
-    try {
-      const res = await fetch('/api/health', { cache: 'no-store' });
-      if (res.ok) {
+    async function checkHealth() {
+      try {
+        const res = await fetch('/api/health', { cache: 'no-store' });
+        if (!res.ok) throw new Error('API unavailable');
         const data = await res.json();
-        dbStatus = data.db_status === 'online' ? 'live' : 'offline';
-      } else {
-        dbStatus = 'offline';
+        return data.status === 'healthy' ? 'live' : 'offline';
+      } catch (e) {
+        // Fallback to baked static health.json
+        try {
+          const res = await fetch(`${import.meta.env.BASE_URL}health.json`);
+          const data = await res.json();
+          return data.status === 'healthy' ? 'live' : 'offline';
+        } catch (e2) {
+          return 'offline';
+        }
       }
-    } catch (e) {
-      dbStatus = 'offline';
     }
+    
+    dbStatus = await checkHealth();
 
     // Restore tab
     const saved = localStorage.getItem('wt-tab');
@@ -41,17 +49,7 @@
 
     // Poll health every 30s
     const interval = setInterval(async () => {
-      try {
-        const res = await fetch('/api/health', { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          dbStatus = data.db_status === 'online' ? 'live' : 'offline';
-        } else {
-          dbStatus = 'offline';
-        }
-      } catch (e) {
-        dbStatus = 'offline';
-      }
+      dbStatus = await checkHealth();
     }, 30000);
 
     return () => clearInterval(interval);

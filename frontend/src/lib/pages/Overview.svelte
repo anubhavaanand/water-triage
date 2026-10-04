@@ -6,7 +6,8 @@
 
     $effect(() => {
         fetch('/api/meta')
-            .then(r => r.json())
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .catch(() => fetch(`${import.meta.env.BASE_URL}meta.json`).then(r => r.json()))
             .then(data => {
                 meta = data;
                 loading = false;
