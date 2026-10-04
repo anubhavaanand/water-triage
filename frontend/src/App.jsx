@@ -541,7 +541,7 @@ export default function App() {
               <div style={{flex: 1, background: 'color-mix(in oklch, var(--low) 50%, transparent)', height: '20%', borderRadius: '1px 1px 0 0'}} />
               <div style={{flex: 1, background: 'color-mix(in oklch, var(--low) 50%, transparent)', height: '15%', borderRadius: '1px 1px 0 0'}} />
             </div>
-            <div className="callout" style={{marginTop: 8}}>→ total_coliform (7) + sulphate (467) are unscored — label clearly in Methodology panel</div>
+            <div className="callout" style={{marginTop: 8}}>→ total coliform and sulphate are unscored — label clearly in Methodology panel</div>
           </div>
           {/* Feature 3: Chronic Hotspot Registry */}
           <div className="feature-card">
@@ -549,7 +549,7 @@ export default function App() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2" /><path d="M12 8v4l3 3" /></svg>
             </div>
             <h3>Chronic Hotspot Registry</h3>
-            <p>Historical contamination registry: 100,690 events, 2009–2012 window. Bihar-heavy (90,794 vs 9,896 UP). Not a live trend — label as historical registry explicitly.</p>
+            <p>Historical contamination registry: {metaData?.corpus?.historical_events_distinct} events, {metaData?.corpus?.registry_years[0]}–{metaData?.corpus?.registry_years[1]} window. Not a live trend — label as historical registry explicitly.</p>
             {/* timeline sketch */}
             <div style={{marginTop: 14, paddingLeft: 14, borderLeft: '2px solid var(--fg)', display: 'flex', flexDirection: 'column', gap: 10}}>
               <div style={{position: 'relative'}}>
