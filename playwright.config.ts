@@ -4,12 +4,7 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 30000,
   use: {
-  webServer: {
-    command: 'npm run preview --prefix frontend',
-    url: 'http://localhost:4173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+    baseURL: 'http://localhost:4173',
     trace: 'on-first-retry',
   },
   webServer: {
