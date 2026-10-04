@@ -43,3 +43,14 @@ playwright-report/
 backend.log
 test-results/
 replacements.txt
+
+# Temp / scratch files (not for git)
+*.pyc
+*.log
+*.out.txt
+*_out.txt
+run_pw.sh
+parse_raw_wq6.py
+patch_queue.py
+playwright_out.txt
+data/validation_reports/WQ6_Complete_UttarPradesh.csv
