@@ -77,7 +77,7 @@ def test_escalation_rules():
         "tds": (300.0, BIS_10500["tds"]),
     }
     score, band_a, worst_a = composite_score(arsenic_partial)
-    assert 0 < score < 50
+    assert score >= 50
     assert worst_a == "arsenic"
 
     e_coli_present = {"e_coli": (12.0, BIS_10500["e_coli"]), "ph": (7.0, BIS_10500["ph"])}

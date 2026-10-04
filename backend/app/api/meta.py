@@ -205,6 +205,88 @@ def get_metadata(db: Session = Depends(get_db)):
             "single_parameter_iron_critical": int(crit_conc[2]),
         }
 
+
+    # Sensitivity Run: Iron limit = 1.0
+    s_bands = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0}
+    s_bihar = {"critical": 0, "sum": 0, "count": 0, "scores": [], "iron_tested": 0, "iron_exceeded": 0}
+    s_up = {"critical": 0, "sum": 0, "count": 0, "scores": [], "iron_tested": 0, "iron_exceeded": 0}
+    
+    all_readings = db.execute(text("""
+        SELECT r.sample_id, r.parameter_key, r.value, s.name as state
+        FROM readings r
+        JOIN water_samples ws ON r.sample_id = ws.id
+        JOIN villages v ON ws.village_id = v.id
+        JOIN districts d ON v.district_id = d.id
+        JOIN states s ON d.state_id = s.id
+    """)).fetchall()
+    
+    # group by sample
+    from collections import defaultdict
+    samples_dict = defaultdict(list)
+    state_map = {}
+    for r in all_readings:
+        samples_dict[r.sample_id].append((r.parameter_key, r.value))
+        state_map[r.sample_id] = r.state
+        
+    from app.engine.scoring import composite_score, BIS_10500
+    from copy import deepcopy
+    my_limits = deepcopy(BIS_10500)
+    my_limits["iron"]["acceptable"] = 1.0
+    my_limits["iron"]["permissible"] = None
+    
+    for sid, readings in samples_dict.items():
+        st = state_map[sid]
+        r_dict = {}
+        for (k, v) in readings:
+            if k in my_limits:
+                r_dict[k] = (v, my_limits[k])
+            if k == 'iron':
+                if st == 'Bihar':
+                    s_bihar['iron_tested'] += 1
+                    if v > 1.0: s_bihar['iron_exceeded'] += 1
+                elif st == 'Uttar Pradesh':
+                    s_up['iron_tested'] += 1
+                    if v > 1.0: s_up['iron_exceeded'] += 1
+                
+        score, band, _ = composite_score(r_dict)
+        s_bands[band] = s_bands.get(band, 0) + 1
+        
+        target = s_bihar if st == 'Bihar' else s_up if st == 'Uttar Pradesh' else None
+        if target is not None:
+            target['sum'] += score
+            target['count'] += 1
+            target['scores'].append(score)
+            if band == 'Critical':
+                target['critical'] += 1
+                
+    def get_med(scrs):
+        if not scrs: return 0.0
+        scrs.sort()
+        n = len(scrs)
+        return (scrs[n//2-1] + scrs[n//2])/2.0 if n%2==0 else scrs[n//2]
+
+    sensitivity = {
+        "iron_1_0": {
+            "bands": s_bands,
+            "state_stats": {
+                "Bihar": {
+                    "mean": round(s_bihar['sum']/max(1, s_bihar['count']), 2),
+                    "median": round(get_med(s_bihar['scores']), 2),
+                    "critical": s_bihar['critical']
+                },
+                "Uttar Pradesh": {
+                    "mean": round(s_up['sum']/max(1, s_up['count']), 2),
+                    "median": round(get_med(s_up['scores']), 2),
+                    "critical": s_up['critical']
+                }
+            },
+            "iron_rates": {
+                "Bihar": round((s_bihar['iron_exceeded']/max(1, s_bihar['iron_tested']))*100, 2),
+                "Uttar Pradesh": round((s_up['iron_exceeded']/max(1, s_up['iron_tested']))*100, 2)
+            }
+        }
+    }
+
     return {
 
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -220,6 +302,7 @@ def get_metadata(db: Session = Depends(get_db)):
             "unassigned_district_samples": unassigned_dict
         },
         "bands": bands_dict,
+        "sensitivity": sensitivity,
         "critical_concentration": critical_concentration,
         "band_thresholds": {"Critical": 75, "High": 50, "Medium": 25, "Low": 0},
         "state_comparison": state_comparison,
@@ -242,6 +325,13 @@ def get_metadata(db: Session = Depends(get_db)):
             ]
         },
         "limitations": [
+            {
+                "id": "iron-limit-conflict",
+                "title": "Iron limit conflict between standard and records",
+                "detail": "876 readings explicitly carry an acceptable limit of 1.0 mg/L in the raw records. Scoring uses the stricter 0.3 mg/L specified by IS 10500:2012.",
+                "status": "accepted"
+            },
+
             {
                 "id": "panel-size-bias",
                 "title": "Panel size drives score",
