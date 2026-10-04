@@ -1,5 +1,10 @@
 <script>
+  
   import { onMount } from 'svelte';
+  import Drawer from './Drawer.svelte';
+  
+  let selectedSampleId = $state(null);
+
   
   let priorityList = [];
   let kpi = {};
@@ -11,7 +16,7 @@
       const res = await fetch('/api/priority');
       if (res.ok) {
         const data = await res.json();
-        priorityList = data.priority || [];
+        priorityList = Array.isArray(data) ? data : (data.priority || []);
         kpi = data.kpi || {};
       } else {
         error = 'Failed to load /api/priority';
@@ -57,7 +62,7 @@
           {@const bandColor = getBandColor(item.band)}
           {@const bgColor = getBgColor(item.band, isPathogen)}
           
-          <div aria-label={isPathogen ? "Pathogen override row" : ""} style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: {isPathogen ? '2px dashed var(--critical)' : '1px dashed var(--border)'}; border-top: none; background: {bgColor};">
+          <div class="queue-item" onclick={() => selectedSampleId = item.sample_id} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && (selectedSampleId = item.sample_id)} aria-label={isPathogen ? "Pathogen override row" : ""} style="cursor:pointer; display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: {isPathogen ? '2px dashed var(--critical)' : '1px dashed var(--border)'}; border-top: none; background: {bgColor};">
             
             <span style="font-family: var(--font-sketch); font-size: 14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
               {item.district}, {item.state}
@@ -141,8 +146,18 @@
 <hr class="rule"/>
 <div class="measure-line" style="margin: 2px 0;">sidebar width</div>
 <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-align: center;">240px fixed</div>
+
+{#if selectedSampleId}
+  <Drawer sampleId={selectedSampleId} onClose={() => selectedSampleId = null} />
+{/if}
+</div>
+
 </div>
 </div>
+
+{#if selectedSampleId}
+  <Drawer sampleId={selectedSampleId} onClose={() => selectedSampleId = null} />
+{/if}
 </div>
-</div>
+
 </div>

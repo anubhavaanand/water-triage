@@ -1,0 +1,12 @@
+{
+  "status": "healthy",
+  "service": "watertriage-api",
+  "version": "1.0.0",
+  "timestamp": "2026-10-04T04:07:37Z",
+  "checks": {
+    "database": "connected",
+    "cache": "connected",
+    "external_apis": "operational"
+  },
+  "uptime_seconds": 86400
+}

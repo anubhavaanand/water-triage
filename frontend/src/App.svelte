@@ -139,7 +139,7 @@
           </span>
           <span class="stat" style="min-width: 80px;">
             <span class="stat-num" style="color: var(--color-low);">1,232</span>
-            <span class="stat-label">Low<br><span class="badge badge-low">< 25</span></span>
+            <span class="stat-label">Low<br><span class="badge badge-low">&lt; 25</span></span>
           </span>
         </div>
         <p class="callout" style="margin-top: 10px;">✓ FIXED — data.json rebuilt from live DB. Counts now match: 89/392/28/1,232. Pre-fix bake (106/653) is retired.</p>
