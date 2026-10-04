@@ -6,6 +6,14 @@ from ..database import get_session
 
 router = APIRouter(tags=["dashboard"])
 
+@router.get("/health")
+def health_check(db: Session = Depends(get_session)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "healthy", "database": "connected"}
+    except Exception:
+        return {"status": "degraded", "database": "disconnected"}
+
 @router.get("/dashboard-data")
 def get_dashboard_data(db: Session = Depends(get_session)):
     samples_res = db.execute(text("SELECT COUNT(*) FROM risk_scores")).scalar() or 0
