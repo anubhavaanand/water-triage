@@ -1,43 +1,27 @@
 import { test, expect } from '@playwright/test';
 
-test('take screenshots and verify KPI', async ({ page }) => {
+test('take screenshots and verify React tabs', async ({ page }) => {
   await page.goto('/');
-  await page.waitForTimeout(2000);
 
-  // 1. Overview
-  await page.click('button:has-text("Variant E")');
-  await page.waitForTimeout(1000);
-  await page.screenshot({ path: 'docs/figures/Overview.png', fullPage: true });
+  // 1. Verify KPIs in the hero section are visible right away
+  await expect(page.locator('.stat-num').first()).toBeVisible({ timeout: 10000 });
 
-  // 2. Queue
-  await page.click('button:has-text("Variant A")');
-  await page.waitForSelector('.queue-item', { timeout: 10000 });
-  await page.waitForTimeout(1000);
+  // 2. Queue (Variant A) - This is the default tab
+  await expect(page.locator('#tab-panel-a')).toBeVisible({ timeout: 10000 });
   await page.screenshot({ path: 'docs/figures/Queue.png', fullPage: true });
 
-  // Drawer inside Queue
-  const firstRow = page.locator('.queue-item').first();
-  await firstRow.click();
-  await page.waitForTimeout(2000);
-  await page.screenshot({ path: 'docs/figures/Drawer.png', fullPage: true });
-  // Close drawer
-  await page.click('button[aria-label="Close drawer"]');
-  await page.waitForTimeout(500);
-
-  // 3. Map
-  await page.click('button:has-text("Variant B")');
-  await page.waitForTimeout(1000);
+  // 3. Map (Variant B)
+  await page.locator('#tab-b').click();
+  await expect(page.locator('#tab-panel-b')).toBeVisible({ timeout: 10000 });
   await page.screenshot({ path: 'docs/figures/Map.png', fullPage: true });
 
-  // 4. Methodology
-  await page.click('button:has-text("Variant F")');
-  await page.waitForTimeout(1000);
-  await page.screenshot({ path: 'docs/figures/Methodology.png', fullPage: true });
+  // 4. Detail Split (Variant C)
+  await page.locator('#tab-c').click();
+  await expect(page.locator('#tab-panel-c')).toBeVisible({ timeout: 10000 });
+  await page.screenshot({ path: 'docs/figures/DetailSplit.png', fullPage: true });
 
-  // 5. Validation
-  await page.click('button:has-text("Variant D")');
-  await page.waitForTimeout(1000);
+  // 5. Validation (Variant D)
+  await page.locator('#tab-d').click();
+  await expect(page.locator('#tab-panel-d')).toBeVisible({ timeout: 10000 });
   await page.screenshot({ path: 'docs/figures/Validation.png', fullPage: true });
-
-  await expect(page.locator('p').filter({ hasText: '1,741 samples' })).toBeVisible();
 });

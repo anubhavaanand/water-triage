@@ -1,0 +1,1437 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WaterTriage — Dashboard Wireframe Sketch v0.3</title>
+  <style>
+    /* ─── tokens (sketch palette, Bugatti-adjacent monochrome + one marker blue) ─ */
+    :root {
+      --bg:       #f4f0e8;   /* aged graph-paper */
+      --surface:  #faf7f0;   /* slightly lifted surface */
+      --fg:       #1c1812;   /* ink/marker near-black */
+      --muted:    #7a6e5a;   /* pencil mid-tone */
+      --border:   #c8b89a;   /* pencil stroke border */
+      --accent:   #2b6cb0;   /* one marker blue — use at most 2× per screen */
+
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft:     color-mix(in oklch, var(--fg) 6%, transparent);
+
+      /* sketch-specific derived tokens */
+      --ink:         color-mix(in oklch, var(--fg) 90%, transparent);
+      --pencil:      color-mix(in oklch, var(--muted) 60%, transparent);
+      --grid-line:   color-mix(in oklch, var(--border) 45%, transparent);
+      --hatch:       color-mix(in oklch, var(--fg) 20%, transparent);
+      --yellow-note: #fef08a;
+      --pink-note:   #fda4af;
+      --green-note:  #86efac;
+
+      /* severity palette (WaterTriage band colors) */
+      --critical:   #c1121f;
+      --high:       #e85d04;
+      --medium:     #d4a017;
+      --low:        #2d7d46;
+
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono:    ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+      --font-sketch:  'Segoe Print', 'Comic Sans MS', 'Chalkboard SE', cursive;
+
+      --fs-h1:   clamp(36px, 5vw, 60px);
+      --fs-h2:   clamp(24px, 3.5vw, 38px);
+      --fs-h3:   20px;
+      --fs-lead: 17px;
+      --fs-body: 15px;
+      --fs-meta: 12px;
+
+      --gap-xs: 8px;
+      --gap-sm: 12px;
+      --gap-md: 20px;
+      --gap-lg: 32px;
+      --gap-xl: 52px;
+      --gap-2xl: 88px;
+      --container: 1080px;
+      --gutter: 32px;
+
+      --radius: 4px;
+      --radius-lg: 6px;
+    }
+
+    /* ─── reset ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: var(--fs-body);
+      line-height: 1.55;
+    }
+    img, svg { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; }
+    p { text-wrap: pretty; margin: 0; }
+    h1, h2, h3, h4 { text-wrap: balance; }
+
+    /* ─── graph-paper background ─────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(color-mix(in oklch, var(--grid-line) 35%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in oklch, var(--grid-line) 35%, transparent) 1px, transparent 1px);
+      background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+      background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+    }
+    body > * { position: relative; z-index: 1; }
+
+    /* ─── layout primitives ──────────────────────────────────── */
+    .container {
+      max-width: var(--container);
+      margin-inline: auto;
+      padding-inline: var(--gutter);
+    }
+    .section {
+      padding-block: clamp(40px, 7vw, var(--gap-2xl));
+    }
+    .section + .section {
+      border-top: 2px dashed var(--border);
+    }
+    .stack { display: flex; flex-direction: column; }
+    .stack > * + * { margin-top: var(--gap-md); }
+    .row { display: flex; align-items: center; gap: var(--gap-md); }
+    .row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--gap-md); }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap-lg); }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap-lg); }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap-md); }
+    .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap-xl); align-items: start; }
+    .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: var(--gap-xl); align-items: start; }
+    @media (max-width: 920px) {
+      .grid-2, .grid-3, .grid-4, .grid-2-1, .grid-1-2 { grid-template-columns: 1fr; }
+    }
+
+    /* ─── type ────────────────────────────────────────────────── */
+    .h1, h1 { font-family: var(--font-sketch); font-size: var(--fs-h1); line-height: 1.1; letter-spacing: -0.01em; margin: 0; }
+    .h2, h2 { font-family: var(--font-sketch); font-size: var(--fs-h2); line-height: 1.15; letter-spacing: -0.008em; margin: 0; }
+    .h3, h3 { font-family: var(--font-sketch); font-size: var(--fs-h3); font-weight: 600; line-height: 1.3; margin: 0; }
+    .lead   { font-family: var(--font-sketch); font-size: var(--fs-lead); line-height: 1.6; color: var(--muted); max-width: 62ch; margin: 0; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 var(--gap-md);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .eyebrow::before { content: '//'; opacity: 0.5; }
+    .meta { font-family: var(--font-mono); font-size: var(--fs-meta); color: var(--muted); }
+    .num  { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    /* ─── sketch chrome: nav ─────────────────────────────────── */
+    .topnav {
+      position: sticky; top: 0; z-index: 10;
+      background: color-mix(in oklch, var(--bg) 94%, transparent);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid var(--fg);
+    }
+    .topnav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-block: 13px;
+      flex-wrap: wrap;
+      gap: var(--gap-sm);
+    }
+    .topnav .logo {
+      font-family: var(--font-sketch);
+      font-size: 18px;
+      letter-spacing: 0.02em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .topnav .logo::before {
+      content: '';
+      display: block; width: 28px; height: 28px;
+      border: 2px solid var(--fg);
+      border-radius: 3px;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent, transparent 3px,
+        var(--hatch) 3px, var(--hatch) 4px
+      );
+    }
+    .topnav nav { display: flex; gap: var(--gap-md); flex-wrap: wrap; }
+    .topnav nav a {
+      font-family: var(--font-sketch);
+      font-size: 13px;
+      color: var(--muted);
+      padding: 4px 0;
+      border-bottom: 2px dashed transparent;
+      min-height: 44px; display: inline-flex; align-items: center;
+    }
+    .topnav nav a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+    .topnav nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .pagefoot {
+      padding-block: var(--gap-xl);
+      color: var(--muted);
+      font-family: var(--font-sketch);
+      font-size: 13px;
+      border-top: 2px solid var(--fg);
+    }
+    .pagefoot .row-between { flex-wrap: wrap; gap: var(--gap-md); }
+
+    /* ─── buttons ────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 22px;           /* ≥44px touch target height */
+      min-height: 44px;
+      border-radius: 2px;
+      border: 2px solid transparent;
+      font-family: var(--font-sketch);
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      transition: transform 0.06s ease, background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+      position: relative;
+    }
+    .btn:active { transform: translateY(1px); }
+    /* imperfect corner dashed ring */
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1px dashed color-mix(in oklch, var(--fg) 25%, transparent);
+      border-radius: 3px;
+      pointer-events: none;
+    }
+    /* ── primary ── */
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;              /* white on blue: 4.5:1+ ✓ */
+      border-color: var(--accent);
+    }
+    .btn-primary:hover {
+      background: color-mix(in oklch, var(--accent) 82%, black);
+      border-color: color-mix(in oklch, var(--accent) 82%, black);
+      color: #ffffff;              /* keep white — contrast stays high */
+    }
+    .btn-primary:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+    /* ── secondary ── */
+    .btn-secondary {
+      background: transparent;
+      color: var(--fg);
+      border: 2px solid var(--fg);
+    }
+    .btn-secondary:hover {
+      background: var(--fg-soft);
+      color: var(--fg);           /* color stays, background darkens slightly */
+    }
+    .btn-secondary:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+    /* ── ghost ── */
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg);
+      border-color: transparent;
+      padding-inline: 8px;
+      min-height: 44px;
+    }
+    .btn-ghost:hover { color: var(--accent); }
+    .btn-ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .btn-arrow::after { content: ' →'; }
+
+    /* ─── sketch box (rough rect) ────────────────────────────── */
+    .sketch-box {
+      background: var(--surface);
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+      padding: 24px;
+      position: relative;
+    }
+    .sketch-box::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 1px dashed var(--border);
+      border-radius: 1px;
+      pointer-events: none;
+    }
+
+    /* ─── hatched fills ──────────────────────────────────────── */
+    .hatch-box {
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent, transparent 5px,
+        var(--hatch) 5px, var(--hatch) 6px
+      );
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+    }
+    .hatch-box-light {
+      background: repeating-linear-gradient(
+        45deg,
+        transparent, transparent 8px,
+        var(--hatch) 8px, var(--hatch) 9px
+      );
+      border: 1px solid var(--border);
+      border-radius: 2px;
+    }
+
+    /* ─── tab component ──────────────────────────────────────── */
+    .tab-row {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--fg);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tab-row::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      font-family: var(--font-sketch);
+      font-size: 13px;
+      background: transparent;
+      border: 2px solid var(--fg);
+      border-bottom: none;
+      border-radius: 3px 3px 0 0;
+      padding: 10px 18px;
+      min-height: 44px;           /* touch target */
+      color: var(--muted);
+      cursor: pointer;
+      margin-right: -2px;
+      position: relative;
+      transition: background 0.1s ease, color 0.1s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tab-btn:hover { background: var(--fg-soft); color: var(--fg); }
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--fg);
+      border-bottom: 2px solid var(--surface);
+      z-index: 2;
+      font-weight: 600;
+    }
+    .tab-btn.active::before {
+      content: '▸ ';
+      font-size: 10px;
+      color: var(--accent);
+    }
+    .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .tab-panel {
+      display: none;
+      border: 2px solid var(--fg);
+      border-top: none;
+      padding: 28px;
+      background: var(--surface);
+      position: relative;
+    }
+    .tab-panel.active { display: block; }
+    .tab-panel::before {
+      content: attr(data-note);
+      position: absolute;
+      top: 12px; right: -144px;
+      width: 136px;
+      font-family: var(--font-sketch);
+      font-size: 11px;
+      color: var(--muted);
+      white-space: normal;
+      line-height: 1.4;
+      padding-left: 12px;
+      border-left: 1px dashed var(--border);
+    }
+    @media (max-width: 1300px) { .tab-panel::before { display: none; } }
+
+    /* ─── feature cells ──────────────────────────────────────── */
+    .feature-mark {
+      width: 40px; height: 40px;
+      display: grid; place-items: center;
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+      color: var(--accent);
+      margin-bottom: var(--gap-md);
+      background: repeating-linear-gradient(
+        45deg,
+        transparent, transparent 4px,
+        var(--hatch) 4px, var(--hatch) 5px
+      );
+    }
+    .feature-mark svg { width: 18px; height: 18px; }
+    .feature-card {
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+      padding: 22px;
+      background: var(--surface);
+      position: relative;
+    }
+    /* corner dog-ear */
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 16px; height: 16px;
+      background: var(--bg);
+      border-left: 2px solid var(--fg);
+      border-bottom: 2px solid var(--fg);
+    }
+    .feature-card h3 { margin-bottom: 6px; }
+    .feature-card p  { margin: 0; color: var(--muted); font-family: var(--font-sketch); font-size: 14px; }
+
+    /* ─── sticky notes ───────────────────────────────────────── */
+    .sticky {
+      padding: 18px 20px;
+      font-family: var(--font-sketch);
+      font-size: 13px;
+      line-height: 1.5;
+      border-radius: 1px;
+      box-shadow: 3px 4px 0 color-mix(in oklch, var(--fg) 14%, transparent);
+      position: relative;
+    }
+    .sticky-title {
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed color-mix(in oklch, var(--fg) 30%, transparent);
+    }
+    .sticky-yellow { background: var(--yellow-note); transform: rotate(-1.2deg); }
+    .sticky-pink   { background: var(--pink-note);   transform: rotate(0.8deg); }
+    .sticky-green  { background: var(--green-note);  transform: rotate(-0.5deg); }
+    /* top tape strip */
+    .sticky::after {
+      content: '';
+      position: absolute;
+      top: -8px; left: 50%; transform: translateX(-50%);
+      width: 48px; height: 16px;
+      background: color-mix(in oklch, var(--yellow-note) 60%, transparent);
+      border: 1px solid color-mix(in oklch, var(--fg) 15%, transparent);
+      border-radius: 1px;
+    }
+    .sticky-pink::after  { background: color-mix(in oklch, var(--pink-note) 60%, transparent); }
+    .sticky-green::after { background: color-mix(in oklch, var(--green-note) 60%, transparent); }
+    @media (max-width: 920px) { .sticky { transform: none !important; } }
+
+    /* ─── scribble chart ─────────────────────────────────────── */
+    .chart-wrap {
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+      padding: 20px;
+      background: var(--surface);
+      position: relative;
+    }
+    .chart-label-x {
+      font-family: var(--font-sketch);
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 6px;
+    }
+    .chart-label-y {
+      font-family: var(--font-sketch);
+      font-size: 11px;
+      color: var(--muted);
+      position: absolute;
+      left: 8px; top: 50%;
+      transform: translateY(-50%) rotate(180deg);
+      writing-mode: vertical-lr;
+    }
+    .chart-title {
+      font-family: var(--font-sketch);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      padding-left: 28px;
+    }
+
+    /* ─── stat (KPI style) ───────────────────────────────────── */
+    .stat .stat-num {
+      font-family: var(--font-sketch);
+      font-size: clamp(44px, 7vw, 72px);
+      line-height: 0.95;
+    }
+    .stat .stat-label { color: var(--muted); font-family: var(--font-sketch); font-size: 13px; margin-top: 8px; max-width: 24ch; }
+    .stat .stat-unit  { font-size: 0.5em; opacity: 0.7; margin-left: 2px; }
+
+    /* ─── severity badge ─────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 8px;
+      border: 1px solid currentColor;
+      border-radius: 2px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .badge-critical { color: var(--critical); background: color-mix(in oklch, var(--critical) 10%, transparent); }
+    .badge-high     { color: var(--high);     background: color-mix(in oklch, var(--high)     10%, transparent); }
+    .badge-medium   { color: var(--medium);   background: color-mix(in oklch, var(--medium)   10%, transparent); }
+    .badge-low      { color: var(--low);      background: color-mix(in oklch, var(--low)      10%, transparent); }
+    /* ─── pill / tag ─────────────────────────────────────────── */
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 2px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .tag {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: 2px;
+      font-family: var(--font-sketch);
+      font-size: 12px;
+    }
+
+    /* ─── form field ─────────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-family: var(--font-sketch); font-size: 13px; color: var(--muted); }
+    .input, .textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: 2px;
+      background: var(--surface);
+      color: var(--fg);
+      font: inherit;
+      font-family: var(--font-sketch);
+      font-size: 14px;
+    }
+    .input:focus, .textarea:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 0;
+      border-color: var(--accent);
+    }
+    .textarea { min-height: 96px; resize: vertical; line-height: 1.55; }
+
+    /* ─── table ──────────────────────────────────────────────── */
+    .ds-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ds-table th, .ds-table td { padding: 11px 14px; text-align: left; border-bottom: 1px dashed var(--border); }
+    .ds-table th { color: var(--muted); font-weight: 600; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .ds-table tbody tr:hover { background: var(--fg-soft); }
+    .ds-table .num-col { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+
+    /* ─── image placeholder ──────────────────────────────────── */
+    .ph-img {
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--fg-soft), var(--fg-soft) 6px,
+        var(--surface) 6px, var(--surface) 12px
+      );
+      border: 2px solid var(--fg);
+      border-radius: 2px;
+      aspect-ratio: 16 / 10;
+      display: grid; place-items: center;
+      color: var(--muted);
+      font-family: var(--font-sketch);
+      font-size: 13px;
+    }
+    .ph-img-x {
+      position: relative;
+      overflow: hidden;
+    }
+    .ph-img-x::before,
+    .ph-img-x::after {
+      content: '';
+      position: absolute;
+      background: color-mix(in oklch, var(--fg) 20%, transparent);
+      width: 2px;
+      height: 141.4%;
+      top: -20%; left: 50%;
+      transform-origin: center;
+    }
+    .ph-img-x::before { transform: translateX(-50%) rotate(-45deg); }
+    .ph-img-x::after  { transform: translateX(-50%) rotate(45deg); }
+
+    /* ─── rule ───────────────────────────────────────────────── */
+    .rule       { border: 0; border-top: 1px dashed var(--border); margin: 0; }
+    .rule-strong{ border: 0; border-top: 2px solid var(--fg); margin: 0; }
+
+    /* ─── hero ───────────────────────────────────────────────── */
+    .hero { padding-block: clamp(64px, 10vw, 120px); }
+    .hero h1 { margin-bottom: var(--gap-md); }
+    .hero .lead { margin-bottom: var(--gap-lg); }
+    .hero-cta { display: inline-flex; gap: var(--gap-sm); flex-wrap: wrap; }
+
+    /* ─── log row ────────────────────────────────────────────── */
+    .log-row { display: grid; grid-template-columns: 120px 1fr 100px; gap: var(--gap-lg); padding: 20px 0; border-top: 1px dashed var(--border); align-items: baseline; }
+    .log-row .meta { color: var(--muted); }
+    .log-row h3 { font-size: 18px; }
+    .log-row .pull { text-align: right; }
+
+    /* ─── annotation callout ─────────────────────────────────── */
+    .callout {
+      font-family: var(--font-sketch);
+      font-size: 12px;
+      color: var(--muted);
+      padding: 8px 12px;
+      border-left: 3px solid var(--border);
+      margin: 0;
+      font-style: italic;
+    }
+
+    /* ─── sketch section label ───────────────────────────────── */
+    .sketch-section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      position: absolute;
+      top: -10px; left: 16px;
+      background: var(--bg);
+      padding: 0 6px;
+    }
+
+    /* ─── measurement line ───────────────────────────────────── */
+    .measure-line {
+      display: flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .measure-line::before,
+    .measure-line::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: currentColor;
+    }
+
+    /* ─── flow arrow ─────────────────────────────────────────── */
+    .flow-arrow {
+      font-size: 24px;
+      color: var(--muted);
+      text-align: center;
+      font-family: var(--font-sketch);
+      line-height: 1;
+      margin: 4px 0;
+    }
+
+    /* ─── progress bar ───────────────────────────────────────── */
+    .prog-track {
+      height: 12px;
+      border: 1px solid var(--fg);
+      border-radius: 2px;
+      background: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    .prog-fill {
+      position: absolute;
+      inset-block: 0; left: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--accent), var(--accent) 4px,
+        color-mix(in oklch, var(--accent) 60%, transparent) 4px,
+        color-mix(in oklch, var(--accent) 60%, transparent) 8px
+      );
+    }
+
+    /* ─── state skeleton / loading ───────────────────────────── */
+    .skeleton {
+      background: repeating-linear-gradient(
+        90deg,
+        var(--border) 0%, color-mix(in oklch, var(--border) 60%, transparent) 50%, var(--border) 100%
+      );
+      background-size: 200% 100%;
+      border-radius: 2px;
+      animation: shimmer 1.4s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .skeleton { animation: none; background: var(--border); }
+    }
+
+    /* ─── error state box ────────────────────────────────────── */
+    .error-box {
+      border: 2px dashed var(--critical);
+      border-radius: 2px;
+      padding: 24px;
+      background: color-mix(in oklch, var(--critical) 5%, transparent);
+      font-family: var(--font-sketch);
+      font-size: 14px;
+      text-align: center;
+      color: var(--critical);
+    }
+    .empty-box {
+      border: 2px dashed var(--border);
+      border-radius: 2px;
+      padding: 36px 24px;
+      background: transparent;
+      font-family: var(--font-sketch);
+      font-size: 14px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    /* ─── responsive ─────────────────────────────────────────── */
+    @media (max-width: 920px) {
+      :root { --gutter: 20px; }
+      body::before { background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px; }
+    }
+    @media (max-width: 480px) {
+      .topnav nav { gap: var(--gap-sm); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════ NAV -->
+  <header class="topnav" data-od-id="topnav">
+    <div class="container topnav-inner">
+      <span class="logo">WaterTriage</span>
+      <nav aria-label="Primary">
+        <a href="#">Map View</a>
+        <a href="#">Priority Queue</a>
+        <a href="#">Registry</a>
+        <a href="#">Drill-down</a>
+      </nav>
+      <button class="btn btn-primary">↓ Export CSV</button>
+    </div>
+  </header>
+
+  <main id="content">
+
+    <!-- ════════════════════════════════════════════════════ HERO + TAB SWITCHER -->
+    <section class="section hero" data-od-id="hero" style="padding-bottom: 0;">
+      <div class="container">
+
+        <!-- heading block -->
+        <div style="max-width: 620px; margin-bottom: 44px;">
+          <p class="eyebrow">v0.3 Wireframe · WaterTriage Dashboard · UP + Bihar · <span style="color: var(--low); letter-spacing: 0.06em;">✓ Backend Integration Complete</span></p>
+          <h1>Dashboard Layout Explorations</h1>
+          <p class="lead" style="margin-top: 16px;">
+            Three layout variants for the main risk-priority view — rough in on structure before committing pixels.
+            Data: <strong>1,741 samples</strong> across <strong>47 districts</strong> (UP 28 / Bihar 19).
+            Tap a tab to switch variants.
+          </p>
+          <!-- KPI strip -->
+          <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 28px; padding: 16px 20px; border: 2px solid var(--fg); border-radius: 2px; background: var(--surface);">
+            <span class="stat" style="min-width: 80px;">
+              <span class="stat-num" style="color: var(--critical);">89</span>
+              <span class="stat-label">Critical<br><span class="badge badge-critical">≥ 75</span></span>
+            </span>
+            <span class="stat" style="min-width: 80px;">
+              <span class="stat-num" style="color: var(--high);">392</span>
+              <span class="stat-label">High<br><span class="badge badge-high">50–74</span></span>
+            </span>
+            <span class="stat" style="min-width: 80px;">
+              <span class="stat-num" style="color: var(--medium);">28</span>
+              <span class="stat-label">Medium<br><span class="badge badge-medium">25–49</span></span>
+            </span>
+            <span class="stat" style="min-width: 80px;">
+              <span class="stat-num" style="color: var(--low);">1,232</span>
+              <span class="stat-label">Low<br><span class="badge badge-low">&lt; 25</span></span>
+            </span>
+          </div>
+          <p class="callout" style="margin-top: 10px;">✓ FIXED — data.json rebuilt from live DB. Counts now match: 89/392/28/1,232. Pre-fix bake (106/653) is retired.</p>
+        </div>
+
+        <!-- ──── TAB SWITCHER ──── -->
+        <div id="tab-system" aria-label="Layout variants">
+          <div class="tab-row" role="tablist" aria-label="Dashboard layout variants">
+            <button class="tab-btn active" role="tab" aria-selected="true"  aria-controls="tab-panel-a" id="tab-a" onclick="switchTab('a')">Variant A — Priority Queue (List)</button>
+            <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-panel-b" id="tab-b" onclick="switchTab('b')">Variant B — Map + Cards</button>
+            <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-panel-c" id="tab-c" onclick="switchTab('c')">Variant C — District + Detail Split</button>
+          </div>
+
+          <!-- ── Panel A: Priority Queue List ── -->
+          <div class="tab-panel active" id="tab-panel-a" role="tabpanel" aria-labelledby="tab-a"
+               data-note="← list-dominant: sidebar nav + sortable district rows — optimal for viva demo">
+            <div class="grid-2-1">
+              <!-- main list -->
+              <div>
+                <div class="callout" style="margin-bottom: 16px;">Sortable district table: risk score descending, filter by state / band / contaminant parameter.</div>
+
+                <!-- table header -->
+                <div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; padding: 8px 14px; border: 1px dashed var(--border); background: var(--fg-soft); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); border-radius: 2px 2px 0 0;">
+                  <span>District</span><span style="text-align:right">Score</span><span style="text-align:center">Band</span><span style="text-align:right">Samples</span><span>Worst Param</span>
+                </div>
+
+                <!-- row 1 — critical -->
+                <div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 2px solid var(--critical); border-top: none; background: color-mix(in oklch, var(--critical) 6%, transparent);">
+                  <span style="font-family: var(--font-sketch); font-size: 14px;">Katihar, Bihar</span>
+                  <span class="num" style="text-align:right; color: var(--critical);">82.4</span>
+                  <span style="text-align:center;"><span class="badge badge-critical">Critical</span></span>
+                  <span class="num" style="text-align:right; color: var(--muted);">24</span>
+                  <span class="tag" style="font-size:11px;">Iron</span>
+                </div>
+                <!-- row 2 — critical -->
+                <div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 1px dashed var(--border); border-top: none; background: var(--surface);">
+                  <span style="font-family: var(--font-sketch); font-size: 14px;">Purnia, Bihar</span>
+                  <span class="num" style="text-align:right; color: var(--critical);">79.1</span>
+                  <span style="text-align:center;"><span class="badge badge-critical">Critical</span></span>
+                  <span class="num" style="text-align:right; color: var(--muted);">18</span>
+                  <span class="tag" style="font-size:11px;">Iron</span>
+                </div>
+                <!-- row 3 — high (active selection) -->
+                <div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 2px solid var(--accent); border-top: none; background: var(--accent-soft);">
+                  <span style="font-family: var(--font-sketch); font-size: 14px; color: var(--accent);">Unnao, UP ← selected</span>
+                  <span class="num" style="text-align:right; color: var(--high);">68.3</span>
+                  <span style="text-align:center;"><span class="badge badge-high">High</span></span>
+                  <span class="num" style="text-align:right; color: var(--muted);">37</span>
+                  <span class="tag" style="font-size:11px;">Fluoride</span>
+                </div>
+                <!-- row 4 -->
+                <div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 1px dashed var(--border); border-top: none; background: var(--surface);">
+                  <span style="font-family: var(--font-sketch); font-size: 14px;">Ferozabad, UP</span>
+                  <span class="num" style="text-align:right; color: var(--high);">61.7</span>
+                  <span style="text-align:center;"><span class="badge badge-high">High</span></span>
+                  <span class="num" style="text-align:right; color: var(--muted);">29</span>
+                  <span class="tag" style="font-size:11px;">Fluoride</span>
+                </div>
+                <!-- row 5 — null worst_param note -->
+                <div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 1px dashed var(--border); border-top: none; background: var(--surface);">
+                  <span style="font-family: var(--font-sketch); font-size: 14px;">Ballia, UP</span>
+                  <span class="num" style="text-align:right; color: var(--low);">12.0</span>
+                  <span style="text-align:center;"><span class="badge badge-low">Low</span></span>
+                  <span class="num" style="text-align:right; color: var(--muted);">41</span>
+                  <span style="font-family:var(--font-sketch); font-size:11px; color: var(--muted);">within limits</span>
+                </div>
+
+                <!-- pagination sketch -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border: 1px dashed var(--border); border-top: none; border-radius: 0 0 2px 2px; font-family: var(--font-mono); font-size: 11px; color: var(--muted);">
+                  <span>1–5 of 47 districts</span>
+                  <div style="display: flex; gap: 4px;">
+                    <button class="btn btn-ghost" style="padding: 4px 10px; min-height: 36px; font-size: 12px;" disabled>← Prev</button>
+                    <button class="btn btn-secondary" style="padding: 4px 10px; min-height: 36px; font-size: 12px;">Next →</button>
+                  </div>
+                </div>
+                <p class="callout" style="margin-top: 10px;">✓ FIXED — JSON generation script updated: 732 NULL worst_parameter values now render as "Within BIS Limits".</p>
+              </div>
+              <!-- sidebar panel sketch -->
+              <div>
+                <div class="sketch-box" style="height: 100%;">
+                  <span class="sketch-section-label">Filter sidebar</span>
+                  <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 12px;">
+                    <!-- state filter -->
+                    <div class="field">
+                      <label>State</label>
+                      <select class="input" style="appearance: none; cursor: pointer; min-height: 44px;" aria-label="Filter by state">
+                        <option>All states</option>
+                        <option>Uttar Pradesh (966)</option>
+                        <option>Bihar (775)</option>
+                      </select>
+                    </div>
+                    <!-- band filter -->
+                    <div class="field">
+                      <label>Risk Band</label>
+                      <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label style="display: flex; gap: 8px; align-items: center; font-family: var(--font-sketch); font-size: 13px; min-height: 44px;"><input type="checkbox" checked style="width:16px;height:16px;" /> <span class="badge badge-critical">Critical</span> 89</label>
+                        <label style="display: flex; gap: 8px; align-items: center; font-family: var(--font-sketch); font-size: 13px; min-height: 44px;"><input type="checkbox" checked style="width:16px;height:16px;" /> <span class="badge badge-high">High</span> 392</label>
+                        <label style="display: flex; gap: 8px; align-items: center; font-family: var(--font-sketch); font-size: 13px; min-height: 44px;"><input type="checkbox" style="width:16px;height:16px;" /> <span class="badge badge-medium">Medium</span> 28</label>
+                        <label style="display: flex; gap: 8px; align-items: center; font-family: var(--font-sketch); font-size: 13px; min-height: 44px;"><input type="checkbox" style="width:16px;height:16px;" /> <span class="badge badge-low">Low</span> 1,232</label>
+                      </div>
+                    </div>
+                    <hr class="rule">
+                    <div class="measure-line" style="margin: 2px 0;">sidebar width</div>
+                    <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-align: center;">240px fixed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Panel B: Map + Cards ── -->
+          <div class="tab-panel" id="tab-panel-b" role="tabpanel" aria-labelledby="tab-b"
+               data-note="← choropleth map hero + district cards below — visual browsing">
+            <div class="callout" style="margin-bottom: 20px;">India choropleth (UP + Bihar highlighted) as the hero — Leaflet / Three.js globe. Cards below summarise top-risk districts.</div>
+            <!-- map placeholder -->
+            <div class="ph-img ph-img-x" style="aspect-ratio: 16/7; margin-bottom: 20px;" aria-label="India choropleth map placeholder — UP + Bihar coloured by risk score">[ India Choropleth — UP / Bihar coloured by composite risk score ]</div>
+            <div class="grid-3">
+              <!-- critical card -->
+              <div class="feature-card" style="border-color: var(--critical);">
+                <span class="badge badge-critical" style="margin-bottom: 12px;">Critical · Bihar</span>
+                <div style="font-family: var(--font-sketch); font-size: 18px; font-weight: 700; margin-bottom: 4px;">Katihar</div>
+                <div style="font-family: var(--font-mono); font-size: 22px; color: var(--critical); margin-bottom: 8px; font-variant-numeric: tabular-nums;">82.4</div>
+                <div style="height: 10px; background: var(--border); border-radius: 1px; width: 90%; margin-bottom: 4px;"></div>
+                <div style="height: 10px; background: var(--grid-line); border-radius: 1px; width: 60%;"></div>
+              </div>
+              <!-- high card (active) -->
+              <div class="feature-card" style="border-color: var(--accent); background: var(--accent-soft);">
+                <span class="pill" style="margin-bottom: 12px;">Selected</span>
+                <div style="font-family: var(--font-sketch); font-size: 18px; font-weight: 700; margin-bottom: 4px;">Unnao, UP</div>
+                <div style="font-family: var(--font-mono); font-size: 22px; color: var(--high); margin-bottom: 8px; font-variant-numeric: tabular-nums;">68.3</div>
+                <div style="height: 10px; background: color-mix(in oklch, var(--accent) 35%, transparent); border-radius: 1px; width: 70%; margin-bottom: 4px;"></div>
+                <div style="height: 10px; background: color-mix(in oklch, var(--accent) 20%, transparent); border-radius: 1px; width: 50%;"></div>
+              </div>
+              <!-- medium card -->
+              <div class="feature-card">
+                <span class="badge badge-medium" style="margin-bottom: 12px;">Medium · UP</span>
+                <div style="font-family: var(--font-sketch); font-size: 18px; font-weight: 700; margin-bottom: 4px;">Hardoi</div>
+                <div style="font-family: var(--font-mono); font-size: 22px; color: var(--medium); margin-bottom: 8px; font-variant-numeric: tabular-nums;">38.6</div>
+                <div style="height: 10px; background: var(--border); border-radius: 1px; width: 80%; margin-bottom: 4px;"></div>
+                <div style="height: 10px; background: var(--grid-line); border-radius: 1px; width: 55%;"></div>
+              </div>
+            </div>
+            <p class="callout" style="margin-top: 16px;">✓ FIXED — earth_16k.glb symlink removed. map.html patched with graceful fallback. No crash on Pages deploy.</p>
+          </div>
+
+          <!-- ── Panel C: District + Detail Split Panel ── -->
+          <div class="tab-panel" id="tab-panel-c" role="tabpanel" aria-labelledby="tab-c"
+               data-note="← master-detail: district list left, sample drill-down right — good for viva Q&A">
+            <div class="callout" style="margin-bottom: 20px;">Split panel: left = district master list (sortable), right = sample-level drill-down. Keyboard navigable for live demo.</div>
+            <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 0; border: 2px solid var(--fg);">
+              <!-- master list -->
+              <div style="border-right: 2px solid var(--fg);">
+                <div style="padding: 10px 14px; border-bottom: 1px dashed var(--border); background: var(--fg-soft); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Districts (47)</div>
+                <div style="display: flex; flex-direction: column;">
+                  <div style="padding: 11px 14px; border-bottom: 1px dashed var(--border); font-family: var(--font-sketch); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;"><span>Katihar, Bihar</span><span class="badge badge-critical">82.4</span></div>
+                  <div style="padding: 11px 14px; border-bottom: 1px dashed var(--border); background: var(--accent-soft); border-left: 3px solid var(--accent); font-family: var(--font-sketch); font-size: 13px; color: var(--fg); display: flex; justify-content: space-between;"><span>Unnao, UP ← selected</span><span class="badge badge-high">68.3</span></div>
+                  <div style="padding: 11px 14px; border-bottom: 1px dashed var(--border); font-family: var(--font-sketch); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;"><span>Ferozabad, UP</span><span class="badge badge-high">61.7</span></div>
+                  <div style="padding: 11px 14px; border-bottom: 1px dashed var(--border); font-family: var(--font-sketch); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;"><span>Muzaffarpur, Bihar</span><span class="badge badge-high">59.2</span></div>
+                  <div style="padding: 11px 14px; font-family: var(--font-sketch); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between;"><span>Saharanpur, UP</span><span class="badge badge-medium">42.1</span></div>
+                </div>
+              </div>
+              <!-- detail pane -->
+              <div style="padding: 20px;">
+                <div style="font-family: var(--font-sketch); font-size: 18px; font-weight: 700; margin-bottom: 6px;">Unnao, Uttar Pradesh</div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;">
+                  <span class="badge badge-high">Score: 68.3</span>
+                  <span class="tag">37 samples</span>
+                  <span class="tag">Worst: Fluoride</span>
+                </div>
+                <!-- parameter mini-bars -->
+                <div style="display: grid; gap: 8px; margin-bottom: 16px;">
+                  <div>
+                    <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:var(--muted); margin-bottom:3px;"><span>Fluoride (avg 2.4 mg/L · BIS: 1.0)</span><span>Sev 0.82</span></div>
+                    <div class="prog-track"><div class="prog-fill" style="width: 82%;"></div></div>
+                  </div>
+                  <div>
+                    <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:var(--muted); margin-bottom:3px;"><span>Turbidity (avg 4.1 NTU · BIS: 1.0)</span><span>Sev 0.41</span></div>
+                    <div class="prog-track"><div class="prog-fill" style="width: 41%;"></div></div>
+                  </div>
+                  <div>
+                    <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:var(--muted); margin-bottom:3px;"><span>pH (avg 7.6 · BIS: 6.5–8.5)</span><span>Sev 0.14</span></div>
+                    <div class="prog-track"><div class="prog-fill" style="width: 14%;"></div></div>
+                  </div>
+                </div>
+                <div class="hatch-box" style="height: 64px; display:grid; place-items:center; font-family:var(--font-sketch); font-size:11px; color:var(--muted); margin-bottom:14px;">[ Sample-level table · 37 rows → /api/samples?district=unnao ]</div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <button class="btn btn-primary">View all samples</button>
+                  <button class="btn btn-secondary">Export district CSV</button>
+                </div>
+              </div>
+            </div>
+            <p class="callout" style="margin-top: 12px;">→ Saharanpur case-normalisation needed: "Saharanpur" vs "SAHARANPUR" is the exact defect D3 mismatch (32 shared districts)</p>
+          </div>
+        </div><!-- /#tab-system -->
+
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════ COMPONENT INVENTORY -->
+    <section class="section" data-od-id="features">
+      <div class="container stack" style="gap: 48px;">
+        <div style="max-width: 40ch;">
+          <p class="eyebrow">Component Inventory</p>
+          <h2>Key UI blocks for v1 scope</h2>
+          <p class="lead" style="margin-top: 12px;">Each component gets one sketch pass — structure and decision points only. No polish yet.</p>
+        </div>
+
+        <div class="grid-3" style="gap: 20px;">
+          <!-- Feature 1: Priority Queue Table -->
+          <div class="feature-card">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 21V9"/></svg>
+            </div>
+            <h3>Priority Queue Table</h3>
+            <p>Sortable by composite risk score (desc). Row colour: red/orange/amber/green by band. Inline worst-parameter tag. Keyboard accessible (↑↓ to navigate rows).</p>
+            <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="height: 10px; background: color-mix(in oklch, var(--critical) 30%, transparent); border-radius: 1px; border-left: 3px solid var(--critical);"></div>
+              <div style="height: 10px; background: color-mix(in oklch, var(--high) 25%, transparent); border-radius: 1px; border-left: 3px solid var(--high);"></div>
+              <div style="height: 10px; background: var(--grid-line); border-radius: 1px;"></div>
+              <div style="height: 10px; background: var(--grid-line); border-radius: 1px;"></div>
+            </div>
+            <div class="callout" style="margin-top: 12px;">→ `/api/priority?state=UP&band=Critical,High` · sticky header on scroll</div>
+          </div>
+
+          <!-- Feature 2: Contaminant Trend Feed -->
+          <div class="feature-card">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20h16M4 20V4M4 20l4-4 4 2 4-6 4-4"/></svg>
+            </div>
+            <h3>Contaminant Drill-down</h3>
+            <p>Parameter selector (fluoride / iron / turbidity / arsenic / e_coli). Histogram of severity distribution. Flagged samples sorted by exceedance ratio.</p>
+            <!-- mini sparklines sketch -->
+            <div style="margin-top: 14px; display: flex; align-items: flex-end; gap: 3px; height: 40px;">
+              <div style="flex:1; background: color-mix(in oklch, var(--high) 60%, transparent); height: 55%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex:1; background: color-mix(in oklch, var(--high) 60%, transparent); height: 80%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex:1; background: color-mix(in oklch, var(--critical) 60%, transparent); height: 100%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex:1; background: color-mix(in oklch, var(--high) 60%, transparent); height: 65%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex:1; background: color-mix(in oklch, var(--medium) 60%, transparent); height: 30%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex:1; background: color-mix(in oklch, var(--low) 50%, transparent); height: 20%; border-radius: 1px 1px 0 0;"></div>
+              <div style="flex:1; background: color-mix(in oklch, var(--low) 50%, transparent); height: 15%; border-radius: 1px 1px 0 0;"></div>
+            </div>
+            <div class="callout" style="margin-top: 8px;">→ total_coliform (7) + sulphate (467) are unscored — label clearly in Methodology panel</div>
+          </div>
+
+          <!-- Feature 3: Chronic Hotspot Registry -->
+          <div class="feature-card">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <h3>Chronic Hotspot Registry</h3>
+            <p>Historical contamination registry: 100,690 events, 2009–2012 window. Bihar-heavy (90,794 vs 9,896 UP). Not a live trend — label as historical registry explicitly.</p>
+            <!-- timeline sketch -->
+            <div style="margin-top: 14px; padding-left: 14px; border-left: 2px solid var(--fg); display: flex; flex-direction: column; gap: 10px;">
+              <div style="position: relative;">
+                <div style="width: 8px; height: 8px; border: 2px solid var(--critical); border-radius: 50%; background: var(--bg); position: absolute; left: -19px; top: 2px;"></div>
+                <div style="height: 10px; background: color-mix(in oklch, var(--critical) 40%, transparent); border-radius: 1px; width: 75%; margin-bottom: 3px;"></div>
+                <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted);">2012 · KHOKHA, PURNIA — Iron 166 events</div>
+              </div>
+              <div style="position: relative;">
+                <div style="width: 8px; height: 8px; border: 2px solid var(--border); border-radius: 50%; background: var(--bg); position: absolute; left: -19px; top: 2px;"></div>
+                <div style="height: 10px; background: var(--grid-line); border-radius: 1px; width: 50%; margin-bottom: 3px;"></div>
+                <div style="font-family: var(--font-mono); font-size: 10px; color: var(--muted);">2009–2012 · Registry window only</div>
+              </div>
+            </div>
+            <div class="callout" style="margin-top: 12px;">→ district-level recurrence only — village join overlap = 0 (defect D3)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════ CHART EXPLORATIONS -->
+    <section class="section" data-od-id="charts" style="background: color-mix(in oklch, var(--surface) 80%, transparent);">
+      <div class="container">
+        <div style="max-width: 40ch; margin-bottom: 40px;">
+          <p class="eyebrow">Data Visualization Sketches</p>
+          <h2>Chart explorations — WaterTriage data</h2>
+          <p class="lead" style="margin-top: 12px;">Rough chart structures — axes, fills, and data shape before live API data is wired in. All values are illustrative.</p>
+        </div>
+
+        <div class="grid-2" style="gap: 24px;">
+
+          <!-- Bar chart: samples by contamination band -->
+          <div class="chart-wrap" data-od-id="chart-bar">
+            <div class="chart-title">Samples by Risk Band (1,741 total)</div>
+            <div style="position: relative; padding-left: 32px;">
+              <span class="chart-label-y" aria-hidden="true">Samples</span>
+              <div style="border-left: 2px solid var(--fg); border-bottom: 2px solid var(--fg); padding: 8px 0 0 12px;">
+                <div style="display: flex; align-items: flex-end; gap: 12px; height: 140px; padding: 0 8px;">
+                  <!-- Critical: 89 / 1741 ≈ 5% -->
+                  <div style="display:flex; flex-direction:column; align-items:center; flex:1; gap:4px; height:100%;">
+                    <div style="flex:1; width:100%; display:flex; flex-direction:column; justify-content:flex-end;">
+                      <div style="height:5%; background:repeating-linear-gradient(-45deg, var(--critical) 0, var(--critical) 2px, transparent 2px, transparent 5px); border:2px solid var(--critical); border-radius:1px 1px 0 0;"></div>
+                    </div>
+                    <span style="font-family:var(--font-mono); font-size:9px; color:var(--critical);">Critical</span>
+                  </div>
+                  <!-- High: 392 / 1741 ≈ 23% -->
+                  <div style="display:flex; flex-direction:column; align-items:center; flex:1; gap:4px; height:100%;">
+                    <div style="flex:1; width:100%; display:flex; flex-direction:column; justify-content:flex-end;">
+                      <div style="height:23%; background:repeating-linear-gradient(-45deg, var(--high) 0, var(--high) 2px, transparent 2px, transparent 5px); border:2px solid var(--high); border-radius:1px 1px 0 0;"></div>
+                    </div>
+                    <span style="font-family:var(--font-mono); font-size:9px; color:var(--high);">High</span>
+                  </div>
+                  <!-- Medium: 28 / 1741 ≈ 2% -->
+                  <div style="display:flex; flex-direction:column; align-items:center; flex:1; gap:4px; height:100%;">
+                    <div style="flex:1; width:100%; display:flex; flex-direction:column; justify-content:flex-end;">
+                      <div style="height:2%; min-height:6px; background:repeating-linear-gradient(-45deg, var(--medium) 0, var(--medium) 2px, transparent 2px, transparent 5px); border:2px solid var(--medium); border-radius:1px 1px 0 0;"></div>
+                    </div>
+                    <span style="font-family:var(--font-mono); font-size:9px; color:var(--medium);">Medium</span>
+                  </div>
+                  <!-- Low: 1232 / 1741 ≈ 71% -->
+                  <div style="display:flex; flex-direction:column; align-items:center; flex:1; gap:4px; height:100%;">
+                    <div style="flex:1; width:100%; display:flex; flex-direction:column; justify-content:flex-end;">
+                      <div style="height:71%; background:repeating-linear-gradient(-45deg, var(--low) 0, var(--low) 2px, transparent 2px, transparent 5px); border:2px solid var(--low); border-radius:1px 1px 0 0;"></div>
+                    </div>
+                    <span style="font-family:var(--font-mono); font-size:9px; color:var(--low);">Low</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="chart-label-x">Risk Band (BIS 10500-based composite score)</p>
+            <p class="callout" style="margin-top: 10px;">→ Bihar holds 75 of 89 Criticals (84%) on only 775 samples — state bias is the key finding for the viva presentation.</p>
+          </div>
+
+          <!-- Donut: contaminant breakdown (worst_parameter distribution) -->
+          <div class="chart-wrap" data-od-id="chart-donut">
+            <div class="chart-title">Worst Parameter Distribution (1,009 non-null scored)</div>
+            <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+              <!--
+                Actual distribution (non-null worst_parameter, 1,009 samples):
+                  turbidity: 401 → 401/1009 = 39.7% → 143°
+                  iron:       382 → 382/1009 = 37.9% → 136°
+                  fluoride:   152 → 152/1009 = 15.1% →  54°
+                  tds:        149 → 149/1009 = 14.8% →  53°  (total > 1009 due to multi-param; simplified)
+                Simplified to 4 segments summing to 100%:
+                  turbidity 40%, iron 38%, fluoride 15%, other 7%
+                  Segment degrees: 144, 136.8, 54, 25.2 = 360 ✓
+                Arc math (cx=70, cy=70, r=48, start at 12 o'clock = -90° offset):
+                  Turbidity 40%:  0→144°  start(-90°)→54°   → start (70,22), end (70+48cos54°, 70+48sin54°) = (70+28.2, 70+38.8) = (98.2, 108.8)
+                  Iron 38%:      144→280.8° start(54°)→190.8° → end (70+48cos190.8°, 70+48sin190.8°) = (70-47.1, 70-9.1) = (22.9, 60.9)
+                  Fluoride 15%: 280.8→334.8° start(190.8°)→244.8° → end (70+48cos244.8°, 70+48sin244.8°) = (70-20.5, 70-43.4) = (49.5, 26.6)
+                  Other 7%:     334.8→360°  start(244.8°)→(-90°=270°) → end (70,22)
+              -->
+              <svg width="140" height="140" viewBox="0 0 140 140" role="img" aria-label="Donut chart: worst parameter distribution — turbidity 40%, iron 38%, fluoride 15%, other 7%">
+                <title>Worst Parameter Distribution</title>
+                <defs>
+                  <pattern id="h-turb" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--high)" stroke-width="2"/>
+                  </pattern>
+                  <pattern id="h-iron" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+                    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--critical)" stroke-width="2"/>
+                  </pattern>
+                  <pattern id="h-fluor" width="5" height="5" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="0" x2="5" y2="0" stroke="var(--medium)" stroke-width="1.5"/>
+                  </pattern>
+                  <pattern id="h-other" width="5" height="5" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="0" x2="5" y2="5" stroke="var(--muted)" stroke-width="1"/>
+                  </pattern>
+                  <clipPath id="donut-ring">
+                    <path d="M70,70 m0,-48 a48,48 0 1,1 0,96 a48,48 0 1,1 0,-96 Z M70,70 m0,-28 a28,28 0 1,0 0,56 a28,28 0 1,0 0,-56 Z"/>
+                  </clipPath>
+                </defs>
+                <!-- Outer ring -->
+                <circle cx="70" cy="70" r="48" fill="none" stroke="var(--fg)" stroke-width="2"/>
+
+                <!-- Segment 1: Turbidity 40% (0°→144°) start=(70,22) end=(98.2,108.8) large-arc=1 -->
+                <path d="M70,70 L70,22 A48,48 0 1,1 98.2,108.8 Z"
+                      fill="url(#h-turb)" stroke="var(--fg)" stroke-width="1.5"
+                      clip-path="url(#donut-ring)"/>
+                <!-- Segment 2: Iron 38% (144°→280.8°) start=(98.2,108.8) end=(22.9,60.9) large-arc=1 -->
+                <path d="M70,70 L98.2,108.8 A48,48 0 1,1 22.9,60.9 Z"
+                      fill="url(#h-iron)" stroke="var(--fg)" stroke-width="1.5"
+                      clip-path="url(#donut-ring)"/>
+                <!-- Segment 3: Fluoride 15% (280.8°→334.8°) start=(22.9,60.9) end=(49.5,26.6) large-arc=0 -->
+                <path d="M70,70 L22.9,60.9 A48,48 0 0,1 49.5,26.6 Z"
+                      fill="url(#h-fluor)" stroke="var(--fg)" stroke-width="1.5"
+                      clip-path="url(#donut-ring)"/>
+                <!-- Segment 4: Other 7% (334.8°→360°) start=(49.5,26.6) end=(70,22) large-arc=0 -->
+                <path d="M70,70 L49.5,26.6 A48,48 0 0,1 70,22 Z"
+                      fill="url(#h-other)" stroke="var(--fg)" stroke-width="1.5"
+                      clip-path="url(#donut-ring)"/>
+
+                <!-- Inner hole -->
+                <circle cx="70" cy="70" r="28" fill="var(--surface)" stroke="var(--fg)" stroke-width="2"/>
+                <!-- Center label -->
+                <text x="70" y="65" text-anchor="middle" font-family="var(--font-sketch), cursive" font-size="11" fill="var(--fg)">Non-null</text>
+                <text x="70" y="80" text-anchor="middle" font-family="var(--font-mono)" font-size="11" fill="var(--fg)">1,009</text>
+              </svg>
+              <!-- legend -->
+              <div style="display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 130px;">
+                <div style="display:flex; align-items:center; gap:8px; font-family:var(--font-sketch); font-size:13px;">
+                  <div style="width:14px; height:14px; border:1.5px solid var(--fg); background:repeating-linear-gradient(45deg, var(--high) 0, var(--high) 2px, transparent 2px, transparent 5px); flex-shrink:0;"></div>
+                  <span>Turbidity</span>
+                  <span class="num" style="margin-left:auto; font-size:11px; color:var(--muted);">401 · 40%</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-family:var(--font-sketch); font-size:13px;">
+                  <div style="width:14px; height:14px; border:1.5px solid var(--fg); background:repeating-linear-gradient(-45deg, var(--critical) 0, var(--critical) 2px, transparent 2px, transparent 5px); flex-shrink:0;"></div>
+                  <span>Iron</span>
+                  <span class="num" style="margin-left:auto; font-size:11px; color:var(--muted);">382 · 38%</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-family:var(--font-sketch); font-size:13px;">
+                  <div style="width:14px; height:14px; border:1.5px solid var(--fg); background:repeating-linear-gradient(0deg, var(--medium) 0, var(--medium) 1.5px, transparent 1.5px, transparent 5px); flex-shrink:0;"></div>
+                  <span>Fluoride</span>
+                  <span class="num" style="margin-left:auto; font-size:11px; color:var(--muted);">152 · 15%</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-family:var(--font-sketch); font-size:13px;">
+                  <div style="width:14px; height:14px; border:1.5px solid var(--fg); background:repeating-linear-gradient(45deg, var(--muted) 0, var(--muted) 1px, transparent 1px, transparent 5px); flex-shrink:0;"></div>
+                  <span>Other</span>
+                  <span class="num" style="margin-left:auto; font-size:11px; color:var(--muted);">74 · 7%</span>
+                </div>
+                <hr class="rule" style="margin: 2px 0;">
+                <div style="font-family:var(--font-sketch); font-size:11px; color:var(--muted);">732 nulls excluded<br>(Low, no exceedance)</div>
+              </div>
+            </div>
+            <p class="callout" style="margin-top: 14px;">✓ FIXED — Medium color (amber #d4a017) patched into map.html. All 4 bands now visually distinct. Real counts: turb 401, Fe 382, F 152, tds 149.</p>
+          </div>
+
+          <!-- Line chart: mean composite score by state / year is moot — using sample date distribution instead -->
+          <div class="chart-wrap" data-od-id="chart-line" style="grid-column: 1 / -1;">
+            <div class="chart-title">Sample Date Distribution — 2022 collection window (all 1,741 samples)</div>
+            <svg width="100%" height="110" viewBox="0 0 800 110" preserveAspectRatio="none" role="img" aria-label="Histogram showing sample collection dates concentrated in 2022">
+              <!-- grid lines -->
+              <line x1="0" y1="25"  x2="800" y2="25"  stroke="var(--grid-line)" stroke-width="1" stroke-dasharray="4,4"/>
+              <line x1="0" y1="55"  x2="800" y2="55"  stroke="var(--grid-line)" stroke-width="1" stroke-dasharray="4,4"/>
+              <line x1="0" y1="85"  x2="800" y2="85"  stroke="var(--grid-line)" stroke-width="1" stroke-dasharray="4,4"/>
+              <!-- spike on 2022-11-14 (341 samples on one date) -->
+              <line x1="670" y1="5" x2="670" y2="100" stroke="var(--critical)" stroke-width="2" stroke-dasharray="3,3"/>
+              <text x="676" y="20" font-family="var(--font-sketch), cursive" font-size="10" fill="var(--critical)">341 piled</text>
+              <!-- area fill sketch -->
+              <path d="M30,95 C80,93 140,90 200,88 C260,86 320,87 380,84 C440,81 500,85 560,80 C590,77 620,70 650,40 C660,20 665,10 670,8 C675,10 680,20 700,50 C720,70 760,90 800,95 L800,110 L30,110 Z"
+                    fill="repeating-linear-gradient(-45deg, color-mix(in oklch, var(--accent) 15%, transparent) 0, color-mix(in oklch, var(--accent) 15%, transparent) 3px, transparent 3px, transparent 7px)"
+                    stroke="none"/>
+              <path d="M30,95 C80,93 140,90 200,88 C260,86 320,87 380,84 C440,81 500,85 560,80 C590,77 620,70 650,40 C660,20 665,10 670,8 C675,10 680,20 700,50 C720,70 760,90 800,95"
+                    fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+              <!-- y axis labels -->
+              <text x="2" y="23"  font-family="var(--font-mono)" font-size="9" fill="var(--muted)">350</text>
+              <text x="2" y="53"  font-family="var(--font-mono)" font-size="9" fill="var(--muted)">200</text>
+              <text x="2" y="83"  font-family="var(--font-mono)" font-size="9" fill="var(--muted)">50</text>
+            </svg>
+            <div style="display:flex; justify-content:space-between; padding:0 4px; margin-top:4px;">
+              <span style="font-family:var(--font-mono); font-size:9px; color:var(--muted);">Jul 2022</span>
+              <span style="font-family:var(--font-mono); font-size:9px; color:var(--muted);">Aug</span>
+              <span style="font-family:var(--font-mono); font-size:9px; color:var(--muted);">Sep</span>
+              <span style="font-family:var(--font-mono); font-size:9px; color:var(--muted);">Oct</span>
+              <span style="font-family:var(--font-mono); font-size:9px; color:var(--muted);">Nov 2022</span>
+            </div>
+            <p class="callout" style="margin-top: 10px;">→ Data limitation (unchanged): all 1,741 samples date to 2022-07-01 → 2022-11-19. Label as "2022 WQMIS collection window" — not live monitoring. data.json now includes `generated_at` so stale-data warnings are surfaced at load time.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════ LOADING / EMPTY / ERROR STATES -->
+    <section class="section" data-od-id="states">
+      <div class="container">
+        <div style="max-width: 40ch; margin-bottom: 40px;">
+          <p class="eyebrow">API State Sketches</p>
+          <h2>Loading · Empty · Error</h2>
+          <p class="lead" style="margin-top: 12px;">Required states for all API-backed views. DB must be running (`docker start watertriage-db`) or fallback loads data.json — now clean with `generated_at` field and correct counts.</p>
+        </div>
+
+        <div class="grid-3" style="gap: 24px;">
+          <!-- Loading state -->
+          <div class="chart-wrap">
+            <div style="font-family: var(--font-sketch); font-size: 13px; font-weight: 700; margin-bottom: 16px;">Loading State</div>
+            <p class="callout" style="margin-bottom: 16px;">Shown while `/api/dashboard-data` fetches. Skeleton rows, no spinners.</p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="skeleton" style="height: 14px; width: 60%;"></div>
+              <div class="skeleton" style="height: 14px; width: 85%;"></div>
+              <div class="skeleton" style="height: 14px; width: 45%;"></div>
+              <div class="skeleton" style="height: 14px; width: 70%;"></div>
+            </div>
+            <div style="margin-top: 16px; display: flex; align-items: center; gap: 10px;">
+              <div class="skeleton" style="height: 40px; width: 40px; border-radius: 50%;"></div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+                <div class="skeleton" style="height: 11px; width: 80%;"></div>
+                <div class="skeleton" style="height: 11px; width: 55%;"></div>
+              </div>
+            </div>
+            <p class="callout" style="margin-top: 14px;">→ Stop skeleton at 60s — escalate to error state if API doesn't respond</p>
+          </div>
+
+          <!-- Empty state -->
+          <div class="chart-wrap">
+            <div style="font-family: var(--font-sketch); font-size: 13px; font-weight: 700; margin-bottom: 16px;">Empty State</div>
+            <p class="callout" style="margin-bottom: 16px;">When filter returns zero districts. Not an error — the filter is just too narrow.</p>
+            <div class="empty-box">
+              <div style="font-size: 28px; margin-bottom: 12px; opacity: 0.4; line-height:1;">∅</div>
+              <div style="font-weight: 700; margin-bottom: 6px;">No districts match this filter</div>
+              <div style="font-size: 12px; color: var(--muted);">Try removing the state or band filter</div>
+              <button class="btn btn-secondary" style="margin-top: 16px; font-size: 13px; min-height: 44px;">Clear filters</button>
+            </div>
+          </div>
+
+          <!-- Error state -->
+          <div class="chart-wrap">
+            <div style="font-family: var(--font-sketch); font-size: 13px; font-weight: 700; margin-bottom: 16px;">Error State</div>
+            <p class="callout" style="margin-bottom: 16px;">DB container not running or API 500. Must not show raw stack trace to user.</p>
+            <div class="error-box">
+              <div style="font-size: 20px; margin-bottom: 10px; line-height:1;">⚠</div>
+              <div style="font-weight: 700; margin-bottom: 6px;">Could not load data</div>
+              <div style="font-size: 12px; color: color-mix(in oklch, var(--critical) 80%, black); margin-bottom: 14px;">
+                API unreachable. Check `docker start watertriage-db`.<br>✓ Static fallback: data.json (counts verified 89/392/28/1,232 — check `generated_at` for recency).
+              </div>
+              <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                <button class="btn btn-secondary" style="font-size:13px; border-color:var(--critical); color:var(--critical); min-height:44px;">Retry</button>
+                <button class="btn btn-ghost" style="font-size:13px; color:var(--critical); min-height:44px;">Load from data.json</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════ STICKY NOTES -->
+    <section class="section" data-od-id="sticky-notes">
+      <div class="container">
+        <div style="max-width: 40ch; margin-bottom: 40px;">
+          <p class="eyebrow">Designer Notes</p>
+          <h2>Open questions + known blockers</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 36px; align-items: start;">
+
+          <!-- DB startup — still open, but fallback handling confirmed -->
+          <div class="sticky sticky-yellow">
+            <div class="sticky-title">DB Startup</div>
+            <p>Still requires `docker start watertriage-db`. data.json fallback now has `generated_at` + `source_counts` so users get stale-data warning, not a crash. <em>Nav status indicator still needed.</em></p>
+          </div>
+
+          <!-- FIXED: data.json rebuilt with correct counts -->
+          <div class="sticky sticky-pink" style="opacity: 0.82;">
+            <div class="sticky-title" style="display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--low); border-radius:50%; font-size:9px; color:#fff; flex-shrink:0; font-family:var(--font-mono);">✓</span>
+              data.json
+              <span style="font-family:var(--font-mono); font-size:9px; color:var(--low); letter-spacing:0.06em; margin-left:auto;">FIXED</span>
+            </div>
+            <p>Rebuilt from live DB. Counts now reflect 89/392/28/1,232. `generated_at` + `source_counts` fields added. CI staleness check script in place.</p>
+          </div>
+
+          <!-- FIXED: Globe symlink removed, graceful fallback patched -->
+          <div class="sticky sticky-green" style="opacity: 0.82;">
+            <div class="sticky-title" style="display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--low); border-radius:50%; font-size:9px; color:#fff; flex-shrink:0; font-family:var(--font-mono);">✓</span>
+              Globe Asset
+              <span style="font-family:var(--font-mono); font-size:9px; color:var(--low); letter-spacing:0.06em; margin-left:auto;">FIXED</span>
+            </div>
+            <p>Broken symlink deleted. map.html patched with graceful fallback — no crash on Pages deploy. 164 MB asset no longer required at runtime.</p>
+          </div>
+
+          <!-- FIXED: Medium amber color added -->
+          <div class="sticky sticky-yellow" style="transform: rotate(1deg); opacity: 0.82;">
+            <div class="sticky-title" style="display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--low); border-radius:50%; font-size:9px; color:#fff; flex-shrink:0; font-family:var(--font-mono);">✓</span>
+              Color Drift
+              <span style="font-family:var(--font-mono); font-size:9px; color:var(--low); letter-spacing:0.06em; margin-left:auto;">FIXED</span>
+            </div>
+            <p>Amber (#d4a017) injected into map.html for the 28 Medium samples. Medium band is now visually distinct from the 1,232 Low (green) samples.</p>
+          </div>
+
+          <!-- FIXED: NULL → "Within BIS Limits" -->
+          <div class="sticky sticky-pink" style="transform: rotate(-0.6deg); opacity: 0.82;">
+            <div class="sticky-title" style="display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--low); border-radius:50%; font-size:9px; color:#fff; flex-shrink:0; font-family:var(--font-mono);">✓</span>
+              Null Param Row
+              <span style="font-family:var(--font-mono); font-size:9px; color:var(--low); letter-spacing:0.06em; margin-left:auto;">FIXED</span>
+            </div>
+            <p>JSON generation script updated. 732 NULL worst_parameter values now output "Within BIS Limits". UI rows render the string correctly.</p>
+          </div>
+
+          <!-- Timeline — updated with current status -->
+          <div class="sticky sticky-green" style="transform: rotate(0.9deg);">
+            <div class="sticky-title">Timeline</div>
+            <p>Code freeze ~09/10/2026. Final report 26/10/2026. Viva 2–6 Nov. Backend integration confirmed ✓ — only UI polish and data.json refresh remain before freeze.</p>
+          </div>
+
+        </div>
+
+        <!-- ════ USER FLOW DIAGRAM ════ -->
+        <div style="margin-top: 56px; padding: 24px; border: 2px solid var(--fg); border-radius: 2px; background: var(--surface); position: relative;">
+          <span class="sketch-section-label">WaterTriage user flow — viva demo path</span>
+          <div style="display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; margin-top: 20px; overflow-x: auto; padding-bottom: 4px;">
+
+            <!-- Step 1: Login -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+              <div style="padding: 10px 16px; border: 2px solid var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 13px; background: var(--surface); text-align: center; min-width: 90px;">Login<br><span style="font-family:var(--font-mono); font-size:9px; color:var(--muted);">Amity SSO?</span></div>
+            </div>
+            <div class="flow-arrow" style="margin-top: 18px;">→</div>
+
+            <!-- Step 2: Map Overview -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+              <div style="padding: 10px 16px; border: 2px solid var(--accent); border-radius: 2px; font-family: var(--font-sketch); font-size: 13px; background: var(--accent-soft); color: var(--accent); text-align: center; min-width: 100px;">Map View<br><span style="font-family:var(--font-mono); font-size:9px;">Three.js globe</span></div>
+            </div>
+            <div class="flow-arrow" style="margin-top: 18px;">→</div>
+
+            <!-- Step 3: Priority Queue -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+              <div style="padding: 10px 16px; border: 2px solid var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 13px; background: var(--surface); text-align: center; min-width: 100px;">Priority Queue<br><span style="font-family:var(--font-mono); font-size:9px;">/api/priority</span></div>
+            </div>
+            <div class="flow-arrow" style="margin-top: 18px;">→</div>
+
+            <!-- Step 4: Branch -->
+            <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+              <div style="padding: 9px 14px; border: 1px dashed var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 12px; min-width: 110px;">District Detail<br><span style="font-family:var(--font-mono); font-size:9px; color:var(--muted);">/api/districts/:id</span></div>
+              <div style="padding: 9px 14px; border: 1px dashed var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 12px; min-width: 110px;">Hotspot Registry<br><span style="font-family:var(--font-mono); font-size:9px; color:var(--muted);">2009–2012 only</span></div>
+              <div style="padding: 9px 14px; border: 1px dashed var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 12px; min-width: 110px;">Sample Drill-down<br><span style="font-family:var(--font-mono); font-size:9px; color:var(--muted);">/api/samples</span></div>
+            </div>
+            <div class="flow-arrow" style="margin-top: 18px;">→</div>
+
+            <!-- Step 5: Export -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+              <div style="padding: 10px 16px; border: 2px solid var(--fg); border-radius: 2px; font-family: var(--font-sketch); font-size: 13px; background: var(--surface); text-align: center; min-width: 80px;">Export CSV<br><span style="font-family:var(--font-mono); font-size:9px; color:var(--muted);">for report</span></div>
+            </div>
+
+          </div>
+          <p class="callout" style="margin-top: 16px;">→ Error states must be mapped for District Detail and Sample Drill-down before dev handoff — add "DB offline" path for all three API calls</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════ CTA STRIP -->
+    <section class="section" data-od-id="cta-strip" style="text-align: center;">
+      <div class="container" style="max-width: 580px;">
+        <p class="eyebrow" style="justify-content: center;">Next step</p>
+        <h2>Ready for viva review?</h2>
+        <p class="lead" style="margin: 16px auto 32px; text-align: center;">
+          Share this sketch with Dr. Paliwal — pick Variant A (Priority Queue) as the default demo view.
+          Hi-fi target: code freeze 09/10, report 26/10, viva 2–6 Nov.
+        </p>
+        <div style="display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+          <button class="btn btn-primary btn-arrow">Share for review</button>
+          <button class="btn btn-secondary">Export as PDF</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="pagefoot" data-od-id="footer">
+    <div class="container row-between">
+      <span>WaterTriage Dashboard Wireframe · v0.3 · Oct 2026 · Anubhav Anand</span>
+      <span class="meta">NTCC Minor Project · Dr. Girish Paliwal · ASET-AUGN · Internal exploration</span>
+    </div>
+  </footer>
+
+  <script>
+    // ─── Tab switcher — keyboard nav + ARIA + localStorage persistence ───
+    function switchTab(id) {
+      const allBtns   = document.querySelectorAll('.tab-btn');
+      const allPanels = document.querySelectorAll('.tab-panel');
+
+      allBtns.forEach(btn => {
+        const isTarget = btn.id === 'tab-' + id;
+        btn.classList.toggle('active', isTarget);
+        btn.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+        btn.setAttribute('tabindex', isTarget ? '0' : '-1');
+      });
+      allPanels.forEach(panel => {
+        panel.classList.toggle('active', panel.id === 'tab-panel-' + id);
+      });
+
+      try { localStorage.setItem('wt-tab', id); } catch(e) {}
+    }
+
+    // Restore tab on load
+    (function() {
+      try {
+        const saved = localStorage.getItem('wt-tab');
+        if (saved && ['a','b','c'].includes(saved)) switchTab(saved);
+      } catch(e) {}
+    })();
+
+    // Keyboard nav — Arrow keys within tablist, Home/End
+    document.querySelector('.tab-row').addEventListener('keydown', function(e) {
+      const tabs = Array.from(this.querySelectorAll('.tab-btn'));
+      const idx  = tabs.indexOf(document.activeElement);
+      if (idx === -1) return;
+
+      let next = -1;
+      if      (e.key === 'ArrowRight') next = (idx + 1) % tabs.length;
+      else if (e.key === 'ArrowLeft')  next = (idx - 1 + tabs.length) % tabs.length;
+      else if (e.key === 'Home')       next = 0;
+      else if (e.key === 'End')        next = tabs.length - 1;
+
+      if (next !== -1) {
+        tabs[next].focus();
+        switchTab(tabs[next].id.replace('tab-', ''));
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>
