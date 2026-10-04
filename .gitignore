@@ -35,3 +35,4 @@ node_modules/
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
 docs/evidence/
+data/raw/official/

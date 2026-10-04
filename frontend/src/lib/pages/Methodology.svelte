@@ -1,7 +1,16 @@
 <script>
     import TacticalButton from '../components/TacticalButton.svelte';
     import DoppelrandCard from '../components/DoppelrandCard.svelte';
-    export let navigate;
+    
+    let { navigate } = $props();
+    let meta = $state(null);
+    
+    $effect(() => {
+        fetch('http://localhost:8000/api/meta')
+            .then(r => r.json())
+            .then(data => meta = data)
+            .catch(err => console.error(err));
+    });
 </script>
 
 <header class="w-full flex justify-between items-end mb-12 relative z-10 border-b border-white/10 pb-4 max-w-5xl mx-auto mt-8">
@@ -10,7 +19,7 @@
 </header>
 
 <main class="flex-1 max-w-5xl mx-auto w-full relative z-10 animate-[fadeUpAnim_0.8s_cubic-bezier(0.32,0.72,0,1)_forwards]">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div class="flex flex-col gap-6">
             <h2 class="text-xl font-bold text-aviation border-b border-white/10 pb-2">BIS IS 10500 Scoring Model</h2>
             <p class="text-sm text-white/70 leading-relaxed">The core algorithmic engine derives its severity model from the Bureau of Indian Standards (BIS IS 10500). Parameters are heavily weighted based on acute physiological hazard.</p>
@@ -28,7 +37,7 @@
         </div>
         <div class="flex flex-col gap-6">
             <h2 class="text-xl font-bold text-white/80 border-b border-white/10 pb-2">Data Acquisition & Pipeline</h2>
-            <p class="text-sm text-white/70 leading-relaxed">The backend relies on a highly-optimized, multi-threaded WQMIS crawler extracting live water quality laboratory reports across Uttar Pradesh and Bihar.</p>
+            <p class="text-sm text-white/70 leading-relaxed">The backend relies on a highly-optimized WQMIS crawler extracting live water quality laboratory reports across Uttar Pradesh and Bihar.</p>
             <DoppelrandCard extraClass="h-full">
                 <div class="flex flex-col justify-center gap-4 text-center h-full">
                     <div class="text-3xl font-bold tracking-tighter">90,000+</div>
@@ -43,4 +52,19 @@
             </DoppelrandCard>
         </div>
     </div>
+
+    {#if meta && meta.limitations}
+        <h2 class="text-xl font-bold text-white/80 border-b border-white/10 pb-2 mb-6">Known Limitations</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {#each meta.limitations as lim}
+                <DoppelrandCard>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-sm text-white">{lim.title}</h3>
+                        <span class="text-[9px] uppercase px-2 py-0.5 rounded border {lim.status === 'open' ? 'border-aviation text-aviation' : 'border-white/20 text-white/50'}">{lim.status}</span>
+                    </div>
+                    <p class="text-xs text-white/60 leading-relaxed">{lim.detail}</p>
+                </DoppelrandCard>
+            {/each}
+        </div>
+    {/if}
 </main>
