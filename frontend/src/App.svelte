@@ -12,7 +12,7 @@
   onMount(async () => {
     // Check Health
     try {
-      const res = await fetch('http://localhost:8000/api/health', { cache: 'no-store' });
+      const res = await fetch('/api/health', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         dbStatus = data.db_status === 'online' ? 'live' : 'offline';
@@ -129,10 +129,10 @@
   <!-- Interactive System -->
   <section class="interactive-system" id="viva">
     <div class="tab-row" role="tablist">
-      <button class="tab-btn {activeTab === 'a' ? 'active' : ''}" on:click={() => setTab('a')}>Variant A: Priority Queue</button>
-      <button class="tab-btn {activeTab === 'b' ? 'active' : ''}" on:click={() => setTab('b')}>Variant B: Map + Cards</button>
-      <button class="tab-btn {activeTab === 'c' ? 'active' : ''}" on:click={() => setTab('c')}>Variant C: District Split</button>
-      <button class="tab-btn {activeTab === 'd' ? 'active' : ''}" on:click={() => setTab('d')}>Variant D: External Validation</button>
+      <button class="tab-btn" class:active={activeTab === 'a'} on:click={() => setTab('a')}>Variant A: Priority Queue</button>
+      <button class="tab-btn" class:active={activeTab === 'b'} on:click={() => setTab('b')}>Variant B: Map + Cards</button>
+      <button class="tab-btn" class:active={activeTab === 'c'} on:click={() => setTab('c')}>Variant C: District Split</button>
+      <button class="tab-btn" class:active={activeTab === 'd'} on:click={() => setTab('d')}>Variant D: External Validation</button>
     </div>
 
     <div class="system-container">
