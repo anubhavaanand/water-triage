@@ -1,3 +1,42 @@
+<script>
+  import { onMount } from 'svelte';
+  
+  let priorityList = [];
+  let kpi = {};
+  let loading = true;
+  let error = null;
+
+  onMount(async () => {
+    try {
+      const res = await fetch('/data.json');
+      if (res.ok) {
+        const data = await res.json();
+        priorityList = data.priority || [];
+        kpi = data.kpi || {};
+      } else {
+        error = 'Failed to load data.json';
+      }
+    } catch (e) {
+      error = e.message;
+    } finally {
+      loading = false;
+    }
+  });
+
+  function getBandColor(band) {
+    if (band === 'Critical') return 'var(--critical)';
+    if (band === 'High') return 'var(--high)';
+    if (band === 'Medium') return 'var(--medium, #d4a017)';
+    return 'var(--low)';
+  }
+  
+  function getBgColor(band, isPathogen) {
+    if (isPathogen) return 'color-mix(in oklch, var(--critical) 7%, transparent)';
+    if (band === 'Critical') return 'color-mix(in oklch, var(--critical) 6%, transparent)';
+    return 'var(--surface)';
+  }
+</script>
+
 <div aria-labelledby="tab-a" class="tab-panel active" data-note="← list-dominant: sidebar nav + sortable district rows — optimal for viva demo" id="tab-panel-a" role="tabpanel">
 <div class="grid-2-1">
 <!-- main list -->
@@ -7,75 +46,63 @@
 <div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; padding: 8px 14px; border: 1px dashed var(--border); background: var(--fg-soft); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); border-radius: 2px 2px 0 0;">
 <span>District</span><span style="text-align:right">Score</span><span style="text-align:center">Band</span><span style="text-align:right">Samples</span><span>Worst Param</span>
 </div>
-<!-- row 1 — critical -->
-<div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 2px solid var(--critical); border-top: none; background: color-mix(in oklch, var(--critical) 6%, transparent);">
-<span style="font-family: var(--font-sketch); font-size: 14px;">Katihar, Bihar</span>
-<span class="num" style="text-align:right; color: var(--critical);">82.4</span>
-<span style="text-align:center;"><span class="badge badge-critical">Critical</span></span>
-<span class="num" style="text-align:right; color: var(--muted);">24</span>
-<span class="tag" style="font-size:11px;">Iron</span>
-</div>
-<!-- row 2 — critical -->
-<div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 1px dashed var(--border); border-top: none; background: var(--surface);">
-<span style="font-family: var(--font-sketch); font-size: 14px;">Purnia, Bihar</span>
-<span class="num" style="text-align:right; color: var(--critical);">79.1</span>
-<span style="text-align:center;"><span class="badge badge-critical">Critical</span></span>
-<span class="num" style="text-align:right; color: var(--muted);">18</span>
-<span class="tag" style="font-size:11px;">Iron</span>
-</div>
-<!-- row 2b — PATHOGEN OVERRIDE: low math score but E.coli positive → forced Critical -->
-<div aria-label="Pathogen override row" style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 2px dashed var(--critical); border-top: none; background: color-mix(in oklch, var(--critical) 7%, transparent);">
-<span style="font-family: var(--font-sketch); font-size: 14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                    Gopalganj, Bihar
-                    <!-- biohazard badge with tooltip -->
-<span class="has-tooltip" style="display:inline-block;">
-<span aria-label="Pathogen override: E. coli detected, score overridden to Critical" class="badge-pathogen" role="img">
-<!-- biohazard icon (simplified SVG) -->
-<svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 20 20">
-<circle cx="10" cy="10" r="2.5"></circle>
-<path d="M10 7.5 C10 4 6 2 4 5 C2.5 7 4 9.5 7 10"></path>
-<path d="M10 7.5 C13 4 17 5.5 16 9 C15 11.5 12 11.5 10 10"></path>
-<path d="M7 10 C4 11 3 14.5 6 15.5 C8.5 16.5 10.5 14 10 12.5"></path>
-<path d="M10 12.5 C10.5 14 13 16 15 14.5 C17 13 15.5 10 13 10"></path>
-<path d="M13 10 C15.5 9.5 17 6.5 15 5"></path>
-</svg>
-                        Pathogen Override
-                      </span>
-<span class="tooltip">E. coli detected (test positive).<br/>Math score was 20.0 → Low, but backend overrides band to <strong>Critical</strong> via pathogen flag. Score shown is overridden composite.</span>
-</span>
-</span>
-<span class="num" style="text-align:right; color: var(--critical); display:flex; align-items:center; gap:4px; justify-content:flex-end;">
-<span style="text-decoration: line-through; color: var(--muted); font-size:10px;">20.0</span>
-<span>—</span>
-</span>
-<span style="text-align:center;"><span class="badge badge-critical">Critical</span></span>
-<span class="num" style="text-align:right; color: var(--muted);">9</span>
-<span class="tag" style="font-size:11px; color: var(--critical); border-color: var(--critical);">E. coli</span>
-</div>
-<!-- row 3 — high (active selection) -->
-<div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 2px solid var(--accent); border-top: none; background: var(--accent-soft);">
-<span style="font-family: var(--font-sketch); font-size: 14px; color: var(--accent);">Unnao, UP ← selected</span>
-<span class="num" style="text-align:right; color: var(--high);">68.3</span>
-<span style="text-align:center;"><span class="badge badge-high">High</span></span>
-<span class="num" style="text-align:right; color: var(--muted);">37</span>
-<span class="tag" style="font-size:11px;">Fluoride</span>
-</div>
-<!-- row 4 -->
-<div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 1px dashed var(--border); border-top: none; background: var(--surface);">
-<span style="font-family: var(--font-sketch); font-size: 14px;">Ferozabad, UP</span>
-<span class="num" style="text-align:right; color: var(--high);">61.7</span>
-<span style="text-align:center;"><span class="badge badge-high">High</span></span>
-<span class="num" style="text-align:right; color: var(--muted);">29</span>
-<span class="tag" style="font-size:11px;">Fluoride</span>
-</div>
-<!-- row 5 — null worst_param note -->
-<div style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: 1px dashed var(--border); border-top: none; background: var(--surface);">
-<span style="font-family: var(--font-sketch); font-size: 14px;">Ballia, UP</span>
-<span class="num" style="text-align:right; color: var(--low);">12.0</span>
-<span style="text-align:center;"><span class="badge badge-low">Low</span></span>
-<span class="num" style="text-align:right; color: var(--muted);">41</span>
-<span style="font-family:var(--font-sketch); font-size:11px; color: var(--muted);">within limits</span>
-</div>
+
+      {#if loading}
+        <div style="padding: 20px; text-align: center; font-family: var(--font-mono); color: var(--muted);">Loading 1,741 samples...</div>
+      {:else if error}
+        <div style="padding: 20px; color: var(--critical);">{error}</div>
+      {:else}
+        {#each priorityList.slice(0, 50) as item}
+          {@const isPathogen = item.band === 'Critical' && item.worst_parameter === 'E. coli'}
+          {@const bandColor = getBandColor(item.band)}
+          {@const bgColor = getBgColor(item.band, isPathogen)}
+          
+          <div aria-label={isPathogen ? "Pathogen override row" : ""} style="display: grid; grid-template-columns: 1fr 80px 90px 80px 80px; gap: 8px; align-items: center; padding: 11px 14px; border: {isPathogen ? '2px dashed var(--critical)' : '1px dashed var(--border)'}; border-top: none; background: {bgColor};">
+            
+            <span style="font-family: var(--font-sketch); font-size: 14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              {item.district}, {item.state}
+              {#if isPathogen}
+                <span class="has-tooltip" style="display:inline-block;">
+                  <span aria-label="Pathogen override: E. coli detected, score overridden to Critical" class="badge-pathogen" role="img">
+                    <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 20 20" style="width: 14px; height: 14px;">
+                      <circle cx="10" cy="10" r="2.5"></circle>
+                      <path d="M10 7.5 C10 4 6 2 4 5 C2.5 7 4 9.5 7 10"></path>
+                      <path d="M10 7.5 C13 4 17 5.5 16 9 C15 11.5 12 11.5 10 10"></path>
+                      <path d="M7 10 C4 11 3 14.5 6 15.5 C8.5 16.5 10.5 14 10 12.5"></path>
+                      <path d="M10 12.5 C10.5 14 13 16 15 14.5 C17 13 15.5 10 13 10"></path>
+                      <path d="M13 10 C15.5 9.5 17 6.5 15 5"></path>
+                    </svg>
+                    Pathogen Override
+                  </span>
+                  <span class="tooltip">E. coli detected (test positive).<br/>Score overridden to <strong>Critical</strong> via pathogen flag.</span>
+                </span>
+              {/if}
+            </span>
+            
+            <span class="num" style="text-align:right; color: {bandColor}; {isPathogen ? 'display:flex; align-items:center; gap:4px; justify-content:flex-end;' : ''}">
+              {#if isPathogen}
+                <span>—</span>
+              {:else}
+                {item.score.toFixed(1)}
+              {/if}
+            </span>
+            
+            <span style="text-align:center;">
+              <span class="badge badge-{item.band.toLowerCase()}">{item.band}</span>
+            </span>
+            
+            <span class="num" style="text-align:right; color: var(--muted);">1</span>
+            
+            {#if item.worst_parameter === 'Within BIS Limits'}
+              <span style="font-family:var(--font-sketch); font-size:11px; color: var(--muted);">{item.worst_parameter}</span>
+            {:else}
+              <span class="tag" style="font-size:11px; {isPathogen ? 'color: var(--critical); border-color: var(--critical);' : ''}">{item.worst_parameter}</span>
+            {/if}
+            
+          </div>
+        {/each}
+      {/if}
+
 <!-- pagination sketch -->
 <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border: 1px dashed var(--border); border-top: none; border-radius: 0 0 2px 2px; font-family: var(--font-mono); font-size: 11px; color: var(--muted);">
 <span>1–5 of 47 districts</span>
