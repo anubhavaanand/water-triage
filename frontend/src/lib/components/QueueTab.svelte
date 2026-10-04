@@ -8,13 +8,13 @@
 
   onMount(async () => {
     try {
-      const res = await fetch('/data.json');
+      const res = await fetch('/api/priority');
       if (res.ok) {
         const data = await res.json();
         priorityList = data.priority || [];
         kpi = data.kpi || {};
       } else {
-        error = 'Failed to load data.json';
+        error = 'Failed to load /api/priority';
       }
     } catch (e) {
       error = e.message;

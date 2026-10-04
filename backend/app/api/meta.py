@@ -108,7 +108,7 @@ def get_metadata(db: Session = Depends(get_db)):
                        ((bp.strategy = 'range' AND (r.value < bp.acceptable_limit OR r.value > bp.permissible_limit))
                         OR (bp.strategy != 'range' AND r.value > bp.permissible_limit))
                    THEN 1 ELSE 0 END) as exceeding_permissible,
-                   MAX(CASE WHEN bp.permissible_limit IS NULL THEN 1 ELSE 0 END) as no_permissible
+                   MAX(CASE WHEN bp.permissible_limit IS NULL OR bp.permissible_limit <= bp.acceptable_limit THEN 1 ELSE 0 END) as no_permissible
             FROM readings r
             JOIN water_samples ws ON r.sample_id = ws.id
             JOIN villages v ON ws.village_id = v.id
@@ -119,10 +119,9 @@ def get_metadata(db: Session = Depends(get_db)):
         """), {"state_id": state_id}).fetchall()
         
         prates = []
-        no_relax = ["iron", "nitrate", "ph", "e_coli"]
         for pr in param_rates:
             key = pr[0]
-            is_no_relax = key in no_relax
+            is_no_relax = pr[4] == 1
             prates.append({
                 "parameter_key": key,
                 "tested": pr[1],
@@ -179,7 +178,35 @@ def get_metadata(db: Session = Depends(get_db)):
         "WHERE lower(v.name) NOT IN ('not available', 'unknown')"
     )).scalar()
     
+
+    # Critical concentration logic
+    crit_conc = db.execute(text('''
+        SELECT d.name as district, COUNT(ws.id) as total_critical,
+               SUM(CASE WHEN 
+                     (SELECT COUNT(*) FROM readings WHERE sample_id = ws.id) = 1 
+                     AND 
+                     (SELECT parameter_key FROM readings WHERE sample_id = ws.id LIMIT 1) = 'iron'
+                   THEN 1 ELSE 0 END) as single_param_iron_critical
+        FROM risk_scores rs
+        JOIN water_samples ws ON rs.sample_id = ws.id
+        JOIN villages v ON ws.village_id = v.id
+        JOIN districts d ON v.district_id = d.id
+        WHERE rs.score >= 75
+        GROUP BY d.name
+        ORDER BY total_critical DESC
+        LIMIT 1;
+    ''')).fetchone()
+    
+    critical_concentration = None
+    if crit_conc:
+        critical_concentration = {
+            "district": crit_conc[0],
+            "total_critical": int(crit_conc[1]),
+            "single_parameter_iron_critical": int(crit_conc[2]),
+        }
+
     return {
+
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "git_commit": get_git_commit(),
         "corpus": {
@@ -193,6 +220,7 @@ def get_metadata(db: Session = Depends(get_db)):
             "unassigned_district_samples": unassigned_dict
         },
         "bands": bands_dict,
+        "critical_concentration": critical_concentration,
         "band_thresholds": {"Critical": 75, "High": 50, "Medium": 25, "Low": 0},
         "state_comparison": state_comparison,
         "top_parameters": top_parameters,
