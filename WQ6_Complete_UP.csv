@@ -1,0 +1,73 @@
+district,pH,TDS,Turbidity,Chloride,Total_Alkalinity,Total_Hardness,Sulphate,Iron,Total_Arsenic,Fluoride,Nitrate,Residual_Chlorine,Others_chem,E_coli,Total_Coliform,Others_bact,state
+Amethi,1,3,16,2,2,4,1,8,0,3,1,0,0,0,0,0,Uttar Pradesh
+Amroha,0,0,1,0,0,0,0,0,0,0,0,0,0,2,4,0,Uttar Pradesh
+Auraiya,0,0,2,0,1,0,0,0,0,1,0,0,0,0,1,0,Uttar Pradesh
+Ayodhya,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Azamgarh,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Baghpat,2,0,2,0,0,0,0,1,0,0,1,0,0,2,2,0,Uttar Pradesh
+Bahraich,10,0,4,0,0,0,0,0,18,0,0,0,0,0,4,0,Uttar Pradesh
+Ballia,1,0,9,0,0,0,0,14,8,7,1,0,0,0,0,0,Uttar Pradesh
+Balrampur,0,0,2,0,0,0,0,0,0,1,0,0,0,0,0,0,Uttar Pradesh
+Banda,0,0,1,0,2,0,0,0,0,0,0,1,0,1,1,0,Uttar Pradesh
+Bara Banki,3,0,8,0,0,0,0,3,0,1,0,0,0,1,1,0,Uttar Pradesh
+Bareilly,0,0,1,0,0,0,0,5,0,0,0,0,0,0,0,0,Uttar Pradesh
+Basti,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,Uttar Pradesh
+Bhadohi,1,1,6,0,1,1,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Bijnor,0,0,0,0,0,0,0,0,0,0,0,0,0,22,25,0,Uttar Pradesh
+Budaun,0,0,5,0,0,0,0,0,0,0,0,0,0,27,29,0,Uttar Pradesh
+Bulandshahr,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Chandauli,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Chitrakoot,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Deoria,0,0,6,0,0,0,0,3,0,0,0,0,0,1,1,0,Uttar Pradesh
+Etah,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Etawah,4,1,7,0,0,1,3,0,0,3,2,0,0,3,13,0,Uttar Pradesh
+Farrukhabad,0,0,6,0,0,0,0,0,1,0,2,39,0,0,0,0,Uttar Pradesh
+Fatehpur,0,2,4,0,1,2,1,2,4,2,1,0,0,0,0,0,Uttar Pradesh
+Firozabad,4,6,21,3,5,3,6,0,0,12,3,0,0,0,0,0,Uttar Pradesh
+Gautam Buddha Nagar,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Ghaziabad,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,Uttar Pradesh
+Ghazipur,0,0,1,0,0,1,0,2,0,1,5,0,0,3,3,0,Uttar Pradesh
+Gonda,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Gorakhpur,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Hamirpur,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,Uttar Pradesh
+Hapur,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Hardoi,0,1,5,0,0,0,1,0,0,0,0,0,0,0,6,0,Uttar Pradesh
+Hathras,0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Jalaun,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Jaunpur,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Jhansi,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Kannauj,1,1,12,0,1,2,1,0,0,7,1,0,0,1,1,0,Uttar Pradesh
+Kanpur Dehat,4,2,11,2,1,1,2,0,1,5,3,0,0,1,4,0,Uttar Pradesh
+Kanpur Nagar,3,1,36,1,5,1,2,0,1,2,0,0,0,4,21,0,Uttar Pradesh
+Kasganj,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Kaushambi,0,0,23,0,0,0,1,1,0,0,0,0,0,0,0,0,Uttar Pradesh
+Kheri,1,0,1,0,0,0,0,1,1,0,0,0,0,0,3,0,Uttar Pradesh
+Kushinagar,12,0,13,0,1,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Lalitpur,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Lucknow,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,Uttar Pradesh
+Mahoba,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Mahrajganj,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Mainpuri,0,0,4,0,0,1,0,0,0,3,1,0,0,0,2,0,Uttar Pradesh
+Mathura,1,18,1,8,3,13,5,0,0,15,1,0,0,4,6,0,Uttar Pradesh
+Mau,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Meerut,0,0,8,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Mirzapur,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Moradabad,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,0,Uttar Pradesh
+Muzaffarnagar,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,Uttar Pradesh
+Pilibhit,0,0,0,0,0,0,0,0,0,0,0,0,0,1,5,0,Uttar Pradesh
+Pratapgarh,4,2,28,0,2,2,1,7,0,18,1,0,0,2,0,0,Uttar Pradesh
+Prayagraj,2,1,39,0,3,2,0,1,0,1,1,0,0,15,2,0,Uttar Pradesh
+Rae Bareli,0,7,7,4,0,8,1,4,0,5,3,0,0,1,4,0,Uttar Pradesh
+Rampur,0,0,2,0,0,0,0,0,0,0,0,0,0,0,1,0,Uttar Pradesh
+Saharanpur,2,1,2,0,0,0,0,0,0,1,0,0,0,13,19,0,Uttar Pradesh
+Sambhal,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Sant Kabir Nagar,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Shahjahanpur,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Shamli,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Uttar Pradesh
+Shrawasti,5,0,4,0,0,0,0,0,0,0,0,0,0,3,6,0,Uttar Pradesh
+Siddharthnagar,1,0,1,0,0,0,0,1,0,3,0,0,0,0,8,0,Uttar Pradesh
+Sitapur,0,0,4,0,0,0,0,0,0,0,0,0,0,5,7,0,Uttar Pradesh
+Sonbhadra,3,0,32,0,0,1,0,8,0,10,9,0,0,2,1,0,Uttar Pradesh
+Sultanpur,0,0,26,0,0,0,0,0,0,1,1,0,0,0,1,0,Uttar Pradesh
+Unnao,25,1,12,0,3,4,2,24,0,30,2,0,0,1,12,0,Uttar Pradesh
+Varanasi,2,2,5,2,1,2,1,2,0,4,0,0,0,0,0,0,Uttar Pradesh
