@@ -5,7 +5,7 @@ BIS_10500 = {
     "ph": {"label": "pH", "unit": "none", "acceptable": 6.5, "permissible": 8.5, "weight": 0.2, "strategy": "range"},
     "tds": {"label": "Total Dissolved Solids", "unit": "mg/L", "acceptable": 500.0, "permissible": 2000.0, "weight": 0.3, "strategy": "threshold"},
     "fluoride": {"label": "Fluoride", "unit": "mg/L", "acceptable": 1.0, "permissible": 1.5, "weight": 0.8, "strategy": "threshold"},
-    "arsenic": {"label": "Arsenic", "unit": "mg/L", "acceptable": 0.01, "permissible": 0.05, "weight": 1.0, "strategy": "threshold"},
+    "arsenic": {"label": "Arsenic", "unit": "mg/L", "acceptable": 0.01, "permissible": None, "weight": 1.0, "strategy": "threshold"},
     "nitrate": {"label": "Nitrate", "unit": "mg/L", "acceptable": 45.0, "permissible": None, "weight": 0.7, "strategy": "threshold"},
     "iron": {"label": "Iron", "unit": "mg/L", "acceptable": 0.3, "permissible": None, "weight": 0.4, "strategy": "threshold"},
     "turbidity": {"label": "Turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "weight": 0.3, "strategy": "threshold"},
