@@ -1,5 +1,8 @@
 # WaterTriage
 
+**Live Demo:** [https://water-triage.onrender.com](https://water-triage.onrender.com)
+
+
 **A Data-Driven Water Quality Risk Scoring and Intervention Prioritization System for Uttar Pradesh and Bihar**
 
 B.Tech NTCC Minor Project (ETMN100) — Anubhav Anand (A41105223039), Amity University Greater Noida
