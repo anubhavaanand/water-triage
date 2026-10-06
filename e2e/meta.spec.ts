@@ -7,18 +7,19 @@ test('asserts displayed samples and band counts match live /api/meta', async ({ 
   await page.goto('/');
   await page.waitForTimeout(2000);
 
-  const samples = meta.corpus.samples.toLocaleString();
-  const districts = meta.corpus.districts_with_samples.toString();
+  const samples = meta.corpus.samples.toString();
+  const historical = meta.corpus.historical_events_distinct.toString();
 
-  await expect(page.locator(`text=${samples} samples`).first()).toBeVisible({ timeout: 10000 });
-  await expect(page.locator(`text=${districts} districts`).first()).toBeVisible();
+  await expect(page.locator(`text=${samples} Samples`).first()).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(`text=${historical} Historical Records`).first()).toBeVisible();
 
-  const criticalStat = page.locator('.stat').filter({ hasText: 'Critical' }).locator('.stat-num');
-  await expect(criticalStat.first()).toHaveText(String(meta.bands.Critical));
+  // Find the exact text of the Critical count. We'll verify the div containing 'Critical' also contains the number.
+  const criticalCount = String(meta.bands.Critical);
+  await expect(page.locator(`text=Critical`).locator('xpath=..').locator(`text=${criticalCount}`).first()).toBeVisible();
   
-  const highStat = page.locator('.stat').filter({ hasText: 'High' }).locator('.stat-num');
-  await expect(highStat.first()).toHaveText(String(meta.bands.High));
+  const highCount = String(meta.bands.High);
+  await expect(page.locator(`text=High`).locator('xpath=..').locator(`text=${highCount}`).first()).toBeVisible();
   
-  const mediumStat = page.locator('.stat').filter({ hasText: 'Medium' }).locator('.stat-num');
-  await expect(mediumStat.first()).toHaveText(String(meta.bands.Medium));
+  const mediumCount = String(meta.bands.Medium);
+  await expect(page.locator(`text=Medium`).locator('xpath=..').locator(`text=${mediumCount}`).first()).toBeVisible();
 });

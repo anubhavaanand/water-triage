@@ -1,0 +1,353 @@
+AMITY SCHOOL OF ENGINEERING & TECHNOLOGY
+Amity University Uttar Pradesh, Greater Noida
+
+MINOR PROJECT REPORT
+(ETMN100)
+
+WaterTriage: A Data-Driven Water Quality Risk Scoring and
+Intervention Prioritization System for Uttar Pradesh and Bihar
+Submitted by
+
+Anubhav Anand
+Enrollment No. A41105223039
+B.Tech (Computer Science & Engineering), Batch 2023–2027
+
+Under the guidance of
+
+Dr. Girish Paliwal
+
+Academic Year 2026–27
+
+Declaration
+I, Anubhav Anand, Enrollment No. A41105223039, hereby declare that this Minor Project
+report titled "WaterTriage: A Data-Driven Water Quality Risk Scoring and Intervention Prioritization
+System for Uttar Pradesh and Bihar" is an original record of work carried out by me under the guidance of
+Dr. Girish Paliwal, Amity School of Engineering & Technology, Amity University Uttar Pradesh,
+Greater Noida, during the academic year 2026–27, and has not been submitted elsewhere for any other
+degree or diploma.
+
+Faculty Guide's Certificate
+This is to certify that the project report titled "WaterTriage: A Data-Driven Water Quality Risk
+Scoring and Intervention Prioritization System for Uttar Pradesh and Bihar" submitted by Anubhav
+Anand (A41105223039) is a record of bona fide work carried out under my supervision in partial
+fulfilment of the requirements of the Minor Project (ETMN100) component of the B.Tech (Computer
+Science & Engineering) programme.
+
+Dr. Girish Paliwal
+Faculty Guide
+Amity School of Engineering & Technology
+
+Abstract
+Access to safe drinking water remains a critical public health concern across rural India,
+particularly in Uttar Pradesh and Bihar, where chemical and microbiological contamination of
+groundwater sources affects millions of households. Despite the Jal Jeevan Mission (JJM) generating
+extensive water quality testing data at habitation level, this information remains largely inaccessible to
+local district and block-level officials responsible for prioritising remediation. This project presents
+WaterTriage, an independently reproducible, open triage system that ingests publicly available JJM water
+quality data and processes it through a backend pipeline built on Python, FastAPI, SQLAlchemy, and
+PostgreSQL. A contamination severity scoring engine evaluates each water source against Bureau of
+Indian Standards (BIS) 10500 permissible limits, applying differential health-risk weights and an acutehazard escalation rule that prevents severe contaminants such as arsenic and E. coli from being diluted by
+compliant aesthetic parameters. The system was validated against a canonical corpus of 1,741 live
+laboratory reports (966 from Uttar Pradesh, 775 from Bihar) and 100,690 historical contamination
+records. Results show a mean composite risk score of 18.36 for Bihar versus 12.68 for Uttar Pradesh;
+however, median scores (0.00 for Bihar, 4.08 for Uttar Pradesh) reveal that Bihar's elevated mean is
+substantially driven by a concentrated cluster of single-parameter iron panels in Madhepura district rather
+than uniformly elevated risk. This finding is reported transparently as a disclosed limitation of panel
+composition rather than a general contamination claim. The system exposes ranked, filterable
+intervention priority lists through a REST API and an interactive dashboard, demonstrating that
+independently reproducible analytics built on government open data can support ground-level water
+safety planning without requiring privileged access to internal government systems.
+Keywords: Water Quality; Jal Jeevan Mission; Contamination Severity Scoring; BIS 10500;
+FastAPI; Intervention Prioritization
+
+1. Introduction
+Access to safe and adequate drinking water is a fundamental determinant of public health, yet a
+substantial proportion of India's rural population continues to rely on groundwater sources vulnerable to
+both geogenic and anthropogenic contamination. Uttar Pradesh and Bihar, situated along the IndoGangetic plain, are particularly affected by naturally occurring arsenic and fluoride contamination,
+compounded by nitrate and microbiological contamination from inadequate sanitation infrastructure. The
+Jal Jeevan Mission (JJM) has generated one of the largest water quality testing datasets in the country, yet
+this data remains consolidated within the Water Quality Management Information System (WQMIS), a
+reporting layer designed for national and state-level monitoring rather than direct, actionable use by
+district and block-level officials.
+This project is motivated by the observation that publicly accessible JJM data can be
+independently processed to help close this accessibility gap without requiring modification to, or
+privileged access within, existing government systems. The objective is to design and implement
+WaterTriage: a reproducible system that ingests JJM water quality data for Uttar Pradesh and Bihar,
+scores each source against BIS 10500 limits, and produces a ranked, filterable list of intervention
+priorities. The two states were selected for both practical feasibility and their genuinely distinct
+contamination geographies, offering a meaningful basis for comparative analysis.
+
+2. Related Work
+2.1 Government Water Quality Monitoring Infrastructure. WQMIS, established under JJM by
+the Department of Drinking Water and Sanitation, consolidates water quality test results at state and
+district laboratories. Published accounts describe this infrastructure as operating primarily for
+programme-level monitoring rather than generating ranked, ground-level intervention priorities for block
+or panchayat-level functionaries.
+2.2 Groundwater Contamination in the Middle Gangetic Plain. Hydrogeochemical research has
+documented severe arsenic and fluoride contamination across this region, with arsenic concentrations
+reported up to several thousand μg/L in parts of the middle Gangetic floodplain and fluoride
+concentrations up to 12 mg/L in affected Bihar districts, substantially exceeding BIS permissible limits.
+2.3 Water Quality Index and Contamination Scoring Approaches. Conventional Water Quality
+Index (WQI) methodologies are known to suffer from an "eclipsing" effect, whereby a single highly toxic
+parameter exceeding safe limits can be masked by a composite score dominated by compliant parameters.
+Reviews of WQI methodology find no consensus on universal parameter weighting, concluding that
+weighting should be adapted to local health priorities rather than treated as fixed across contexts.
+2.4 Positioning of This Project. WaterTriage applies a BIS 10500-grounded, severity-weighted
+scoring approach explicitly designed to avoid the eclipsing flaw, to JJM monitoring data for Uttar
+
+Pradesh and Bihar, with the goal of producing actionable output that existing government reporting
+systems do not directly provide to local stakeholders.
+
+3. Methodology
+3.1 System Architecture. WaterTriage is implemented as a four-stage pipeline: acquisition,
+storage, enrichment, and serving. Data is acquired from public WQMIS reports and cached locally,
+persisted in a normalized PostgreSQL schema, enriched with per-record severity scores, and served
+through a REST API and browser dashboard.
+3.2 Database Schema. The system persists data across eight tables: a geographic hierarchy
+(states, districts, villages), bis_parameters (BIS limits and health weights), water_samples and readings
+(separating
+
+a
+
+lab
+
+report
+
+from
+
+its
+
+individual
+
+parameter
+
+measurements),
+
+risk_scores,
+
+historical_contamination (registry events from 2009–2012), and interventions.
+3.3 Contamination Severity Scoring. Each parameter reading is converted to a severity value
+between 0 and 1 by linear interpolation between the BIS acceptable and permissible limits. During
+development, iron and nitrate were initially found to have no defined permissible ceiling in the scoring
+configuration, which caused any exceedance of the acceptable limit to saturate directly to maximum
+severity (a binary rather than graded response). This was identified as a methodological defect and
+corrected by assigning iron a BIS-aligned permissible limit of 1.0 mg/L, restoring graded linear
+interpolation consistent with every other parameter. The composite risk score (CRS) for a sample is the
+weighted mean of severity across tested parameters, scaled to 0–100, using health-risk weights (arsenic =
+1.0, E. coli = 0.9, fluoride = 0.8, nitrate = 0.7, iron = 0.4, turbidity/TDS = 0.3, pH = 0.2). A bandescalation rule additionally forces a minimum "High" classification for any parameter reaching full
+severity, and a "Critical" classification for acute-hazard parameters (E. coli, arsenic ≥ 0.05 mg/L)
+irrespective of the numeric composite score. Based on CRS, each sample is classified as Critical (≥75),
+High (50–74), Medium (25–49), or Low/Safe (<25).
+3.4 Recurrence Detection. A recurrence classification module was implemented to blend
+historical registry presence with current exceedance status, producing verdicts of chronic-hotspot,
+recurring, watchlist, or no-history for a given village-parameter combination. This logic was validated
+through unit testing in isolation; however, live linkage between the production water_samples table and
+the historical_contamination registry could not be established for this reporting period because the two
+data sources use disjoint village identifier schemes. This limitation is disclosed in full in Section 6.
+3.5 Data Acquisition. The primary acquisition channel is a crawler against WQMIS's public,
+unauthenticated report-printing endpoint, operating with caching and resume checkpoints. A historical
+Quality-Affected Habitations registry (2009–2012, 100,690 events) was loaded as a supplementary
+source.
+
+3.6 Implementation and Validation. The backend is implemented in Python using FastAPI and
+SQLAlchemy against PostgreSQL, containerized via Docker Compose. A dedicated /api/meta endpoint
+serves corpus-level invariants as a single source of truth for dashboard consumers, shown in Table 3. The
+implementation was validated using twenty-eight automated test cases (one skipped), covering scoring
+correctness, API contract behaviour, WQMIS parser edge cases, and database integration.
+Invariant
+total_samples == 1,741
+band_counts.sum() == total_samples
+critical_count == 89
+readings_total == 6,792
+
+Description
+Corpus size matches the frozen canonical count
+Severity band distribution is exhaustive
+Critical-band count matches the corrected scoring run
+Reading count matches the corpus
+
+4. Results
+4.1 Data Volume. The canonical, frozen corpus used for all results in this section comprises
+1,741 scored live laboratory reports (Uttar Pradesh: 966; Bihar: 775), 6,792 discrete parameter readings,
+and 100,690 historical contamination registry events. This figure supersedes several intermediate sample
+counts (755, 1,245, and 1,855) reported in earlier weekly progress reports during active development;
+those counts reflected partial crawls and an interim SQLite-to-PostgreSQL migration and are not used in
+this final report.
+4.2 Severity Band Distribution. Table 1 shows the distribution of the 1,741 scored samples
+across severity bands under the corrected scoring methodology (Section 3.3).
+Severity Band
+Critical (CRS ≥ 75)
+High (50 ≤ CRS < 75)
+Medium (25 ≤ CRS < 50)
+Low / Safe (CRS < 25)
+Total
+
+Count
+89
+392
+28
+1,232
+1,741
+
+Share
+5.1%
+22.5%
+1.6%
+70.8%
+100%
+
+4.3 Comparative State Analysis: Mean, Median, and a Panel-Size Artifact. Table 2 compares
+risk statistics between the two states.
+Statistic
+Mean composite risk score (CRS)
+Median composite risk score (CRS)
+Critical band samples (CRS ≥ 75)
+High band samples (50 ≤ CRS < 75)
+
+Uttar Pradesh (n=966)
+12.68
+4.08
+14
+234
+
+Bihar (n=775)
+18.36
+0.00
+75
+158
+
+Bihar's mean composite risk score (18.36) exceeds Uttar Pradesh's (12.68); however, Bihar's
+median score is 0.00, compared to 4.08 for Uttar Pradesh, indicating that more than half of Bihar's scored
+samples fall in the Low/Safe band. This divergence between mean and median is explained by a specific
+data artifact: 70 of the 89 Critical-band samples (78.7%) originate from Madhepura district alone, where
+all 70 samples were tested under a single-parameter panel for iron only. Under the corrected scoring rule,
+any iron reading at or above the permissible limit saturates to maximum severity, and because no other
+parameters were tested for these samples, the composite score for each equals 100 by construction. This
+is disclosed explicitly as a panel-composition limitation rather than evidence of uniformly severe
+contamination across Bihar, and is surfaced to dashboard consumers via the /api/meta endpoint's
+documented limitations.
+4.4 Escalation Rule Validation. During testing, synthetic and live cases confirmed that the bandescalation rule (Section 3.3) correctly reclassifies samples with acute hazards (E. coli presence or arsenic
+≥ 0.05 mg/L) to Critical band even where the arithmetic composite score alone would classify the sample
+as Low or Medium, confirming the rule functions as intended to prevent the eclipsing failure mode
+discussed in Section 2.3.
+4.5 Recurrence Module Status. The historical registry confirms Khokha village (Purnia district,
+Bihar) as the single most frequently recorded location for iron-related events in the 2009–2012 registry,
+
+with 166 recorded events — the highest of any village in the historical dataset. However, because the
+production water_samples table and the historical_contamination registry use disjoint village identifier
+schemes, this historical finding could not be linked to a corresponding live risk score for the same village
+during this reporting period, and an earlier characterisation of Khokha as a "confirmed chronic
+contamination hotspot" based on live system output has accordingly been withdrawn. The historical
+figure is reported here as a registry-level finding only, and the identifier-mapping gap is recorded as an
+open limitation (Section 6).
+4.6 System Validation. All twenty-eight automated tests pass (one skipped), and the four corpuslevel invariants exposed via /api/meta (Table 3) were confirmed to hold against the production database at
+the time of this report.
+
+5. Discussion
+The results in Section 4.3 illustrate why reporting both mean and median statistics, together with
+panel-composition context, is necessary for an honest comparative analysis: a mean-only reading would
+have suggested Bihar carries substantially higher contamination risk than Uttar Pradesh across the board,
+when the more complete picture is that a small, structurally distinct cluster of single-parameter samples
+accounts for the great majority of that gap. This is treated in this report as a methodological finding about
+the dataset's composition, not a claim about underlying contamination incidence rates between the two
+states, which this sample is not equipped to estimate without correcting for panel-size variation.
+The correction to the iron/nitrate scoring logic (Section 3.3) was itself a significant finding: the
+original binary-saturation behaviour for parameters lacking an explicit permissible limit caused
+disproportionate Critical-band inflation, which was only identified through systematic re-verification of
+the scoring engine against its own BIS 10500 justification. This underscores the value of treating a
+scoring model's assumptions as testable claims rather than fixed infrastructure.
+The withdrawal of the Khokha chronic-hotspot claim (Section 4.5) reflects the same discipline:
+rather than retaining a compelling but unverifiable narrative example, the identifier-mismatch limitation
+is disclosed directly, and the historical finding is reported at the scope it can actually support.
+
+6. Limitations
+This work is bounded by several limitations that should inform how its findings are used. First,
+the 1,741 live laboratory reports represent a sample drawn from targeted WQMIS identifier ranges rather
+than a spatially uniform census of either state; sample density by district reflects crawler coverage, not
+necessarily underlying population-level contamination burden. Second, as discussed in Section 4.3, a
+subset of Critical-band samples originate from single-parameter test panels (iron only), which
+mechanically produces maximum severity scores independent of a source's overall water quality and
+should not be read as representative of multi-parameter contamination severity. Third, live linkage
+
+between the historical contamination registry and current water_samples records could not be established
+due to disjoint village identifier schemes between the two sources, limiting recurrence/trend
+classification to registry-level findings rather than sample-linked verdicts for this reporting period.
+Fourth, a temporal discontinuity exists between the historical registry (2009–2012) and current WQMIS
+testing cycles, meaning historical findings indicate long-term hydrogeological susceptibility rather than
+real-time contamination status.
+
+7. Conclusion
+This project set out to design and implement WaterTriage, a system that ingests publicly
+available JJM water quality data for Uttar Pradesh and Bihar and produces ranked, actionable
+intervention priorities that existing government reporting systems do not directly provide to local
+officials. Table 4 maps the objectives declared in the project synopsis against delivered outcomes.
+Synopsis Objective
+Acquisition and normalization of JJM open water-quality
+data for UP and Bihar
+Relational database schema for source-level records
+Contamination severity scoring model per BIS IS 10500
+
+Recurrence/trend detection module
+
+FastAPI backend exposing ranked intervention lists
+Dashboard for district-wise and state-wise comparison
+Containerized deployment
+
+Delivered Outcome
+Achieved — WQMIS public report crawler delivering
+1,741 scored live laboratory reports (UP 966 / Bihar 775),
+supplemented by a 100,690-event historical registry (2009–
+2012)
+Achieved — eight-table normalized PostgreSQL schema
+with canonical state naming and referential integrity
+Achieved — weighted per-parameter severity with linear
+interpolation between acceptable and permissible limits
+(including a corrected iron permissible limit of 1.0 mg/L)
+and an acute-hazard escalation rule
+Partially achieved — scoring and classification logic
+implemented and unit-tested in isolation; live linkage to the
+historical registry is blocked by disjoint village identifiers
+between the two data sources (Section 6, Limitations)
+Achieved — REST endpoints including ranked priority
+queue, state comparison, and a dedicated /api/meta
+endpoint serving verified corpus invariants
+Achieved — interactive dashboard with priority queue,
+overview KPIs, and methodology/limitations panel sourced
+from /api/meta
+Partially achieved — PostgreSQL and backend services
+containerized via Docker Compose
+
+The system was implemented, validated against twenty-eight automated test cases, and
+evaluated against a reconciled, canonical database of 1,741 real laboratory reports and 100,690 historical
+contamination records. Over the course of implementation, two significant methodological issues were
+identified and corrected: a scoring-logic defect causing disproportionate Critical-band inflation for
+certain parameters, and an unverifiable recurrence claim that was withdrawn once a data-linkage
+limitation was identified, rather than retained uncorrected. The system's central contribution is an open,
+independently reproducible triage layer that renders JJM water-quality data actionable for district and
+block-level officials, demonstrating, within the bounds of an 82-day Minor Project, that rigorous dataengineering practice — including the discipline of identifying and disclosing one's own errors — can be
+meaningfully applied to a socially consequential public-health problem. Future work includes resolving
+
+the village-identifier mismatch to enable true sample-linked recurrence detection, expanding live crawler
+coverage, and completing production hardening of the deployment.
+
+References
+[1] Department of Drinking Water and Sanitation, "Jal Jeevan Mission — Har Ghar Jal," Ministry of
+Jal Shakti, Government of India, 2019.
+[2] National Jal Jeevan Mission, "Drinking Water Quality Monitoring & Surveillance Framework,"
+Government of India, jaljeevanmission.gov.in.
+[3] Chauhan, V.S. et al., cited in "Comparative assessment of fluoride and arsenic mobilization
+mechanisms among the groundwater of the major affected river basins of India," Water Supply,
+IWA Publishing, 2024.
+[4] Chakraborti, D. et al., cited in "Comparative assessment of fluoride and arsenic mobilization
+mechanisms among the groundwater of the major affected river basins of India," Water Supply,
+IWA Publishing, 2024.
+[5] "Multiple Groundwater Contamination in the Mid-Gangetic Plain, Bihar (India): A Potential
+Threat," ResearchGate, 2024.
+[6] "Comparative health risk assessment of arsenic and fluoride toxicity in the rural area groundwater
+in the middle Gangetic plain at Muzaffarpur, India," Bulletin of the National Research Centre,
+Springer Nature, 2025.
+[7] "Comprehensive Assessment of Drinking Water Quality Indices: A Review," Journal of Geological
+Society of India, 2025.
+[8] "Evaluation of different WQI methods for drinking water," JGEESI.
+
+

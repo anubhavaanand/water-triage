@@ -2,45 +2,38 @@ import { test, expect } from '@playwright/test';
 
 test.describe('WaterTriage React Frontend E2E Tests', () => {
 
-  test('loads Engineering Notebook Dashboard cleanly', async ({ page }) => {
+  test('loads Dashboard cleanly', async ({ page }) => {
     await page.goto('/');
     
-    // Check Top Nav
-    await expect(page.locator('.logo')).toContainText('WaterTriage');
+    // Check main title
+    await expect(page.locator('h1')).toContainText('WaterTriage');
     
     // DB Status indicator should be visible
-    await expect(page.locator('.status-pill')).toBeVisible();
-
-    // Check main title
-    await expect(page.locator('h1')).toContainText('Dashboard Layout Explorations');
+    await expect(page.locator('text=DB LIVE')).toBeVisible();
     
     // Check interactive system tabs
-    await expect(page.locator('#tab-a')).toContainText('Variant A');
-    await expect(page.locator('#tab-b')).toContainText('Variant B');
-    await expect(page.locator('#tab-c')).toContainText('Variant C');
-    await expect(page.locator('#tab-d')).toContainText('Variant D');
+    await expect(page.locator('button', { hasText: /^Overview$/ })).toBeVisible();
+    await expect(page.locator('button', { hasText: /^Queue$/ })).toBeVisible();
+    await expect(page.locator('button', { hasText: /^Methodology$/ })).toBeVisible();
   });
 
   test('verifies tab navigation and data loading', async ({ page }) => {
     await page.goto('/');
     
-    // Default tab should be Variant A
-    await expect(page.locator('#tab-panel-a')).toBeVisible();
+    // Wait for data to load
+    await expect(page.locator('text=Loading WaterTriage Dashboard...')).toBeHidden({ timeout: 10000 });
 
-    // Navigate to Map Tab (B)
-    await page.locator('#tab-b').click();
-    await expect(page.locator('#tab-panel-b')).toBeVisible();
+    // Navigate to Queue Tab
+    await page.locator('button', { hasText: /^Queue$/ }).click();
+    await expect(page.locator('h2', { hasText: 'Priority Intervention Queue' })).toBeVisible();
 
-    // Navigate to Detail Tab (C)
-    await page.locator('#tab-c').click();
-    await expect(page.locator('#tab-panel-c')).toBeVisible();
-
-    // Navigate to Validation Tab (D)
-    await page.locator('#tab-d').click();
+    // Navigate to Methodology Tab
+    await page.locator('button', { hasText: /^Methodology$/ }).click();
+    await expect(page.locator('h2', { hasText: 'Data Provenance & Limitations' })).toBeVisible();
     
-    // Verify Validation content rendered and check VP-1
-    await expect(page.locator('#tab-panel-d')).toBeVisible();
-    await expect(page.locator('#tab-panel-d')).toContainText('VP-1');
+    // Navigate back to Overview Tab
+    await page.locator('button', { hasText: /^Overview$/ }).click();
+    await expect(page.locator('h2', { hasText: 'Dashboard Overview' })).toBeVisible();
   });
 
 });

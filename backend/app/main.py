@@ -30,10 +30,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 for router in all_routers:
     app.include_router(router, prefix="/api")
 
-
-@app.get("/")
-def root():
-    return {"service": "watertriage", "docs": "/docs"}
+# Serve the React frontend if the dist folder exists
+frontend_dist = os.path.join(os.path.dirname(__file__), "../../frontend/dist")
+if os.path.isdir(frontend_dist):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+    
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        # Allow API routes to pass through (handled by routers above, but just in case)
+        if full_path.startswith("api/"):
+            return {"error": "Endpoint not found"}
+            
+        # Serve exact file if it exists in dist
+        file_path = os.path.join(frontend_dist, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+            
+        # Fallback to index.html for React Router / SPA
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
+else:
+    @app.get("/")
+    def root():
+        return {"service": "watertriage", "docs": "/docs", "warning": "Frontend dist folder not found"}

@@ -228,16 +228,16 @@ def get_metadata(db: Session = Depends(get_db)):
         samples_dict[r.sample_id].append((r.parameter_key, r.value))
         state_map[r.sample_id] = r.state
         
-    from app.engine.scoring import composite_score, BIS_10500
+    from backend.app.engine.scoring import composite_score, BIS_10500
     from copy import deepcopy
     my_limits = deepcopy(BIS_10500)
     my_limits["iron"]["acceptable"] = 1.0
     my_limits["iron"]["permissible"] = None
     
-    for sid, readings in samples_dict.items():
+    for sid, sample_readings in samples_dict.items():
         st = state_map[sid]
         r_dict = {}
-        for (k, v) in readings:
+        for (k, v) in sample_readings:
             if k in my_limits:
                 r_dict[k] = (v, my_limits[k])
             if k == 'iron':
