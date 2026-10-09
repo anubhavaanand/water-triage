@@ -90,12 +90,14 @@ def get_dashboard_data(db: Session = Depends(get_session)):
     samples_res = db.execute(text("SELECT COUNT(*) FROM risk_scores")).scalar() or 0
     crit_res = db.execute(text("SELECT COUNT(*) FROM risk_scores WHERE band='Critical'")).scalar() or 0
     high_res = db.execute(text("SELECT COUNT(*) FROM risk_scores WHERE band='High'")).scalar() or 0
+    medium_res = db.execute(text("SELECT COUNT(*) FROM risk_scores WHERE band='Medium'")).scalar() or 0
     low_res = db.execute(text("SELECT COUNT(*) FROM risk_scores WHERE band='Low'")).scalar() or 0
     
     kpi = {
         "samples": samples_res,
         "critical": crit_res,
         "high": high_res,
+        "medium": medium_res,
         "low": low_res
     }
     
