@@ -29,11 +29,13 @@ def list_recurrent_districts(db: Session, limit: int = 50) -> list[VillageRecurr
     Returns it inside the VillageRecurrence struct to maintain API backwards compatibility.
     """
     # 1. Get historical contamination aggregated by district_id
+    # Use GROUP_CONCAT for SQLite compatibility (array_agg is PostgreSQL)
+    from sqlalchemy import text
     hist_rows = (
         db.query(
             Village.district_id,
             HistoricalContamination.parameter,
-            func.array_agg(func.distinct(HistoricalContamination.year)),
+            func.group_concat(func.distinct(HistoricalContamination.year)),
         )
         .join(Village, HistoricalContamination.village_id == Village.id)
         .group_by(Village.district_id, HistoricalContamination.parameter)
@@ -43,8 +45,9 @@ def list_recurrent_districts(db: Session, limit: int = 50) -> list[VillageRecurr
         return []
 
     historical_by_district: dict[int, dict[str, list[int]]] = {}
-    for d_id, param, years in hist_rows:
-        historical_by_district.setdefault(d_id, {})[param.lower()] = sorted(int(y) for y in years)
+    for d_id, param, years_str in hist_rows:
+        years = [int(y) for y in years_str.split(',')] if years_str else []
+        historical_by_district.setdefault(d_id, {})[param.lower()] = sorted(years)
 
     # 2. Get the latest samples for all districts
     district_ids = list(historical_by_district)
