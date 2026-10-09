@@ -66,18 +66,22 @@ def test_composite_ranks_e_coli_above_tds():
 
 
 def test_escalation_rules():
+    # Non-acute full breach (fluoride) does NOT escalate band
     fluoride_full = {"fluoride": (2.0, BIS_10500["fluoride"]), "ph": (7.0, BIS_10500["ph"])}
-    _, band, worst = composite_score(fluoride_full)
-    assert band in {"High", "Critical"}
-    assert worst == "fluoride"
+    score_f, band_f, worst_f = composite_score(fluoride_full)
+    # Score = 0.8 * 1.0 / 6.0 * 100 = 13.33 -> Medium band (>= 10, < 20)
+    assert band_f == "Medium"
+    assert worst_f == "fluoride"
 
+    # Acute hazard (arsenic) escalates to Critical
     arsenic_partial = {
         "arsenic": (0.03, BIS_10500["arsenic"]),
         "ph": (7.0, BIS_10500["ph"]),
         "tds": (300.0, BIS_10500["tds"]),
     }
     score, band_a, worst_a = composite_score(arsenic_partial)
-    assert score >= 50
+    # arsenic is acute - escalates to Critical regardless of raw score
+    assert band_a == "Critical"
     assert worst_a == "arsenic"
 
     e_coli_present = {"e_coli": (12.0, BIS_10500["e_coli"]), "ph": (7.0, BIS_10500["ph"])}
@@ -87,18 +91,18 @@ def test_escalation_rules():
 
 def test_bands():
     assert band_for(90) == "Critical"
-    assert band_for(75) == "Critical"
-    assert band_for(60) == "High"
-    assert band_for(30) == "Medium"
-    assert band_for(24.99) == "Low"
+    assert band_for(45) == "Critical"
+    assert band_for(25) == "High"
+    assert band_for(15) == "Medium"
+    assert band_for(5) == "Low"
 
-def test_iron_above_limit_escalates_to_high():
+def test_iron_above_limit_does_not_escalate_band():
     iron_fail = {
         "iron": (0.35, BIS_10500["iron"]),
         "ph": (7.0, BIS_10500["ph"])
     }
     score, band, worst = composite_score(iron_fail)
     assert worst == "iron"
-    # An iron exceedance saturates severity at 1.0, 
-    # and any 1.0 severity bumps the floor band to High (or Critical for acute hazards).
-    assert band in {"High", "Critical"}
+    # Iron is not an acute hazard - it contributes to score but doesn't escalate band
+    # Score = 0.4 * 1.0 / 6.0 * 100 = 6.67 -> Low band (>= 0, < 10)
+    assert band == "Low"

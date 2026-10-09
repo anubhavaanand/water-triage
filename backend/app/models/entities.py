@@ -26,6 +26,8 @@ class District(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     state_id: Mapped[int] = mapped_column(ForeignKey("states.id"))
     name: Mapped[str] = mapped_column(String(100))
+    parameter_count: Mapped[int] = mapped_column(default=0)
+    data_quality: Mapped[str] = mapped_column(String(20), default="unknown")
 
     state: Mapped["State"] = relationship(back_populates="districts")
     villages: Mapped[list["Village"]] = relationship(back_populates="district")

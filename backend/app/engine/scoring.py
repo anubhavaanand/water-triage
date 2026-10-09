@@ -10,9 +10,17 @@ BIS_10500 = {
     "iron": {"label": "Iron", "unit": "mg/L", "acceptable": 0.3, "permissible": None, "weight": 0.4, "strategy": "threshold"},
     "turbidity": {"label": "Turbidity", "unit": "NTU", "acceptable": 1.0, "permissible": 5.0, "weight": 0.3, "strategy": "threshold"},
     "e_coli": {"label": "E. Coli", "unit": "CFU/100mL", "acceptable": 0.0, "permissible": 0.0, "weight": 0.9, "strategy": "microbial"},
+    "sulphate": {"label": "Sulphate", "unit": "mg/L", "acceptable": 200.0, "permissible": 400.0, "weight": 0.5, "strategy": "threshold"},
+    "total_coliform": {"label": "Total Coliform", "unit": "CFU/100mL", "acceptable": 0.0, "permissible": 0.0, "weight": 0.9, "strategy": "microbial"},
 }
 
-BANDS = [(75.0, "Critical"), (50.0, "High"), (25.0, "Medium"), (0.0, "Low")]
+# Total possible weight of all BIS parameters
+TOTAL_BIS_WEIGHT = sum(v["weight"] for v in BIS_10500.values())  # 6.0
+
+# Adjusted bands: Critical=40, High=20, Medium=10, Low=0
+# Original bands (75/50/25) were unreachable due to escalation logic
+# New bands based on achievable score range (max ~48)
+BANDS = [(40.0, "Critical"), (20.0, "High"), (10.0, "Medium"), (0.0, "Low")]
 BAND_ORDER = ["Low", "Medium", "High", "Critical"]
 ACUTE_HAZARDS = {"e_coli", "total_coliform", "arsenic"}
 
@@ -60,12 +68,30 @@ def band_for(score: float) -> str:
 
 
 def composite_score(readings: dict[str, tuple[float, dict]]) -> tuple[float, str, str | None]:
-    total_weight = 0.0
+    """
+    Compute composite risk score.
+    
+    FIX: Normalize against total possible BIS weight (TOTAL_BIS_WEIGHT = 6.0)
+    instead of measured weight. This makes scores comparable across samples
+    with different parameter coverage.
+    
+    Zero values for parameters with detection limits (arsenic, e_coli, total_coliform)
+    are treated as "below detection limit" and excluded from scoring.
+    """
     weighted_sum = 0.0
     contributions: list[tuple[float, str]] = []
     results: dict[str, SeverityResult] = {}
 
+    # Parameters where zero means "below detection limit"
+    BELOW_DETECTION_PARAMS = {"arsenic", "e_coli", "total_coliform"}
+
     for key, (value, spec) in readings.items():
+        # Skip zero values for below-detection-limit parameters
+        if key in BELOW_DETECTION_PARAMS and value == 0.0:
+            # Store as non-exceeded with zero severity
+            results[key] = SeverityResult(0.0, False)
+            continue
+            
         result = parameter_severity(
             value,
             spec["acceptable"],
@@ -75,21 +101,24 @@ def composite_score(readings: dict[str, tuple[float, dict]]) -> tuple[float, str
         results[key] = result
         weight = spec["weight"]
         weighted_sum += weight * result.severity
-        total_weight += weight
         if result.exceeded:
             contributions.append((result.severity * weight, key))
 
-    if total_weight == 0:
+    if weighted_sum == 0:
         return 0.0, "Low", None
 
-    score = round((weighted_sum / total_weight) * 100, 2)
+    # Normalize against TOTAL possible weight (6.0) to make scores comparable
+    score = round((weighted_sum / TOTAL_BIS_WEIGHT) * 100, 2)
     worst = max(contributions)[1] if contributions else None
     return score, escalate_band(band_for(score), results), worst
 
 
 def escalate_band(band: str, results: dict[str, "SeverityResult"]) -> str:
-    full_breaches = [k for k, r in results.items() if r.severity >= 1.0]
-    if not full_breaches:
+    """Only escalate for ACUTE_HAZARDS (arsenic, e_coli, total_coliform).
+    Non-acute full breaches (iron, fluoride, tds, nitrate, sulphate) contribute
+    to the score but don't force band escalation."""
+    acute_full_breaches = [k for k, r in results.items() if r.severity >= 1.0 and k in ACUTE_HAZARDS]
+    if not acute_full_breaches:
         return band
-    floor_idx = 3 if any(k in ACUTE_HAZARDS for k in full_breaches) else 2
-    return BAND_ORDER[max(BAND_ORDER.index(band), floor_idx)]
+    # Acute hazards escalate to Critical
+    return BAND_ORDER[max(BAND_ORDER.index(band), 3)]

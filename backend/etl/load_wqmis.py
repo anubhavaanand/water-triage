@@ -101,7 +101,7 @@ def clip(value, width):
 
 
 def load_all(db: Session) -> dict:
-    inserted = skipped_no_results = duplicates = 0
+    inserted = skipped_no_results = duplicates = duplicate_readings = 0
 
     existing_refs = {
         r for (r,) in db.query(WaterSample.wqmis_ref).all() if r
@@ -121,6 +121,18 @@ def load_all(db: Session) -> dict:
         if not mapped:
             skipped_no_results += 1
             continue
+
+        # Plausibility guard: detect duplicate parameters within the same sample
+        seen_params = {}
+        for key, value in mapped:
+            if key in seen_params:
+                duplicate_readings += 1
+                print(
+                    f"WARNING: Duplicate parameter '{key}' in sample {record.get('wqmis_sample_id')}: "
+                    f"values {seen_params[key]} and {value} — keeping both for max-severity aggregation"
+                )
+            else:
+                seen_params[key] = value
 
         ref = record.get("wqmis_sample_id")
         if ref and ref in existing_refs:
@@ -148,6 +160,7 @@ def load_all(db: Session) -> dict:
     return {
         "inserted": inserted,
         "duplicates": duplicates,
+        "duplicate_readings": duplicate_readings,
         "skipped_empty": skipped_no_results,
         "scored_total": scored,
     }

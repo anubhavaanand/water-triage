@@ -179,7 +179,7 @@ def get_metadata(db: Session = Depends(get_db)):
     )).scalar()
     
 
-    # Critical concentration logic
+    # Critical concentration logic (updated for new bands: Critical >= 40)
     crit_conc = db.execute(text('''
         SELECT d.name as district, COUNT(ws.id) as total_critical,
                SUM(CASE WHEN 
@@ -191,7 +191,7 @@ def get_metadata(db: Session = Depends(get_db)):
         JOIN water_samples ws ON rs.sample_id = ws.id
         JOIN villages v ON ws.village_id = v.id
         JOIN districts d ON v.district_id = d.id
-        WHERE rs.score >= 75
+        WHERE rs.score >= 40
         GROUP BY d.name
         ORDER BY total_critical DESC
         LIMIT 1;
@@ -304,7 +304,7 @@ def get_metadata(db: Session = Depends(get_db)):
         "bands": bands_dict,
         "sensitivity": sensitivity,
         "critical_concentration": critical_concentration,
-        "band_thresholds": {"Critical": 75, "High": 50, "Medium": 25, "Low": 0},
+        "band_thresholds": {"Critical": 40, "High": 20, "Medium": 10, "Low": 0},
         "state_comparison": state_comparison,
         "top_parameters": top_parameters,
         "scoring": {
@@ -313,15 +313,18 @@ def get_metadata(db: Session = Depends(get_db)):
             "weights": {
                 "arsenic": 1.0,
                 "e_coli": 0.9,
+                "total_coliform": 0.9,
                 "fluoride": 0.8,
                 "nitrate": 0.7,
                 "iron": 0.4,
+                "sulphate": 0.5,
                 "turbidity": 0.3,
                 "tds": 0.3,
                 "ph": 0.2
             },
             "escalation_rules": [
-                {"rule": "Any parameter severity 1.0 (exceeds permissible / acute risk)", "bands_floor": "High"}
+                {"rule": "Acute hazards (arsenic, e_coli, total_coliform) full breach → Critical floor", "bands_floor": "Critical"},
+                {"rule": "Non-acute full breaches contribute to score but do not force band escalation", "bands_floor": "none"}
             ]
         },
         "limitations": [
@@ -370,9 +373,9 @@ def get_metadata(db: Session = Depends(get_db)):
             },
             {
                 "id": "medium-band-empty",
-                "title": "Near-empty Medium band",
-                "detail": "The step function makes scores bimodal; the Medium band contains only 1.6% of samples, meaning the four-band scheme behaves like three bands.",
-                "status": "accepted"
+                "title": "Medium band historically empty (now populated)",
+                "detail": "The original step function made scores bimodal; the Medium band contained only 1.6% of samples. After adjusting band thresholds to Critical=40, High=20, Medium=10, Low=0 and refining escalation logic, the Medium band now contains 7.2% of samples (125/1741).",
+                "status": "resolved"
             }
         ],
         "caveats": {

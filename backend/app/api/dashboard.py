@@ -6,6 +6,77 @@ from ..database import get_session
 
 router = APIRouter(tags=["dashboard"])
 
+@router.get("/districts")
+def get_districts(db: Session = Depends(get_session)):
+    """Get all districts with parameter coverage, data quality, and band counts."""
+    rows = db.execute(text("""
+        SELECT d.id, d.name, d.state_id, s.name as state,
+               d.parameter_count, d.data_quality
+        FROM districts d
+        JOIN states s ON d.state_id = s.id
+        ORDER BY s.name, d.name
+    """)).fetchall()
+    
+    # Get band counts for each district
+    band_rows = db.execute(text("""
+        SELECT d.id as district_id, rs.band, COUNT(*) as cnt
+        FROM risk_scores rs
+        JOIN water_samples ws ON rs.sample_id = ws.id
+        JOIN villages v ON ws.village_id = v.id
+        JOIN districts d ON v.district_id = d.id
+        GROUP BY d.id, rs.band
+    """)).fetchall()
+    
+    band_map = {}
+    for r in band_rows:
+        if r.district_id not in band_map:
+            band_map[r.district_id] = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0}
+        band = r.band if r.band in ["Critical", "High", "Medium", "Low"] else "Low"
+        band_map[r.district_id][band] += r.cnt
+    
+    result = []
+    for r in rows:
+        band_counts = band_map.get(r.id, {"Critical": 0, "High": 0, "Medium": 0, "Low": 0})
+        result.append({
+            "id": r.id,
+            "name": r.name,
+            "state_id": r.state_id,
+            "state": r.state,
+            "parameter_count": r.parameter_count,
+            "data_quality": r.data_quality,
+            "band_counts": band_counts
+        })
+    
+    return result
+
+@router.get("/districts/coverage")
+def get_district_coverage(db: Session = Depends(get_session)):
+    """Get district coverage summary by data quality tier."""
+    rows = db.execute(text("""
+        SELECT data_quality, COUNT(*) as count
+        FROM districts
+        GROUP BY data_quality
+        ORDER BY 
+            CASE data_quality 
+                WHEN 'high_coverage' THEN 1 
+                WHEN 'medium_coverage' THEN 2 
+                WHEN 'low_coverage' THEN 3 
+                WHEN 'no_data' THEN 4 
+                ELSE 5 
+            END
+    """)).fetchall()
+    
+    summary = {r.data_quality: r.count for r in rows}
+    # Ensure all categories present
+    for cat in ['high_coverage', 'medium_coverage', 'low_coverage', 'no_data']:
+        if cat not in summary:
+            summary[cat] = 0
+    
+    return {
+        "by_quality": summary,
+        "total": sum(summary.values())
+    }
+
 @router.get("/health")
 def health_check(db: Session = Depends(get_session)):
     try:
