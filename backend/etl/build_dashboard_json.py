@@ -22,7 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DB = ROOT / "data" / "watertriage.db"
-OUT = ROOT / "dashboard" / "data.json"
+OUT = ROOT / "dashboard" / "dist" / "data.json"
 
 
 def build(details_n: int = 200) -> dict:
