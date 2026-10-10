@@ -1,8 +1,8 @@
 FROM node:20-slim AS frontend-builder
-WORKDIR /frontend
-COPY frontend/package*.json ./
+WORKDIR /dashboard
+COPY dashboard/package*.json ./
 RUN npm ci || npm install
-COPY frontend/ ./
+COPY dashboard/ ./
 RUN npm run build
 
 FROM python:3.13-slim
@@ -17,7 +17,7 @@ COPY pyproject.toml ./
 RUN pip install --no-cache-dir .
 
 COPY backend/ ./backend/
-COPY --from=frontend-builder /frontend/dist ./frontend/dist
+COPY --from=frontend-builder /dashboard/dist ./frontend/dist
 
 EXPOSE 8000
 

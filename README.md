@@ -14,7 +14,7 @@ Guide: Dr. Girish Paliwal
 
 1. **Ingests** water quality test data from government sources (WQMIS / JJM).
 2. **Scores** each village/sample against BIS IS 10500 limits using a weighted severity model.
-3. **Ranks** villages into severity bands (Critical ≥ 75, High 50–74, Medium 25–49, Low < 25) to produce an intervention priority list.
+3. **Ranks** villages into severity bands (Critical ≥ 40, High ≥ 20, Medium ≥ 10, Low ≥ 0) to produce an intervention priority list.
 4. **Displays** results via an interactive dashboard: severity overview, priority queue, and district parameters.
 
 ## Data & Limitations
@@ -43,8 +43,8 @@ cd backend
 ../.venv/bin/python -m uvicorn app.main:app --port 8000
 ```
 
-3. **Run Frontend (React):**
+3. **Run Dashboard (React):**
 ```bash
-cd frontend
+cd dashboard
 npm run dev
 ```
