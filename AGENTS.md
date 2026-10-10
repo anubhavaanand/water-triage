@@ -75,3 +75,16 @@ Build **WaterTriage**: a system that scores water quality risk at village level 
 - Python ≥3.13, uv-managed deps (edit `pyproject.toml` → `uv sync`)
 - Tests: pytest (empty `tests/` for now)
 - `.env` is gitignored — never commit it (DB password inside)
+## Agent skills
+
+### Issue tracker
+
+Issues tracked in GitHub Issues (gh CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical roles with default label strings. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout (GLOSSARY.md at root + docs/adr/). See `docs/agents/domain.md`.
