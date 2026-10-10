@@ -1,1 +1,4 @@
-{"status":"healthy","database":"connected"}
+{
+  "status": "healthy",
+  "database": "connected"
+}

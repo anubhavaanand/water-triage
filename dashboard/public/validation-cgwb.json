@@ -1,0 +1,31 @@
+{
+  "ph": [
+    {
+      "state": "Bihar",
+      "year": "2023-24",
+      "readings": 91,
+      "exceeded": 68,
+      "exceed_pct": 74.7
+    }
+  ],
+  "available_parameters": {
+    "Uttar Pradesh": [
+      "water_level_aug",
+      "water_level_jan",
+      "water_level_max_depth",
+      "water_level_may",
+      "water_level_min_depth",
+      "water_level_nov",
+      "wells_analyzed"
+    ],
+    "Bihar": [
+      "ph",
+      "water_level_max_depth",
+      "water_level_min_depth",
+      "wells_analyzed"
+    ]
+  },
+  "years": [
+    "2023-24"
+  ]
+}

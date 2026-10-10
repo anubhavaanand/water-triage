@@ -62,4 +62,12 @@ build_review_packet.py
 generate_packet.py
 patch_q17.py
 check_ajax.py
-.env.backup
+
+# Dotenv files hold live credentials (Postgres/Neon URLs with passwords) and
+# must never be committed. Match the whole family, not just bare ".env":
+# .env.neon was tracked on this branch until it was caught and untracked.
+# A leading space made the five entries above silently no-op patterns, so
+# ".env.neon" slipped through; these are anchored with no indentation.
+.env
+.env.*
+!.env.example
