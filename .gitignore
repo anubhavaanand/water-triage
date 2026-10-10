@@ -8,6 +8,12 @@ wheels/
 
 # Virtual environments
 .venv
+# Two more copies were sitting here untracked (563M, Python 3.14 each) while the
+# active interpreter is .venv/bin/python (3.13 per AGENTS.md). Ignore them so a
+# `git add .` cannot sweep a second and third venv into the repo.
+venv/
+test_env/
+env/
 
 # Secrets — never commit
 .env
