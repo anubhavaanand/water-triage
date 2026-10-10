@@ -13,12 +13,11 @@ Build **WaterTriage**: a system that scores water quality risk at village level 
 
 ## 2. Decisions Already Made (Do NOT Re-Open)
 
-1. **Stack:** FastAPI + SQLAlchemy 2 + PostgreSQL (Docker) + Alembic + Streamlit dashboard
-   - React was explicitly rejected (overkill; backend-focused student)
+1. **Stack:** FastAPI + SQLAlchemy 2 + PostgreSQL (Docker) + Alembic + React/Vite dashboard
 2. **Scope:** STATE-WIDE — all of UP (76 districts) + Bihar (38 districts), ~114 total. Changed from 6-district subset on 17 Aug 2026 after WQMIS API reverse-engineering made bulk pulls feasible (~1,800 requests via session-gated parameter-wise endpoint). Synthetic demo data still covers 6 representative districts
    - UP: Unnao, Ferozabad, Hardoi · Bihar: Katihar, Araria, +1 TBD
 3. **Data path:** WQMIS WQ4 manual exports → AIKosh CSV → synthetic fallback (in that order)
-4. **Scoring model:** per-parameter severity = (value − acceptable)/(permissible − acceptable), clamped 0–1; composite = weighted avg × 100. Weights: As 1.0, E. coli 0.9, F 0.8, Nitrate 0.7, Iron 0.4, Turbidity 0.3, TDS 0.3, pH 0.2. Bands: Critical ≥75, High 50–74, Medium 25–49, Low <25
+4. **Scoring model (FINAL — commit 7331a9b, Oct 9):** per-parameter severity = (value − acceptable)/(permissible − acceptable), clamped 0–1; composite = weighted_sum / TOTAL_BIS_WEIGHT × 100 where TOTAL_BIS_WEIGHT = 6.0. Weights: As 1.0, E. coli 0.9, F 0.8, Nitrate 0.7, Iron 0.4, Turbidity 0.3, TDS 0.3, pH 0.2, **Sulphate 0.5** (added Oct 9), **Total Coliform 0.9** (added Oct 9). **Bands: Critical ≥40, High ≥20, Medium ≥10, Low ≥0**. Escalation: **only acute hazards** (arsenic, e_coli, total_coliform) escalate to Critical; non-acute full breaches (iron, fluoride, tds, nitrate, sulphate) contribute to score but do NOT force band escalation. Zero values for arsenic, e_coli, total_coliform are treated as below-detection-limit and excluded from scoring.
 5. **Guide name:** "Dr. Girish Paliwal" (no extra designation)
 6. **WPR sequence:** 2=Abstract, 3=Introduction, 4=Related Work, 5=Methodology, 6=Results, 7=Discussion, 8=Conclusion, 9=Full Paper, 10=Plagiarism, 11=Completion
 
@@ -75,3 +74,16 @@ Build **WaterTriage**: a system that scores water quality risk at village level 
 - Python ≥3.13, uv-managed deps (edit `pyproject.toml` → `uv sync`)
 - Tests: pytest (empty `tests/` for now)
 - `.env` is gitignored — never commit it (DB password inside)
+## Agent skills
+
+### Issue tracker
+
+Issues tracked in GitHub Issues (gh CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical roles with default label strings. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout (GLOSSARY.md at root + docs/adr/). See `docs/agents/domain.md`.
