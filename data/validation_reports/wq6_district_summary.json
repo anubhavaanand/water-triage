@@ -1,0 +1,74 @@
+{
+  "Uttar Pradesh": {
+    "state": "Uttar Pradesh",
+    "districts": 72,
+    "contaminated_villages_by_parameter": {
+      "pH": 92,
+      "TDS": 51,
+      "Turbidity": 398,
+      "Chloride": 22,
+      "Total_Alkalinity": 32,
+      "Total_Hardness": 49,
+      "Sulphate": 28,
+      "Iron": 88,
+      "Total_Arsenic": 34,
+      "Fluoride": 136,
+      "Nitrate": 40,
+      "Residual_Chlorine": 41,
+      "Others_chem": 0,
+      "E_coli": 118,
+      "Total_Coliform": 201,
+      "Others_bact": 0
+    },
+    "affected_districts_by_parameter": {
+      "pH": 22,
+      "TDS": 17,
+      "Turbidity": 50,
+      "Chloride": 7,
+      "Total_Alkalinity": 15,
+      "Total_Hardness": 17,
+      "Sulphate": 14,
+      "Iron": 18,
+      "Fluoride": 23,
+      "Nitrate": 19,
+      "E_coli": 24,
+      "Total_Coliform": 34,
+      "Total_Arsenic": 7,
+      "Residual_Chlorine": 3
+    }
+  },
+  "Bihar": {
+    "state": "Bihar",
+    "districts": 35,
+    "contaminated_villages_by_parameter": {
+      "pH": 95,
+      "TDS": 1,
+      "Turbidity": 84,
+      "Chloride": 0,
+      "Total_Alkalinity": 6,
+      "Total_Hardness": 3,
+      "Sulphate": 0,
+      "Iron": 3645,
+      "Total_Arsenic": 202,
+      "Fluoride": 277,
+      "Nitrate": 5,
+      "Residual_Chlorine": 0,
+      "Others_chem": 0,
+      "E_coli": 7,
+      "Total_Coliform": 0,
+      "Others_bact": 0
+    },
+    "affected_districts_by_parameter": {
+      "pH": 8,
+      "Fluoride": 7,
+      "Nitrate": 3,
+      "Turbidity": 7,
+      "Total_Alkalinity": 2,
+      "Total_Hardness": 1,
+      "Iron": 15,
+      "Total_Arsenic": 6,
+      "E_coli": 4,
+      "TDS": 1
+    }
+  }
+}

@@ -69,12 +69,21 @@ const PARAM_LABELS = {
 const fmt = (n) => (n == null ? '\u2014' : Number(n).toLocaleString('en-IN'));
 
 /**
+ * Resolve a public/ asset against the app's base URL.
+ *
+ * The production build sets vite `base: '/water-triage/'` for GitHub Pages, so a
+ * hardcoded '/meta.json' 404s there even though the file is sitting next to
+ * index.html. import.meta.env.BASE_URL carries the configured base in both dev
+ * and build, which keeps the offline fallbacks working under any base path.
+ */
+const assetUrl = (file) => import.meta.env.BASE_URL.replace(/\/$/, '') + file;
+
+/**
  * Fetch live, fall back to the baked snapshot in public/.
  *
  * The GitHub Pages deploy has no backend, so /api/* is unreachable there. The
  * snapshots were written by scripts/regen_fallbacks.py against the live
- * database, so they are the same numbers -- just older. They are also served
- * from the dev origin, so a relative path works in both places.
+ * database, so they are the same numbers -- just older.
  */
 async function fetchLive(path, fallbackFile) {
   try {
@@ -84,7 +93,7 @@ async function fetchLive(path, fallbackFile) {
   } catch (err) {
     if (!fallbackFile) throw err;
     try {
-      const res = await fetch(fallbackFile);
+      const res = await fetch(assetUrl(fallbackFile));
       if (!res.ok) throw new Error(String(res.status));
       return { data: await res.json(), stale: true };
     } catch (err2) {
@@ -588,7 +597,7 @@ function SampleDetail({ district, thresholds, specs }) {
         // baked dashboard-data.json carries the same readings for the top
         // scored rows, keyed by risk id, so the drill-down still works.
         if (cancelled) return;
-        fetch('/dashboard-data.json')
+        fetch(assetUrl('/dashboard-data.json'))
           .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
           .then((baked) => {
             const det = baked && baked.details && baked.details[String(sampleId)];
