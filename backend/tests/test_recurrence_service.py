@@ -11,7 +11,9 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_DIR))
 
 # Use env variable INTEGRATION_DB_URL
-POSTGRES_URL = os.environ.get("INTEGRATION_DB_URL", "postgresql://jjm_user:D0hL5JJbc8JazKfcXKI8@localhost:5432/jjm_triage")
+POSTGRES_URL = os.environ.get("INTEGRATION_DB_URL")
+if POSTGRES_URL is None:
+    pytest.skip("INTEGRATION_DB_URL not set", allow_module_level=True)
 
 try:
     _engine = create_engine(POSTGRES_URL)

@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from ..models import (
@@ -29,24 +29,25 @@ def list_recurrent_districts(db: Session, limit: int = 50) -> list[VillageRecurr
     Returns it inside the VillageRecurrence struct to maintain API backwards compatibility.
     """
     # 1. Get historical contamination aggregated by district_id
-    # Use GROUP_CONCAT for SQLite compatibility (array_agg is PostgreSQL)
-    from sqlalchemy import text
-    hist_rows = (
-        db.query(
-            Village.district_id,
-            HistoricalContamination.parameter,
-            func.group_concat(func.distinct(HistoricalContamination.year)),
-        )
-        .join(Village, HistoricalContamination.village_id == Village.id)
-        .group_by(Village.district_id, HistoricalContamination.parameter)
-        .all()
-    )
+    #    PostgreSQL: string_agg(DISTINCT ...) is the portable equivalent of
+    #    SQLite's GROUP_CONCAT(DISTINCT ...). The previous group_concat call
+    #    failed on live Postgres with "function group_concat(integer) does not exist".
+    #    Use a raw text() query because the ORM string_agg aggregate with DISTINCT
+    #    + separator trips SQLAlchemy 2.x query-cache key generation.
+    hist_rows = db.execute(text("""
+        SELECT v.district_id,
+               hc.parameter,
+               string_agg(DISTINCT hc.year::TEXT, ' ')
+        FROM historical_contamination hc
+        JOIN villages v ON hc.village_id = v.id
+        GROUP BY v.district_id, hc.parameter
+    """)).all()
     if not hist_rows:
         return []
 
     historical_by_district: dict[int, dict[str, list[int]]] = {}
     for d_id, param, years_str in hist_rows:
-        years = [int(y) for y in years_str.split(',')] if years_str else []
+        years = [int(y) for y in years_str.split()] if years_str else []
         historical_by_district.setdefault(d_id, {})[param.lower()] = sorted(years)
 
     # 2. Get the latest samples for all districts

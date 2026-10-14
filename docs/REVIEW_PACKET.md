@@ -403,15 +403,15 @@ page   num  type   width height color comp bpc  enc interp  object ID x-ppi y-pp
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 =========================== short test summary info ============================
-SKIPPED [1] backend/tests/test_recurrence_service.py:21: PostgreSQL unavailable at postgresql://jjm_user:D0hL5JJbc8JazKfcXKI8@localhost:5432/jjm_triage: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused
+SKIPPED [1] backend/tests/test_recurrence_service.py:21: PostgreSQL unavailable at <REDACTED_DSN>: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused
 	Is the server running on that host and accepting TCP/IP connections?
-connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "jjm_user"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user <REDACTED_USER>
 
 (Background on this error at: https://sqlalche.me/e/20/e3q8)
 28 passed, 1 skipped, 1 warning in 1.10s
 ```
 
-- **With `INTEGRATION_DB_URL="postgresql://jjm_user:postgres@localhost:5432/jjm_triage"`:**
+- **With `INTEGRATION_DB_URL=<REDACTED_DSN>`:**
 ```
 .............................                                            [100%]
 =============================== warnings summary ===============================
