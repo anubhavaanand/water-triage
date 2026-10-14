@@ -1083,7 +1083,7 @@ export default function App() {
                         key: s.state,
                         state: s.state,
                         samples: fmt(s.samples),
-                        band_counts: fmt(s.bands.Critical),
+                        critical: fmt(s.bands.Critical),
                         high: fmt(s.bands.High),
                         medium: fmt(s.bands.Medium),
                         low: fmt(s.bands.Low),
