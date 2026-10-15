@@ -2,7 +2,7 @@
 
 > Read this first. It gives any agent (Claude, Kimi, ChatGPT, opencode, etc.) the current project state without re-deriving it.
 
-**Last updated:** 17 Aug 2026
+**Last updated:** 16 Oct 2026
 **Owner:** Anubhav Anand · NTCC Minor Project (ETMN100) · Deadline: 09/10/2026 (final report 26/10, viva 2–6 Nov)
 
 ---
@@ -16,7 +16,7 @@ Build **WaterTriage**: a system that scores water quality risk at village level 
 1. **Stack:** FastAPI + SQLAlchemy 2 + PostgreSQL (Docker) + Alembic + React/Vite dashboard
 2. **Scope:** STATE-WIDE — all of UP (76 districts) + Bihar (38 districts), ~114 total. Changed from 6-district subset on 17 Aug 2026 after WQMIS API reverse-engineering made bulk pulls feasible (~1,800 requests via session-gated parameter-wise endpoint). Synthetic demo data still covers 6 representative districts
    - UP: Unnao, Ferozabad, Hardoi · Bihar: Katihar, Araria, +1 TBD
-3. **Data path:** WQMIS WQ4 manual exports → AIKosh CSV → synthetic fallback (in that order)
+3. **Data path:** WQMIS crawl (multi-threaded `crawl_fast.py`) → offline JSON fallbacks for rendering. AIKosh CSV not needed. Synthetic data used only for tests.
 4. **Scoring model (FINAL — commit 7331a9b, Oct 9):** per-parameter severity = (value − acceptable)/(permissible − acceptable), clamped 0–1; composite = weighted_sum / TOTAL_BIS_WEIGHT × 100 where TOTAL_BIS_WEIGHT = 6.0. Weights: As 1.0, E. coli 0.9, F 0.8, Nitrate 0.7, Iron 0.4, Turbidity 0.3, TDS 0.3, pH 0.2, **Sulphate 0.5** (added Oct 9), **Total Coliform 0.9** (added Oct 9). **Bands: Critical ≥40, High ≥20, Medium ≥10, Low ≥0**. Escalation: **only acute hazards** (arsenic, e_coli, total_coliform) escalate to Critical; non-acute full breaches (iron, fluoride, tds, nitrate, sulphate) contribute to score but do NOT force band escalation. Zero values for arsenic, e_coli, total_coliform are treated as below-detection-limit and excluded from scoring.
 5. **Guide name:** "Dr. Girish Paliwal" (no extra designation)
 6. **WPR sequence:** 2=Abstract, 3=Introduction, 4=Related Work, 5=Methodology, 6=Results, 7=Discussion, 8=Conclusion, 9=Full Paper, 10=Plagiarism, 11=Completion
@@ -33,7 +33,7 @@ Build **WaterTriage**: a system that scores water quality risk at village level 
 
 **Known problem districts:** Unnao (fluoride 33), Ferozabad (fluoride 33), Hardoi (E. coli 18, TC 41) [UP]; Katihar (iron 6), Araria (turbidity 1) [Bihar]. Bihar much cleaner overall (~7 contaminated villages in FY 2026-27).
 
-**Do NOT attempt bulk scraping of WQMIS** — session auth + CAPTCHA + rate limits; manual export test decides the automation approach.
+**Bulk WQMIS crawl completed** — `crawl_fast.py` used ASP.NET session cookie handshake (GET /WQMIS/Report/Report_p → GET /WQMIS/Common/final_report_print) to fetch 1,741 real samples. Multi-threaded with 6 workers.
 
 ## 4. Current Progress (Week 3–4)
 
@@ -51,12 +51,12 @@ Build **WaterTriage**: a system that scores water quality risk at village level 
 ## 5. Next Steps (priority order)
 
 1. **User action:** manual WQ4 export for Unnao district → confirm data format for ETL
-2. **Build backend skeleton:** `backend/app/{main.py, config.py, database.py, models.py, schemas.py, scoring.py, recurrence.py}` + `routers/` (samples, districts, scoring, priority)
+2. **Build backend skeleton:** `backend/app/{main.py, config.py, database.py, models.py, schemas.py, engine/scoring.py, engine/recurrence.py, api/dashboard.py, api/districts.py, api/helpers.py, api/meta.py, api/priority.py, api/samples.py, api/validation.py}`
 3. **DB schema** (target tables): states, districts, blocks, panchayats, villages, bis_limits, water_samples, parameter_readings, risk_scores, interventions
 4. **API endpoints:** `/api/samples`, `/api/samples/{id}`, `/api/districts`, `/api/districts/{id}`, `/api/scoring`, `/api/priority`, `/api/priority/top/{n}`, `/api/compare`
 5. **ETL parser** for WQMIS parameter-wise JSON/Excel → load state-wide (all UP + Bihar districts)
 6. **Docker compose:** postgres + backend + dashboard
-7. **Streamlit dashboard:** map (severity-colored markers) + district table + priority list + UP/Bihar comparison
+7. **React/Vite dashboard:** 6-tab interactive UI (Priority Queue, Map + Cards, District Detail, External Validation, Overview & Sensitivity, Methodology & Limitations) with dark mode. Serve via `cd dashboard && npm run dev` or static via GitHub Pages.
 8. **WPR-4 (Literature Review)** — due Week 4, draft from existing research (JJM WQMIS, BIS 10500, JalRakshak comparison)
 
 ## 6. Environment Facts
