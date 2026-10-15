@@ -1,4 +1,7 @@
 district,pH,TDS,Turbidity,Chloride,Total_Alkalinity,Total_Hardness,Sulphate,Iron,Total_Arsenic,Fluoride,Nitrate,Residual_Chlorine,Others_chem,E_coli,Total_Coliform,Others_bact,state
+Agra,0,8,2,2,1,1,2,0,0,2,0,0,0,2,2,0,Uttar Pradesh
+Aligarh,0,1,3,0,0,0,0,0,0,0,0,0,0,0,1,0,Uttar Pradesh
+Ambedkar Nagar,0,0,1,0,0,1,0,0,0,0,0,0,0,5,0,0,Uttar Pradesh
 Amethi,1,3,16,2,2,4,1,8,0,3,1,0,0,0,0,0,Uttar Pradesh
 Amroha,0,0,1,0,0,0,0,0,0,0,0,0,0,2,4,0,Uttar Pradesh
 Auraiya,0,0,2,0,1,0,0,0,0,1,0,0,0,0,1,0,Uttar Pradesh

@@ -8,6 +8,10 @@ import os
 import re
 import pandas as pd
 from bs4 import BeautifulSoup
+try:
+    from district_registry import CANONICAL_DISTRICTS
+except ImportError:
+    from scripts.district_registry import CANONICAL_DISTRICTS
 
 CONTAMINANT_COLS = [
     'pH', 'TDS', 'Turbidity', 'Chloride', 'Total_Alkalinity', 'Total_Hardness',
@@ -43,7 +47,7 @@ def parse_wq6_file(filepath):
         return None
     
     df_rows = []
-    for row in data[3:]:
+    for row in data:
         if row[0].isdigit() or row[1] == 'Total':
             df_rows.append(row)
     
@@ -99,11 +103,12 @@ if bihar_dfs:
     bihar_all = pd.concat(bihar_dfs, ignore_index=True)
     agg_cols = ['district'] + CONTAMINANT_COLS
     bihar_all = bihar_all[agg_cols].groupby('district').max().reset_index()
+    bihar_all = bihar_all[bihar_all['district'].isin(CANONICAL_DISTRICTS['Bihar'])].copy()
     bihar_all['state'] = 'Bihar'
     print(f"\nTotal unique Bihar districts: {len(bihar_all)}")
     
     # Export
-    out_path = "/home/anubhavanand/Documents/Projects/water-triage/WQ6_Complete_Bihar.xlsx"
+    out_path = "/home/anubhavanand/Documents/Projects/water-triage/data/validation_reports/WQ6_Complete_Bihar.xlsx"
     bihar_all.to_excel(out_path, index=False)
     print(f"Saved: {out_path}")
 
@@ -111,17 +116,18 @@ if up_dfs:
     up_all = pd.concat(up_dfs, ignore_index=True)
     agg_cols = ['district'] + CONTAMINANT_COLS
     up_all = up_all[agg_cols].groupby('district').max().reset_index()
+    up_all = up_all[up_all['district'].isin(CANONICAL_DISTRICTS['Uttar Pradesh'])].copy()
     up_all['state'] = 'Uttar Pradesh'
     print(f"\nTotal unique UP districts: {len(up_all)}")
     
-    out_path = "/home/anubhavanand/Documents/Projects/water-triage/WQ6_Complete_UP.xlsx"
+    out_path = "/home/anubhavanand/Documents/Projects/water-triage/data/validation_reports/WQ6_Complete_UP.xlsx"
     up_all.to_excel(out_path, index=False)
     print(f"Saved: {out_path}")
 
 # Also export as CSV for easy viewing
 if bihar_dfs:
-    bihar_all.to_csv("/home/anubhavanand/Documents/Projects/water-triage/WQ6_Complete_Bihar.csv", index=False)
+    bihar_all.to_csv("/home/anubhavanand/Documents/Projects/water-triage/data/validation_reports/WQ6_Complete_Bihar.csv", index=False)
 if up_dfs:
-    up_all.to_csv("/home/anubhavanand/Documents/Projects/water-triage/WQ6_Complete_UP.csv", index=False)
+    up_all.to_csv("/home/anubhavanand/Documents/Projects/water-triage/data/validation_reports/WQ6_Complete_UP.csv", index=False)
 
 print("\nDone!")

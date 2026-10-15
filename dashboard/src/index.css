@@ -747,6 +747,13 @@
       background: var(--low);
       animation: pulse-live 2s ease-in-out infinite;
     }
+    .status-pill.snapshot {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .status-pill.snapshot .status-dot {
+      background: var(--accent);
+    }
     .status-pill.offline {
       border-color: var(--critical);
       color: var(--critical);

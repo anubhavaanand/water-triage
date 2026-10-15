@@ -4,10 +4,10 @@
     "label": "Arsenic",
     "unit": "mg/L",
     "acceptable": 0.01,
-    "permissible": 0.05,
+    "permissible": null,
     "weight": 1.0,
     "strategy": "threshold",
-    "binary_exceedance": false
+    "binary_exceedance": true
   },
   {
     "key": "e_coli",

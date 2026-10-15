@@ -4,6 +4,10 @@ import glob
 import pandas as pd
 from bs4 import BeautifulSoup
 import re
+try:
+    from district_registry import CANONICAL_DISTRICTS
+except ImportError:
+    from scripts.district_registry import CANONICAL_DISTRICTS
 
 CONTAMINANT_COLS = [
     'pH', 'TDS', 'Turbidity', 'Chloride', 'Total_Alkalinity', 'Total_Hardness',
@@ -44,7 +48,7 @@ def parse_wq6_file(filepath):
             data.append(vals)
             
     df_rows = []
-    for row in data[3:]:
+    for row in data:
         if row[0].isdigit() or row[1] == 'Total':
             df_rows.append(row)
             
@@ -75,6 +79,7 @@ for state in ['Bihar', 'Uttar Pradesh']:
         combined = pd.concat(all_data[state], ignore_index=True)
         agg_cols = ['district'] + CONTAMINANT_COLS
         final = combined[agg_cols].groupby('district').max().reset_index()
+        final = final[final['district'].isin(CANONICAL_DISTRICTS[state])].copy()
         final['state'] = state
         
         out_csv = f"data/validation_reports/WQ6_Complete_{state.replace(' ', '')}.csv"

@@ -110,9 +110,14 @@ function HealthPill() {
     fetch(`${API}/health`, { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((d) => {
-        setState(d && d.database === 'connected' ? 'live' : 'offline');
+        setState(d && d.database === 'connected' ? 'live' : 'snapshot');
       })
-      .catch(() => setState('offline'));
+      .catch(() => {
+        fetch(assetUrl('/health.json'))
+          .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+          .then(() => setState('snapshot'))
+          .catch(() => setState('offline'));
+      });
   };
 
   useEffect(() => {
@@ -122,7 +127,7 @@ function HealthPill() {
   }, []);
 
   const label =
-    state === 'live' ? 'DB Live' : state === 'offline' ? 'DB Offline' : 'Checking\u2026';
+    state === 'live' ? 'DB Live' : state === 'snapshot' ? '1,741 Snapshot' : state === 'offline' ? 'DB Offline' : 'Checking\u2026';
   return (
     <span
       className={`status-pill ${state}`}
@@ -347,7 +352,7 @@ function DistrictRows({ items, activeKey, onSelect }) {
               <span className={bandClass(band)}>{band}</span>
             </span>
             <span className="num" style={{ textAlign: 'right', color: 'var(--muted)' }}>
-              {d.n_scored_params != null ? `${d.n_scored_params}/8` : '\u2014'}
+              {d.n_scored_params != null ? `${d.n_scored_params}/10` : '\u2014'}
             </span>
             <span className="tag" style={{ fontSize: 11 }}>
               {d.worst_parameter ? PARAM_LABELS[d.worst_parameter] || d.worst_parameter : 'Within BIS Limits'}
@@ -745,11 +750,13 @@ export default function App() {
   const [rawQueue, setRawQueue] = useState([]);
   const [queueLoading, setQueueLoading] = useState(true);
   const [paramSpecs, setParamSpecs] = useState({});
-  const [cgwb, setCgwb] = useState({ ph: [], available: {} });
+  const [cgwb, setCgwb] = useState({ ph: [], available: {}, wq6_summary: {}, master_districts: [] });
 
   const [stateFilter, setStateFilter] = useState('');
   const [bandFilter, setBandFilter] = useState('');
   const [selected, setSelected] = useState(null);
+  const [valStateFilter, setValStateFilter] = useState('');
+  const [valSearch, setValSearch] = useState('');
 
   useEffect(() => {
     fetchLive(`${API}/meta`, '/meta.json')
@@ -768,9 +775,11 @@ export default function App() {
         setCgwb({
           ph: Array.isArray(data && data.ph) ? data.ph : [],
           available: (data && data.available_parameters) || {},
+          wq6_summary: (data && data.wq6_summary) || {},
+          master_districts: Array.isArray(data && data.master_districts) ? data.master_districts : [],
         });
       })
-      .catch(() => setCgwb({ ph: [], available: {} }));
+      .catch(() => setCgwb({ ph: [], available: {}, wq6_summary: {}, master_districts: [] }));
   }, []);
 
   // BIS limits come from the bis_parameters table that actually produced the
@@ -803,7 +812,12 @@ export default function App() {
                 score: p.score,
                 band: p.band,
                 worst_parameter: p.worst,
-                n_scored_params: null,
+                n_scored_params:
+                  p.n_scored_params != null
+                    ? p.n_scored_params
+                    : data.details && data.details[String(p.sample_id)] && Array.isArray(data.details[String(p.sample_id)].readings)
+                      ? data.details[String(p.sample_id)].readings.length
+                      : null,
                 collected_on: p.date,
               }))
             : [];
@@ -889,13 +903,41 @@ export default function App() {
           <HealthPill />
           <ThemeToggle dark={dark} onToggle={toggleDark} />
           <nav aria-label="Primary">
-            <a href="#panel-queue">Priority Queue</a>
-            <a href="#panel-validation">Validation</a>
-            <a href="#panel-methodology">Methodology</a>
+            <a href="#panel-queue" onClick={(e) => { e.preventDefault(); setActiveTab('queue'); }}>Priority Queue</a>
+            <a href="#panel-overview" onClick={(e) => { e.preventDefault(); setActiveTab('overview'); }}>Overview</a>
+            <a href="#panel-validation" onClick={(e) => { e.preventDefault(); setActiveTab('validation'); }}>Validation (113 Dist.)</a>
+            <a href="#panel-methodology" onClick={(e) => { e.preventDefault(); setActiveTab('methodology'); }}>Methodology</a>
           </nav>
           <button
             className="btn btn-primary"
-            onClick={() => window.open(`${API}/dashboard-data`, '_blank')}
+            onClick={() => {
+              const rowsToExport = activeTab === 'validation' && (cgwb.master_districts || []).length
+                ? cgwb.master_districts
+                : filtered.map((d) => ({
+                    district: d.district,
+                    state: d.state,
+                    max_score: d.score,
+                    band: d.band,
+                    samples_in_queue: d.sample_count,
+                    n_scored_params: d.n_scored_params,
+                    worst_parameter: d.worst_parameter || 'within_limits',
+                  }));
+              if (!rowsToExport.length) return;
+              const headers = Object.keys(rowsToExport[0]);
+              const csvLines = [
+                headers.join(','),
+                ...rowsToExport.map((row) =>
+                  headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(',')
+                ),
+              ];
+              const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = activeTab === 'validation' ? 'watertriage_113_districts_master.csv' : 'watertriage_priority_districts.csv';
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
           >
             Export CSV
           </button>
@@ -908,7 +950,12 @@ export default function App() {
           <div className="container">
             <div style={{ maxWidth: 680, marginBottom: 44 }}>
               <p className="eyebrow">
-                WaterTriage Dashboard \u00b7 UP + Bihar \u00b7 <span style={{ color: 'var(--low)' }}>Live DB</span>
+                WaterTriage Dashboard \u00b7 UP + Bihar (113 Districts) \u00b7{' '}
+                {stale ? (
+                  <span style={{ color: 'var(--accent)' }}>Verified Corpus Snapshot (1,741 Samples)</span>
+                ) : (
+                  <span style={{ color: 'var(--low)' }}>Live DB</span>
+                )}
               </p>
               <h1>Water Quality Risk Priorities</h1>
               <p className="lead" style={{ marginTop: 16 }}>
@@ -1144,6 +1191,86 @@ export default function App() {
                       ]}
                     />
                   </div>
+
+                  {(cgwb.master_districts || []).length > 0 && (
+                    <div className="sketch-box">
+                      <span className="sketch-section-label">
+                        113-District Master Ground-Truth Explorer (75 UP + 38 Bihar = 100% District Coverage)
+                      </span>
+                      <p className="callout" style={{ margin: '12px 0 16px' }}>
+                        Complete district-level triangulation across all <strong>75 Uttar Pradesh</strong> and{' '}
+                        <strong>38 Bihar</strong> districts (including the 6 recovered S.No. 1&ndash;3 districts:{' '}
+                        <em>Agra, Aligarh, Ambedkar Nagar, Araria, Arwal, Aurangabad</em>), combining our{' '}
+                        <strong>1,741 WQMIS lab samples</strong> (+47 deterministic single-district lab matches),{' '}
+                        <strong>IMIS 2009&ndash;2012</strong> registry habitations (100,690 events), and{' '}
+                        <strong>JJM Form WQ6</strong> contaminated-village counts.
+                      </p>
+                      <div className="row" style={{ gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+                        <select
+                          className="input"
+                          value={valStateFilter}
+                          onChange={(e) => setValStateFilter(e.target.value)}
+                          style={{ maxWidth: 240, minHeight: 40, cursor: 'pointer' }}
+                          aria-label="Filter 113 districts by state"
+                        >
+                          <option value="">All 113 Districts (UP 75 + Bihar 38)</option>
+                          <option value="Uttar Pradesh">Uttar Pradesh (75 districts)</option>
+                          <option value="Bihar">Bihar (38 districts)</option>
+                        </select>
+                        <input
+                          type="search"
+                          className="input"
+                          placeholder="Search district (e.g. Agra, Araria, Madhepura, Prayagraj)..."
+                          value={valSearch}
+                          onChange={(e) => setValSearch(e.target.value)}
+                          style={{ flex: 1, minWidth: 220, minHeight: 40 }}
+                        />
+                      </div>
+                      <DataTable
+                        columns={[
+                          { key: 'district_label', label: 'District (State)' },
+                          { key: 'samples_label', label: 'WQMIS Samples', align: 'right' },
+                          { key: 'imis_total', label: 'IMIS (2009–12)', align: 'right' },
+                          { key: 'wq6_iron', label: 'WQ6 Iron', align: 'right' },
+                          { key: 'wq6_fluoride', label: 'WQ6 Fluoride', align: 'right' },
+                          { key: 'wq6_arsenic', label: 'WQ6 Arsenic', align: 'right' },
+                          { key: 'wq6_turbidity', label: 'WQ6 Turbidity', align: 'right' },
+                          { key: 'wq6_bact', label: 'WQ6 E. coli / TC', align: 'right' },
+                        ]}
+                        rows={(cgwb.master_districts || [])
+                          .filter(
+                            (d) =>
+                              (!valStateFilter || d.state === valStateFilter) &&
+                              (!valSearch ||
+                                String(d.district_norm || '')
+                                  .toLowerCase()
+                                  .includes(valSearch.trim().toLowerCase()))
+                          )
+                          .map((d) => {
+                            const imisSum =
+                              (d.imis_iron || 0) +
+                              (d.imis_arsenic || 0) +
+                              (d.imis_fluoride || 0) +
+                              (d.imis_nitrate || 0) +
+                              (d.imis_salinity || 0);
+                            return {
+                              key: `${d.state}-${d.district_norm}`,
+                              district_label: `${d.district_norm} (${d.state === 'Uttar Pradesh' ? 'UP' : 'Bihar'})`,
+                              samples_label:
+                                d.our_inferred_samples > 0
+                                  ? `${fmt(d.our_samples)} (+${d.our_inferred_samples} lab)`
+                                  : fmt(d.our_samples || 0),
+                              imis_total: fmt(imisSum),
+                              wq6_iron: fmt(d.Iron || 0),
+                              wq6_fluoride: fmt(d.Fluoride || 0),
+                              wq6_arsenic: fmt(d.Total_Arsenic || 0),
+                              wq6_turbidity: fmt(d.Turbidity || 0),
+                              wq6_bact: `${fmt(d.E_coli || 0)} / ${fmt(d.Total_Coliform || 0)}`,
+                            };
+                          })}
+                      />
+                    </div>
+                  )}
 
                   <div className="sketch-box">
                     <span className="sketch-section-label">CGWB pH outside BIS range 6.5\u20138.5</span>

@@ -1,4 +1,7 @@
 district,pH,TDS,Turbidity,Chloride,Total_Alkalinity,Total_Hardness,Sulphate,Iron,Total_Arsenic,Fluoride,Nitrate,Residual_Chlorine,Others_chem,E_coli,Total_Coliform,Others_bact,state
+Araria,0,0,0,0,0,0,0,584,0,2,0,0,0,1,0,0,Bihar
+Arwal,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,Bihar
+Aurangabad,0,0,0,0,0,0,0,0,0,17,0,0,0,0,0,0,Bihar
 Banka,2,0,0,0,0,0,0,0,0,203,1,0,0,0,0,0,Bihar
 Begusarai,3,0,3,0,4,3,0,405,68,2,0,0,0,1,0,0,Bihar
 Bhagalpur,0,0,45,0,0,0,0,114,83,65,3,0,0,0,0,0,Bihar
