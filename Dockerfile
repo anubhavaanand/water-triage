@@ -17,7 +17,7 @@ COPY pyproject.toml ./
 RUN pip install --no-cache-dir .
 
 COPY backend/ ./backend/
-COPY --from=frontend-builder /dashboard/dist ./frontend/dist
+COPY --from=frontend-builder /dashboard/dist ./dashboard/dist
 
 EXPOSE 8000
 
