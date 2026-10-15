@@ -559,7 +559,9 @@ export default function App() {
             <a href="#workspace" onClick={() => setActiveTab('A')}>Priority Queue</a>
             <a href="#workspace" onClick={() => setActiveTab('B')}>113-District Map</a>
             <a href="#workspace" onClick={() => setActiveTab('C')}>Master-Detail Split</a>
-            <a href="#workspace" onClick={() => setActiveTab('D')}>4-Way Validation</a>
+            <a href="#workspace" onClick={() => setActiveTab('D')}>Validation</a>
+            <a href="#workspace" onClick={() => setActiveTab('overview')}>Overview</a>
+            <a href="#workspace" onClick={() => setActiveTab('methodology')}>Methodology</a>
             <a href="#charts">Charts</a>
             <a href="#architecture">Architecture</a>
             <a href="#notes">Field Notes</a>
@@ -862,12 +864,30 @@ export default function App() {
               className={`tab-btn ${activeTab === 'D' ? 'active' : ''}`}
               onClick={() => setActiveTab('D')}
             >
-              Variant D — External Validation (CGWB + WQ6 + IMIS)
+              Variant D — External Validation
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'overview'}
+              className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+              onClick={() => setActiveTab('overview')}
+            >
+              Overview &amp; Sensitivity
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'methodology'}
+              className={`tab-btn ${activeTab === 'methodology' ? 'active' : ''}`}
+              onClick={() => setActiveTab('methodology')}
+            >
+              Methodology &amp; Limitations
             </button>
           </div>
 
           {/* SHARED FILTER BAR FOR TABS A, B, C */}
-          {activeTab !== 'D' && (
+          {['A', 'B', 'C'].includes(activeTab) && (
             <div
               style={{
                 borderLeft: '2px solid var(--fg)',
@@ -1876,6 +1896,243 @@ export default function App() {
                         })}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* ─── TAB E: OVERVIEW & SENSITIVITY AUDIT (PRESERVED FROM DASHBOARD/SRC/APP.JSX) ─── */}
+          {!loading && !error && activeTab === 'overview' && (
+            <div
+              className="tab-panel active"
+              id="panel-overview"
+              data-note=" Corpus KPIs, Fe=1.0 mg/L sensitivity rerun, and state comparison from /api/meta"
+            >
+              <div className="stack" style={{ gap: 'var(--gap-lg)' }}>
+                <div className="grid-2">
+                  <div className="sketch-box">
+                    <span className="sketch-section-label">1,741-Sample Corpus Band Distribution (Model v1)</span>
+                    <div className="stack" style={{ gap: 10, marginTop: 12 }}>
+                      {['Critical', 'High', 'Medium', 'Low'].map((b) => {
+                        const cnt = (metaData?.bands || {})[b] ?? 0;
+                        const pct = ((cnt / (metaData?.corpus?.samples || 1741)) * 100).toFixed(1);
+                        return (
+                          <div key={b}>
+                            <div className="row-between meta" style={{ marginBottom: 4 }}>
+                              <span style={{ color: BAND_COLORS[b], fontWeight: 700 }}>{b}</span>
+                              <span className="num">{cnt.toLocaleString()} samples ({pct}%)</span>
+                            </div>
+                            <div className="prog-track">
+                              <div className="prog-fill" style={{ width: `${pct}%`, background: BAND_COLORS[b] }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="sketch-box">
+                    <span className="sketch-section-label">Critical Concentration &amp; Coverage Audit</span>
+                    <div className="stack" style={{ gap: 10, marginTop: 12 }}>
+                      <p style={{ fontFamily: 'var(--font-sketch)', fontSize: 15 }}>
+                        {metaData?.critical_concentration
+                          ? `${metaData.critical_concentration.district} — ${metaData.critical_concentration.total_critical} critical samples, ${metaData.critical_concentration.single_parameter_iron_critical} of them single-parameter iron (0.318–0.478 mg/L).`
+                          : 'Madhepura — 89 critical samples, 70 of them single-parameter iron.'}
+                      </p>
+                      <p className="callout">
+                        Raw submitter addresses populate village names in {metaData?.corpus?.village_name_coverage_pct ?? 1.21}% of samples (21/1,741) and leave 354 districts as "Not available". Non-destructive enrichment (<code>close_data_gaps.py</code>) recovers 305 villages (17.52%) and resolves 302/354 unassigned districts (85.3%) across 20 testing labs.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="sketch-box">
+                  <span className="sketch-section-label">Sensitivity Run — Iron Limit Re-set to 1.0 mg/L</span>
+                  <p className="callout" style={{ margin: '12px 0 16px' }}>
+                    876 raw WQMIS iron rows print an older 1.0 mg/L acceptable limit; primary scoring enforces the stricter 0.3 mg/L limit from BIS IS 10500:2012 Table 2 (xii). This sensitivity rerun quantifies how far the bands move under a 1.0 mg/L iron threshold.
+                  </p>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className="ds-table">
+                      <thead>
+                        <tr>
+                          <th>State</th>
+                          <th className="num-col">Samples</th>
+                          <th className="num-col">Primary Mean CRS (Fe 0.3)</th>
+                          <th className="num-col">Rerun Mean CRS (Fe 1.0)</th>
+                          <th className="num-col">Rerun Median</th>
+                          <th className="num-col">Rerun Critical</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(metaData?.state_comparison || []).map((s) => {
+                          const rs = metaData?.sensitivity?.iron_1_0?.state_stats?.[s.state] || {};
+                          return (
+                            <tr key={s.state}>
+                              <td><strong>{s.state}</strong></td>
+                              <td className="num-col">{s.samples?.toLocaleString()}</td>
+                              <td className="num-col">{s.mean_crs != null ? s.mean_crs.toFixed(2) : '—'}</td>
+                              <td className="num-col">{rs.mean != null ? rs.mean.toFixed(2) : '—'}</td>
+                              <td className="num-col">{rs.median != null ? rs.median.toFixed(2) : '—'}</td>
+                              <td className="num-col">{rs.critical ?? '—'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {metaData?.sensitivity?.iron_1_0?.bands && (
+                    <p className="callout" style={{ marginTop: 12 }}>
+                      Corpus-wide Fe=1.0 mg/L rerun bands: Critical {metaData.sensitivity.iron_1_0.bands.Critical} · High {metaData.sensitivity.iron_1_0.bands.High} · Medium {metaData.sensitivity.iron_1_0.bands.Medium} · Low {metaData.sensitivity.iron_1_0.bands.Low} (No-floor 10-param recomputation: 3 Critical · 41 High · 108 Medium · 1,589 Low; UP mean 9.95*).
+                    </p>
+                  )}
+                </div>
+
+                <div className="sketch-box">
+                  <span className="sketch-section-label">State Comparison &amp; Top Exceedance Parameters (/api/meta)</span>
+                  <div className="grid-2" style={{ marginTop: 12 }}>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="ds-table">
+                        <thead>
+                          <tr>
+                            <th>State</th>
+                            <th className="num-col">Samples</th>
+                            <th className="num-col">Critical</th>
+                            <th className="num-col">High</th>
+                            <th className="num-col">Medium</th>
+                            <th className="num-col">Low</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(metaData?.state_comparison || []).map((s) => (
+                            <tr key={s.state}>
+                              <td><strong>{s.state}</strong></td>
+                              <td className="num-col">{s.samples?.toLocaleString()}</td>
+                              <td className="num-col">{s.bands?.Critical ?? 0}</td>
+                              <td className="num-col">{s.bands?.High ?? 0}</td>
+                              <td className="num-col">{s.bands?.Medium ?? 0}</td>
+                              <td className="num-col">{s.bands?.Low ?? 0}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div style={{ overflowX: 'auto', maxHeight: 280 }}>
+                      <table className="ds-table">
+                        <thead>
+                          <tr>
+                            <th>State</th>
+                            <th>Parameter</th>
+                            <th className="num-col">Tested</th>
+                            <th className="num-col">Exceeding BIS</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(metaData?.top_parameters || []).slice(0, 12).map((p, idx) => (
+                            <tr key={`${p.state}-${p.parameter_key}-${idx}`}>
+                              <td>{p.state}</td>
+                              <td><strong>{PARAM_LABELS[p.parameter_key] || p.parameter_key}</strong></td>
+                              <td className="num-col">{p.tested?.toLocaleString()}</td>
+                              <td className="num-col">{p.exceeding?.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ─── TAB F: METHODOLOGY & LIMITATIONS (PRESERVED FROM DASHBOARD/SRC/APP.JSX) ─── */}
+          {!loading && !error && activeTab === 'methodology' && (
+            <div
+              className="tab-panel active"
+              id="panel-methodology"
+              data-note=" Provenance, BIS 10500 scoring model, band thresholds, and API-reported limitations"
+            >
+              <div className="stack" style={{ gap: 'var(--gap-lg)' }}>
+                <div className="sketch-box">
+                  <span className="sketch-section-label">Corpus Extraction &amp; Provenance</span>
+                  <div className="stack" style={{ marginTop: 12 }}>
+                    <p style={{ fontFamily: 'var(--font-sketch)', fontSize: 14 }}>
+                      WQMIS lab reports were crawled in batches between 23 Aug and 20 Sep 2026 across 1,822 internal IDs (1,741 valid UP &amp; Bihar reports with 6,792 readings; 81 empty shells skipped). Collection window for scored samples: {metaData?.corpus?.sample_years ? metaData.corpus.sample_years.join('–') : '2022'}. Historical IMIS registry window: {metaData?.corpus?.registry_years ? metaData.corpus.registry_years.join('–') : '2009–2012'} (100,690 deduplicated events across 14,006 villages in 93 districts). Official Form WQ6 village census: 2024–2026 across all 113 canonical districts (75 UP + 38 Bihar).
+                    </p>
+                    <p className="meta">
+                      git commit {metaData?.git_commit || '27bcc0e'} · generated {metaData?.generated_at || '2026-10-15'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="sketch-box">
+                  <span className="sketch-section-label">API-Reported Audit Limitations (/api/meta)</span>
+                  <ul className="stack" style={{ lineHeight: 1.6, marginTop: 12, listStyle: 'none', padding: 0 }}>
+                    {(metaData?.limitations || []).map((lim) => (
+                      <li key={lim.id} style={{ borderBottom: '1px dashed var(--border)', paddingBottom: 12 }}>
+                        <div className="row-between" style={{ alignItems: 'baseline', flexWrap: 'wrap' }}>
+                          <strong style={{ fontFamily: 'var(--font-sketch)' }}>{lim.title}</strong>
+                          <span className={`badge badge-${lim.status === 'open' ? 'high' : 'low'}`}>
+                            {lim.status}
+                          </span>
+                        </div>
+                        <div style={{ color: 'var(--muted)', fontFamily: 'var(--font-sketch)', fontSize: 13, marginTop: 4 }}>
+                          {lim.detail}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="grid-2">
+                  <div className="sketch-box">
+                    <span className="sketch-section-label">Severity Band Cut-Offs</span>
+                    <div className="stack" style={{ marginTop: 12 }}>
+                      <p className="callout">
+                        Model v2 normalizes against total possible BIS weight (6.0) with 40 / 20 / 10 band cut-offs; Model v1 normalizes against tested weight with 75 / 50 / 25 cut-offs.
+                      </p>
+                      <table className="ds-table">
+                        <thead>
+                          <tr>
+                            <th>Band</th>
+                            <th>Model v2 Cut-Off (1/6.0)</th>
+                            <th>Model v1 Cut-Off (1/n)</th>
+                            <th className="num-col">113-Dist. Count</th>
+                            <th className="num-col">1,741-Sample (v1)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            ['Critical', '≥ 40 (or Acute Override)', '≥ 75 (or Full Breach)', triageSummary.bands.Critical, (metaData?.bands || {}).Critical ?? 89],
+                            ['High', '20 – 39.9', '50 – 74.9', triageSummary.bands.High, (metaData?.bands || {}).High ?? 392],
+                            ['Medium', '10 – 19.9', '25 – 49.9', triageSummary.bands.Medium, (metaData?.bands || {}).Medium ?? 28],
+                            ['Low', '< 10', '< 25', triageSummary.bands.Low, (metaData?.bands || {}).Low ?? 1232],
+                          ].map(([b, c2, c1, dCnt, sCnt]) => (
+                            <tr key={b}>
+                              <td><span className={BAND_BADGE[b]}>{b}</span></td>
+                              <td className="num">{c2}</td>
+                              <td className="num">{c1}</td>
+                              <td className="num-col"><strong>{dCnt}</strong></td>
+                              <td className="num-col">{sCnt.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className="sketch-box">
+                    <span className="sketch-section-label">Escalation Rules</span>
+                    <div className="stack" style={{ marginTop: 12, gap: 10 }}>
+                      {(metaData?.scoring?.escalation_rules || []).map((r, i) => (
+                        <p key={i} className="callout">
+                          {r.rule} → floor: <strong>{r.bands_floor}</strong>
+                        </p>
+                      ))}
+                      <p className="callout">
+                        <strong>District Multi-Tier Pathogen &amp; Arsenic Override:</strong> Any district with confirmed E. coli village contamination in Form WQ6 (31 districts: 26 UP + 5 Bihar) or lab samples (Lucknow) is escalated to Critical with a Pathogen Override badge; districts with ≥10 WQ6 Arsenic villages or ≥100 IMIS Arsenic habitations (13 districts) are escalated to Critical.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

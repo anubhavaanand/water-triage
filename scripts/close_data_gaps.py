@@ -271,7 +271,7 @@ def main() -> None:
                 er = json.loads(line)
                 lc = er.get("lab_code")
                 inf_d = er.get("inferred_district")
-                if lc and lc not in MULTI_DISTRICT_LABS and inf_d and inf_d != "Not available":
+                if er.get("district") == "Not available" and lc and lc not in MULTI_DISTRICT_LABS and inf_d and inf_d != "Not available":
                     lab_to_district[lc] = inf_d
         except Exception:
             pass
