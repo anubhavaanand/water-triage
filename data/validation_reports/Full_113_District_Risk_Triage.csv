@@ -1,0 +1,114 @@
+rank,district,state,band,unified_score,raw_math_score,is_pathogen_override,is_arsenic_override,worst_parameter,recurrence_verdict,total_samples,submitter_samples,lab_inferred_samples,wq6_total_contaminated_villages,wq6_ecoli,wq6_total_coliform,wq6_arsenic,wq6_fluoride,wq6_iron,wq6_nitrate,wq6_turbidity,imis_total_events,cgwb_station_years
+1,Unnao,Uttar Pradesh,Critical,97.0,66.61,True,False,E. coli,chronic-hotspot,0,0,0,116,1,12,0,30,24,2,12,638,28
+2,Mathura,Uttar Pradesh,Critical,97.0,63.74,True,False,E. coli,recurring,0,0,0,75,4,6,0,15,0,1,1,335,0
+3,Prayagraj,Uttar Pradesh,Critical,97.0,65.19,True,False,E. coli,recurring,23,5,18,67,15,2,0,1,1,1,39,98,0
+4,Rae Bareli,Uttar Pradesh,Critical,97.0,67.24,True,False,E. coli,chronic-hotspot,20,0,20,44,1,4,0,5,4,3,7,821,0
+5,Agra,Uttar Pradesh,Critical,97.0,65.6,True,False,E. coli,chronic-hotspot,43,43,0,22,2,2,0,2,0,0,2,854,0
+6,Kanpur Nagar,Uttar Pradesh,Critical,95.35,59.23,True,False,E. coli,recurring,15,0,15,77,4,21,1,2,0,0,36,100,0
+7,Etawah,Uttar Pradesh,Critical,94.83,58.62,True,False,E. coli,recurring,0,0,0,37,3,13,0,3,0,2,7,70,0
+8,Moradabad,Uttar Pradesh,Critical,92.15,55.47,True,False,E. coli,watchlist,9,0,9,3,1,2,0,0,0,0,0,1,21
+9,Ghazipur,Uttar Pradesh,Critical,89.68,52.56,True,False,E. coli,recurring,0,0,0,16,3,3,0,1,2,5,1,99,0
+10,Begusarai,Bihar,Critical,89.61,52.48,True,False,E. coli,chronic-hotspot,0,0,0,489,1,0,68,2,405,0,3,8399,27
+11,Khagaria,Bihar,Critical,88.49,51.16,True,False,E. coli,chronic-hotspot,0,0,0,187,2,0,36,0,145,1,0,1531,6
+12,Sonbhadra,Uttar Pradesh,Critical,87.75,50.29,True,False,E. coli,recurring,7,0,7,66,2,1,0,10,8,9,32,95,7
+13,Kanpur Dehat,Uttar Pradesh,Critical,86.85,49.23,True,False,E. coli,watchlist,0,0,0,37,1,4,1,5,0,3,11,11,0
+14,Pratapgarh,Uttar Pradesh,Critical,86.33,48.62,True,False,E. coli,recurring,0,0,0,67,2,0,0,18,7,1,28,351,0
+15,Bijnor,Uttar Pradesh,Critical,82.41,44.01,True,False,E. coli,recurring,16,0,16,47,22,25,0,0,0,0,0,144,0
+16,Katihar,Bihar,Critical,80.34,41.58,True,False,E. coli,chronic-hotspot,0,0,0,828,1,0,0,0,798,0,29,2960,11
+17,Baghpat,Uttar Pradesh,Critical,79.08,40.09,True,False,E. coli,watchlist,33,33,0,10,2,2,0,0,1,1,2,15,6
+18,Kannauj,Uttar Pradesh,Critical,78.87,39.85,True,False,E. coli,recurring,0,0,0,28,1,1,0,7,0,1,12,136,0
+19,Saharanpur,Uttar Pradesh,Critical,77.07,37.73,True,False,E. coli,watchlist,15,6,9,38,13,19,0,1,0,0,2,2,0
+20,Lucknow,Uttar Pradesh,Critical,76.82,37.43,True,False,E. coli,watchlist,5,5,0,1,0,1,0,0,0,0,0,6,17
+21,Supaul,Bihar,Critical,75.32,35.67,True,False,E. coli,chronic-hotspot,0,0,0,264,3,0,0,0,261,0,0,12385,1
+22,Deoria,Uttar Pradesh,Critical,74.87,35.14,True,False,E. coli,recurring,15,0,15,11,1,1,0,0,3,0,6,311,0
+23,Shrawasti,Uttar Pradesh,Critical,74.77,35.02,True,False,E. coli,watchlist,0,0,0,18,3,6,0,0,0,0,4,3,0
+24,Sitapur,Uttar Pradesh,Critical,74.31,34.48,True,False,E. coli,clean,27,27,0,16,5,7,0,0,0,0,4,0,0
+25,Araria,Bihar,Critical,74.02,34.14,True,False,E. coli,chronic-hotspot,0,0,0,587,1,0,0,2,584,0,0,7230,9
+26,Ambedkar Nagar,Uttar Pradesh,Critical,73.94,34.05,True,False,E. coli,watchlist,20,20,0,7,5,0,0,0,0,0,1,16,0
+27,Budaun,Uttar Pradesh,Critical,72.62,32.5,True,False,E. coli,clean,77,77,0,61,27,29,0,0,0,0,5,0,0
+28,Pilibhit,Uttar Pradesh,Critical,71.49,31.17,True,False,E. coli,clean,15,15,0,6,1,5,0,0,0,0,0,0,0
+29,Hamirpur,Uttar Pradesh,Critical,69.2,28.47,True,False,E. coli,watchlist,0,0,0,4,2,2,0,0,0,0,0,19,0
+30,Bara Banki,Uttar Pradesh,Critical,68.06,27.13,True,False,E. coli,watchlist,48,48,0,17,1,1,0,1,3,0,8,43,0
+31,Amroha,Uttar Pradesh,Critical,66.83,25.68,True,False,E. coli,watchlist,0,0,0,7,2,4,0,0,0,0,1,2,0
+32,Banda,Uttar Pradesh,Critical,63.45,21.7,True,False,E. coli,watchlist,0,0,0,6,1,1,0,0,0,0,1,22,0
+33,Bhagalpur,Bihar,Critical,87.48,58.1,False,True,Total Arsenic,chronic-hotspot,118,118,0,310,0,0,83,65,114,3,45,2022,1
+34,Kheri,Uttar Pradesh,Critical,80.55,49.44,False,True,Total Arsenic,chronic-hotspot,26,26,0,7,0,3,1,0,1,0,1,625,0
+35,Bahraich,Uttar Pradesh,Critical,79.28,47.85,False,True,Total Arsenic,chronic-hotspot,2,2,0,36,0,4,18,0,0,0,4,1080,0
+36,Ballia,Uttar Pradesh,Critical,76.38,44.23,False,True,Total Arsenic,chronic-hotspot,36,30,6,40,0,0,8,7,14,1,9,755,0
+37,Munger,Bihar,Critical,69.47,35.59,False,True,Total Arsenic,chronic-hotspot,0,0,0,0,0,0,0,0,0,0,0,2541,14
+38,Bhojpur,Bihar,Critical,64.99,29.99,False,True,Total Arsenic,chronic-hotspot,96,96,0,21,0,0,12,0,9,0,0,168,10
+39,Samastipur,Bihar,Critical,64.45,29.31,False,True,Total Arsenic,chronic-hotspot,15,0,15,17,0,0,1,0,14,0,0,644,15
+40,Buxar,Bihar,Critical,64.12,28.9,False,True,Total Arsenic,chronic-hotspot,1,1,0,2,0,0,2,0,0,0,0,1276,10
+41,Gorakhpur,Uttar Pradesh,Critical,63.21,27.76,False,True,Total Arsenic,chronic-hotspot,1,0,1,0,0,0,0,0,0,0,0,333,8
+42,Lakhisarai,Bihar,Critical,59.67,23.34,False,True,Total Arsenic,chronic-hotspot,0,0,0,0,0,0,0,0,0,0,0,828,0
+43,Saran,Bihar,Critical,59.58,23.22,False,True,Total Arsenic,chronic-hotspot,76,76,0,0,0,0,0,0,0,0,0,129,0
+44,Patna,Bihar,Critical,57.6,20.75,False,True,Total Arsenic,chronic-hotspot,19,19,0,2,0,0,0,0,2,0,0,281,38
+45,Vaishali,Bihar,Critical,56.38,19.23,False,True,Total Arsenic,chronic-hotspot,0,0,0,0,0,0,0,0,0,0,0,269,15
+46,Firozabad,Uttar Pradesh,Critical,41.09,41.09,False,False,Fluoride,recurring,12,0,12,63,0,0,0,12,0,3,21,244,0
+47,Varanasi,Uttar Pradesh,High,36.12,36.12,False,False,Nitrate,recurring,11,11,0,21,0,0,0,4,2,0,5,80,21
+48,Fatehpur,Uttar Pradesh,High,35.56,35.56,False,False,Total Arsenic,recurring,0,0,0,19,0,0,4,2,2,1,4,217,9
+49,Banka,Bihar,High,35.39,35.39,False,False,Fluoride,chronic-hotspot,0,0,0,206,0,0,0,203,0,1,0,9491,0
+50,Siddharthnagar,Uttar Pradesh,High,34.81,34.81,False,False,Total Coliform,recurring,2,2,0,14,0,8,0,3,1,0,1,125,0
+51,Sultanpur,Uttar Pradesh,High,30.34,30.34,False,False,Iron,recurring,14,14,0,29,0,1,0,1,0,1,26,105,17
+52,Basti,Uttar Pradesh,High,30.28,30.28,False,False,Fluoride,recurring,14,14,0,3,0,1,0,0,1,0,0,165,0
+53,Kaushambi,Uttar Pradesh,High,28.22,28.22,False,False,Fluoride,watchlist,37,16,21,25,0,0,0,0,1,0,23,42,0
+54,Farrukhabad,Uttar Pradesh,High,27.25,27.25,False,False,Fluoride,recurring,0,0,0,48,0,0,1,0,0,2,6,144,0
+55,Ghaziabad,Uttar Pradesh,High,26.69,26.69,False,False,Fluoride,recurring,62,62,0,2,0,0,0,0,0,1,1,74,30
+56,Hardoi,Uttar Pradesh,High,26.59,26.59,False,False,Total Coliform,watchlist,26,26,0,13,0,6,0,0,0,0,5,6,0
+57,Gonda,Uttar Pradesh,High,26.0,26.0,False,False,Total Arsenic,recurring,0,0,0,0,0,0,0,0,0,0,0,219,0
+58,Etah,Uttar Pradesh,High,24.9,24.9,False,False,Fluoride,watchlist,15,15,0,0,0,0,0,0,0,0,0,47,0
+59,Madhepura,Bihar,High,24.69,24.69,False,False,Iron,chronic-hotspot,70,70,0,323,0,0,0,0,241,0,0,5897,6
+60,Amethi,Uttar Pradesh,High,24.69,24.69,False,False,Iron,clean,30,30,0,41,0,0,0,3,8,1,16,0,0
+61,Rohtas,Bihar,High,24.68,24.68,False,False,Fluoride,chronic-hotspot,4,4,0,0,0,0,0,0,0,0,0,748,14
+62,Meerut,Uttar Pradesh,High,24.43,24.43,False,False,Iron,recurring,48,0,48,8,0,0,0,0,0,0,8,85,20
+63,Kishanganj,Bihar,High,24.35,24.35,False,False,Iron,chronic-hotspot,25,25,0,577,0,0,0,1,576,0,0,6492,5
+64,Auraiya,Uttar Pradesh,High,23.85,23.85,False,False,Total Coliform,recurring,13,13,0,5,0,1,0,1,0,0,2,124,0
+65,Saharsa,Bihar,High,23.47,23.47,False,False,Iron,chronic-hotspot,0,0,0,286,0,0,0,0,281,0,2,8687,7
+66,Kushinagar,Uttar Pradesh,High,22.84,22.84,False,False,Iron,recurring,11,11,0,26,0,0,0,0,0,0,13,277,0
+67,Mainpuri,Uttar Pradesh,High,22.79,22.79,False,False,Total Coliform,watchlist,28,0,28,11,0,2,0,3,0,1,4,10,0
+68,Lalitpur,Uttar Pradesh,High,22.06,22.06,False,False,Iron,watchlist,1,0,1,2,0,0,0,0,0,0,2,39,0
+69,Purnia,Bihar,High,21.63,21.63,False,False,Iron,chronic-hotspot,0,0,0,795,0,0,0,0,794,0,1,11745,0
+70,Jamui,Bihar,High,21.08,21.08,False,False,Fluoride,chronic-hotspot,0,0,0,0,0,0,0,0,0,0,0,3925,0
+71,Sheikhpura,Bihar,High,20.56,20.56,False,False,Fluoride,chronic-hotspot,2,2,0,3,0,0,0,3,0,0,0,738,0
+72,Muzaffarnagar,Uttar Pradesh,High,20.21,20.21,False,False,Total Coliform,recurring,0,0,0,2,0,2,0,0,0,0,0,53,3
+73,Aurangabad,Bihar,High,20.07,20.07,False,False,Fluoride,recurring,17,17,0,17,0,0,0,17,0,0,0,315,5
+74,Nalanda,Bihar,Medium,19.95,19.95,False,False,Fluoride,chronic-hotspot,18,18,0,1,0,0,0,1,0,0,0,805,12
+75,Gaya,Bihar,Medium,19.54,19.54,False,False,Fluoride,chronic-hotspot,1,1,0,1,0,0,0,0,0,0,0,806,24
+76,Kaimur (Bhabua),Bihar,Medium,18.3,18.3,False,False,Fluoride,recurring,15,15,0,0,0,0,0,0,0,0,0,192,0
+77,Mau,Uttar Pradesh,Medium,18.29,18.29,False,False,Fluoride,recurring,0,0,0,1,0,0,0,0,0,0,1,200,13
+78,Nawada,Bihar,Medium,15.61,15.61,False,False,Fluoride,recurring,0,0,0,2,0,0,0,2,0,0,0,323,5
+79,Darbhanga,Bihar,Medium,15.57,15.57,False,False,Iron,watchlist,13,13,0,3,0,0,0,0,2,0,0,20,12
+80,Mirzapur,Uttar Pradesh,Medium,15.5,15.5,False,False,Fluoride,recurring,0,0,0,0,0,0,0,0,0,0,0,134,6
+81,Hathras,Uttar Pradesh,Medium,15.02,15.02,False,False,Fluoride,recurring,0,0,0,3,0,0,0,0,0,0,2,52,0
+82,Balrampur,Uttar Pradesh,Medium,14.95,14.95,False,False,Iron,recurring,9,9,0,3,0,0,0,1,0,0,2,73,0
+83,Aligarh,Uttar Pradesh,Medium,14.55,14.55,False,False,Total Coliform,watchlist,0,0,0,5,0,1,0,0,0,0,3,32,0
+84,Jhansi,Uttar Pradesh,Medium,14.09,14.09,False,False,Fluoride,recurring,0,0,0,0,0,0,0,0,0,0,0,84,0
+85,Bareilly,Uttar Pradesh,Medium,13.43,13.43,False,False,Total Arsenic,watchlist,0,0,0,6,0,0,0,0,5,0,1,33,8
+86,Azamgarh,Uttar Pradesh,Medium,13.37,13.37,False,False,Fluoride,recurring,10,10,0,0,0,0,0,0,0,0,0,59,0
+87,Purbi Champaran,Bihar,Medium,10.89,10.89,False,False,Iron,clean,144,144,0,0,0,0,0,0,0,0,0,0,0
+88,Gautam Buddha Nagar,Uttar Pradesh,Medium,10.71,10.71,False,False,Fluoride,watchlist,40,0,40,0,0,0,0,0,0,0,0,35,0
+89,Chandauli,Uttar Pradesh,Medium,10.55,10.55,False,False,Total Arsenic,watchlist,0,0,0,0,0,0,0,0,0,0,0,39,0
+90,Mahrajganj,Uttar Pradesh,Medium,10.52,10.52,False,False,Fluoride,watchlist,0,0,0,1,0,0,0,0,0,0,1,28,0
+91,Bhadohi,Uttar Pradesh,Medium,10.13,10.13,False,False,Total Arsenic,watchlist,0,0,0,10,0,0,0,0,0,0,6,6,14
+92,Shahjahanpur,Uttar Pradesh,Medium,10.04,10.04,False,False,Iron,clean,18,17,1,1,0,0,0,0,0,0,1,0,0
+93,Bulandshahr,Uttar Pradesh,Low,8.61,8.61,False,False,Fluoride,watchlist,4,0,4,1,0,0,0,0,0,0,1,22,0
+94,Sitamarhi,Bihar,Low,8.6,8.6,False,False,Iron,clean,45,45,0,0,0,0,0,0,0,0,0,0,7
+95,Sant Kabir Nagar,Uttar Pradesh,Low,7.8,7.8,False,False,Iron,watchlist,0,0,0,4,0,0,0,0,0,0,4,26,0
+96,Rampur,Uttar Pradesh,Low,7.43,7.43,False,False,Total Coliform,watchlist,40,40,0,3,0,1,0,0,0,0,2,1,0
+97,Arwal,Bihar,Low,7.11,7.11,False,False,Iron,clean,36,36,0,1,0,0,0,0,0,0,1,0,0
+98,Jaunpur,Uttar Pradesh,Low,5.69,5.69,False,False,Nitrate,watchlist,0,0,0,0,0,0,0,0,0,0,0,8,0
+99,Jalaun,Uttar Pradesh,Low,4.03,4.03,False,False,Total Dissolved Solids,watchlist,0,0,0,0,0,0,0,0,0,0,0,14,6
+100,Mahoba,Uttar Pradesh,Low,3.97,3.97,False,False,Fluoride,watchlist,0,0,0,0,0,0,0,0,0,0,0,4,0
+101,Gopalganj,Bihar,Low,3.26,3.26,False,False,Iron,clean,0,0,0,4,0,0,0,0,2,0,1,0,12
+102,Madhubani,Bihar,Low,2.86,2.86,False,False,Turbidity,clean,0,0,0,4,0,0,0,0,1,0,3,0,5
+103,Chitrakoot,Uttar Pradesh,Low,2.66,2.66,False,False,Total Dissolved Solids,watchlist,0,0,0,0,0,0,0,0,0,0,0,5,0
+104,Hapur,Uttar Pradesh,Low,2.48,2.48,False,False,Turbidity,clean,16,0,16,0,0,0,0,0,0,0,0,0,11
+105,Ayodhya,Uttar Pradesh,Low,2.24,2.24,False,False,Turbidity,clean,0,0,0,4,0,0,0,0,0,0,4,0,0
+106,Sambhal,Uttar Pradesh,Low,1.93,1.93,False,False,Turbidity,clean,0,0,0,3,0,0,0,0,0,0,3,0,0
+107,Jehanabad,Bihar,Low,1.28,1.28,False,False,Total Dissolved Solids,clean,38,38,0,0,0,0,0,0,0,0,0,0,0
+108,Pashchim Champaran,Bihar,Low,1.2,1.2,False,False,Turbidity,clean,22,22,0,0,0,0,0,0,0,0,0,0,0
+109,Kasganj,Uttar Pradesh,Low,0.0,0.0,False,False,None (All Pass),clean,0,0,0,0,0,0,0,0,0,0,0,0,0
+110,Shamli,Uttar Pradesh,Low,0.0,0.0,False,False,None (All Pass),clean,0,0,0,0,0,0,0,0,0,0,0,0,0
+111,Muzaffarpur,Bihar,Low,0.0,0.0,False,False,None (All Pass),clean,0,0,0,0,0,0,0,0,0,0,0,0,16
+112,Sheohar,Bihar,Low,0.0,0.0,False,False,None (All Pass),clean,0,0,0,0,0,0,0,0,0,0,0,0,0
+113,Siwan,Bihar,Low,0.0,0.0,False,False,None (All Pass),clean,0,0,0,0,0,0,0,0,0,0,0,0,6

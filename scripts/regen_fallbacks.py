@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Refresh dashboard/public static JSON fallbacks from the live backend API OR offline canonical files.
 
-If the live backend (BACKEND_URL) is running, pulls from `/api/*`.
-If the backend is offline (e.g., Docker stopped or CI/GitHub Pages build), regenerates
-`scoring-parameters.json`, `validation-cgwb.json`, `meta.json`, `dashboard-data.json`,
-and `health.json` directly from the canonical repository files (`scoring.py`,
-`data/validation_reports/*.csv`, `wq6_district_summary.json`, and `dashboard-data.json`).
+Generates:
+  1. `dashboard/public/scoring-parameters.json` (10 BIS IS 10500:2012 parameters)
+  2. `dashboard/public/validation-cgwb.json` (17 CGWB pH rows + 113 master districts + WQ6 summary)
+  3. `dashboard/public/meta.json` (corpus invariants, sensitivity audit, 113-district WQ6 summary)
+  4. `dashboard/public/full-113-triage.json` (complete 113-district multi-tier BIS risk triage)
+  5. `dashboard/public/dashboard-data.json` (1,741 sample priority rows enriched with inferred_district & extracted_location)
+  6. `dashboard/public/health.json`
 """
 
 from __future__ import annotations
@@ -16,12 +18,13 @@ import importlib.util
 import json
 import os
 import sys
-import urllib.request
 from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = os.environ.get("BACKEND_URL", "http://127.0.0.1:8088")
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 OUT = ROOT / "dashboard" / "public"
 VAL_DIR = ROOT / "data" / "validation_reports"
 
@@ -135,27 +138,10 @@ def build_validation_cgwb_offline() -> dict:
     }
 
 
-def enrich_dashboard_data_offline(dd_path: Path) -> dict | None:
-    if not dd_path.exists():
-        return None
-    data = json.loads(dd_path.read_text(encoding="utf-8"))
-    details = data.get("details") or {}
-    priority = data.get("priority") or []
-    for p in priority:
-        sid = str(p.get("sample_id"))
-        det = details.get(sid)
-        if det and isinstance(det.get("readings"), list):
-            p["n_scored_params"] = len(det["readings"])
-    data["wq6_total_districts"] = 113
-    dd_path.write_text(json.dumps(data), encoding="utf-8")
-    return data
-
-
 def enrich_meta_offline(meta_path: Path) -> dict | None:
     if not meta_path.exists():
         return None
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
-    # Ensure sulphate & total_coliform are present in top_parameters
     top_p = meta.get("top_parameters") or []
     has_so4 = any(x.get("parameter_key") == "sulphate" for x in top_p)
     if not has_so4:
@@ -169,7 +155,6 @@ def enrich_meta_offline(meta_path: Path) -> dict | None:
         top_p.sort(key=lambda x: (-int(x.get("exceeding", 0)), -int(x.get("tested", 0))))
         meta["top_parameters"] = top_p
 
-    # Ensure 10-param weights are in meta["scoring"]["weights"]
     if "scoring" in meta and "weights" in meta["scoring"]:
         meta["scoring"]["weights"]["sulphate"] = 0.5
         meta["scoring"]["weights"]["total_coliform"] = 0.9
@@ -208,13 +193,16 @@ def main() -> None:
             f"samples={meta['corpus']['samples']} top_params={len(meta.get('top_parameters', []))}"
         )
 
-    # 4. dashboard-data.json
-    dd = enrich_dashboard_data_offline(OUT / "dashboard-data.json")
-    if dd:
-        print(
-            f"OK dashboard-data.json ({(OUT / 'dashboard-data.json').stat().st_size}B) "
-            f"priority={len(dd.get('priority', []))} details={len(dd.get('details', {}))}"
-        )
+    # 4. full-113-triage.json + enriched dashboard-data.json
+    triage_spec = importlib.util.spec_from_file_location("build_full_113_district_triage", ROOT / "scripts" / "build_full_113_district_triage.py")
+    triage_mod = importlib.util.module_from_spec(triage_spec)
+    triage_spec.loader.exec_module(triage_mod)
+    build_full_113_triage = triage_mod.build_full_113_triage
+    triage_payload = build_full_113_triage()
+    print(
+        f"OK full-113-triage.json ({(OUT / 'full-113-triage.json').stat().st_size}B) "
+        f"{len(triage_payload.get('districts', []))} scored districts"
+    )
 
     # 5. health.json
     h_path = OUT / "health.json"

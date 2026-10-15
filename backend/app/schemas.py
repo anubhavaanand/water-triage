@@ -44,8 +44,33 @@ class DistrictSummary(BaseModel):
     name: str
     state: str
     sample_count: int
-    avg_score: float | None
-    band_counts: dict[str, int]
+    critical_count: int = 0
+    avg_score: float | None = None
+    band_counts: dict[str, int] = {}
+
+
+class VillageSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    block: str | None = None
+    latest_score: float | None = None
+    latest_band: str | None = None
+    worst_parameter: str | None = None
+    last_sampled_on: datetime | None = None
+
+
+class DistrictDetail(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    state: str
+    sample_count: int
+    critical_count: int = 0
+    avg_score: float
+    villages: list[VillageSummary]
 
 
 class PriorityItem(BaseModel):

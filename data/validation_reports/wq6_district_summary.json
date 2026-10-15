@@ -21,20 +21,22 @@
       "Others_bact": 0
     },
     "affected_districts_by_parameter": {
+      "pH": 22,
       "TDS": 19,
       "Turbidity": 53,
       "Chloride": 8,
       "Total_Alkalinity": 16,
       "Total_Hardness": 19,
       "Sulphate": 15,
+      "Iron": 18,
+      "Total_Arsenic": 7,
       "Fluoride": 24,
+      "Nitrate": 19,
+      "Residual_Chlorine": 3,
+      "Others_chem": 0,
       "E_coli": 26,
       "Total_Coliform": 36,
-      "pH": 22,
-      "Iron": 18,
-      "Nitrate": 19,
-      "Total_Arsenic": 7,
-      "Residual_Chlorine": 3
+      "Others_bact": 0
     }
   },
   "Bihar": {
@@ -59,16 +61,22 @@
       "Others_bact": 0
     },
     "affected_districts_by_parameter": {
-      "Iron": 16,
-      "Fluoride": 9,
-      "E_coli": 5,
-      "Turbidity": 8,
       "pH": 8,
-      "Nitrate": 3,
+      "TDS": 1,
+      "Turbidity": 8,
+      "Chloride": 0,
       "Total_Alkalinity": 2,
       "Total_Hardness": 1,
+      "Sulphate": 0,
+      "Iron": 16,
       "Total_Arsenic": 6,
-      "TDS": 1
+      "Fluoride": 9,
+      "Nitrate": 3,
+      "Residual_Chlorine": 0,
+      "Others_chem": 0,
+      "E_coli": 5,
+      "Total_Coliform": 0,
+      "Others_bact": 0
     }
   }
 }

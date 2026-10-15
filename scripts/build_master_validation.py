@@ -3,34 +3,22 @@
 Build Master Validation Tables for WaterTriage (100% 113-District Coverage)
 ---------------------------------------------------------------------------
 Joins all four water-quality layers across ALL 113 canonical districts
-(75 Uttar Pradesh + 38 Bihar) WITHOUT requiring a live PostgreSQL server
-(falls back automatically to raw files when PostgreSQL is unreachable):
+(75 Uttar Pradesh + 38 Bihar) WITHOUT requiring a live PostgreSQL server:
 
 1. WQ6 2024–2026 Official District Tables (`WQ6_Complete_UP.csv` [75 districts] +
-   `WQ6_Complete_Bihar.csv` [38 districts] = 113 districts, 16 parameters including
-   E. coli, Total Coliform, Total Arsenic, Fluoride, Iron, Nitrate, Sulphate, Turbidity, TDS, pH).
-2. Live Scored WQMIS Corpus (`data/raw/wqmis/records.jsonl` + `records_enriched.jsonl`,
-   1,741 valid samples, 6,792 readings, including the 47 deterministically resolved
-   single-district lab samples).
+   `WQ6_Complete_Bihar.csv` [38 districts] = 113 districts, 16 parameters).
+2. Live Scored WQMIS Corpus (`data/raw/wqmis/records_enriched.jsonl` / `records.jsonl`,
+   1,741 valid samples, 6,792 readings, including all 20 resolved single-district labs = 302 samples).
 3. Historical IMIS 2009–2012 Registry (`IndiaAffectedWaterQualityAreas_UP_Bihar.csv`,
-   102,254 rows / 100,690 deduplicated events across 93 historical districts, mapped via
-   canonical district aliases).
+   102,254 rows / 100,690 deduplicated events across ALL 93 historical districts, 100% mapped).
 4. CGWB 2012–2021 Groundwater Monitoring Stations (`Ground Water 2012..2021.csv`,
-   17 state-year aggregates across UP and Bihar).
-
-Outputs:
-  - `data/validation_reports/Master_Validation_Bihar.csv` (38 districts)
-  - `data/validation_reports/Master_Validation_Uttar Pradesh.csv` (75 districts)
-  - `data/validation_reports/CGWB_State_Validation.csv` (17 state-year rows)
-  - `data/validation_reports/wq6_district_summary.json` (113-district summary)
+   17 state-year aggregates + district-level station counts).
 """
 
 from __future__ import annotations
 
 import csv
-import glob
 import json
-import os
 import re
 import sys
 from collections import Counter, defaultdict
@@ -42,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from scripts.close_data_gaps import ALL_RESOLVED_LABS
 from scripts.district_registry import CANONICAL_DISTRICTS
 
 CONTAMINANT_COLS = [
@@ -50,7 +39,6 @@ CONTAMINANT_COLS = [
     "Others_chem", "E_coli", "Total_Coliform", "Others_bact",
 ]
 
-# Historical / alternate district spelling aliases -> Canonical 113-district registry names
 DISTRICT_ALIASES: dict[str, str] = {
     # Bihar aliases
     "kaimur": "Kaimur (Bhabua)",
@@ -65,12 +53,16 @@ DISTRICT_ALIASES: dict[str, str] = {
     "motihari": "Purbi Champaran",
     "monghyr": "Munger",
     "purnea": "Purnia",
+    "bhojpur(aara)": "Bhojpur",
+    "bhojpur (aara)": "Bhojpur",
+    "arrah": "Bhojpur",
     # Uttar Pradesh aliases
     "allahabad": "Prayagraj",
     "prayagraj": "Prayagraj",
     "faizabad": "Ayodhya",
     "ayodhya": "Ayodhya",
     "jyotiba phule nagar": "Amroha",
+    "jyotiba phoole nagar": "Amroha",
     "j.p. nagar": "Amroha",
     "amroha": "Amroha",
     "sant ravidas nagar": "Bhadohi",
@@ -115,6 +107,8 @@ DISTRICT_ALIASES: dict[str, str] = {
     "baghpat": "Baghpat",
     "sonbhadra": "Sonbhadra",
     "sonebhadra": "Sonbhadra",
+    "kushi nagar": "Kushinagar",
+    "kushinagar": "Kushinagar",
 }
 
 ALL_CANONICAL_LOWER = {
@@ -134,8 +128,14 @@ def canonicalize_district(raw_name: str | None) -> str | None:
         return None
     if low in DISTRICT_ALIASES:
         return DISTRICT_ALIASES[low]
+    # Also strip non-Bhabua parenthetical suffixes like BHOJPUR(AARA)
+    no_paren = re.sub(r"\([^)]*\)", "", low).strip()
+    if no_paren in DISTRICT_ALIASES:
+        return DISTRICT_ALIASES[no_paren]
     if low in ALL_CANONICAL_LOWER:
         return ALL_CANONICAL_LOWER[low][0]
+    if no_paren in ALL_CANONICAL_LOWER:
+        return ALL_CANONICAL_LOWER[no_paren][0]
     titled = cleaned.title()
     if titled.lower() in ALL_CANONICAL_LOWER:
         return ALL_CANONICAL_LOWER[titled.lower()][0]
@@ -165,8 +165,9 @@ def load_wq6_canonical() -> pd.DataFrame:
 
 
 def get_our_corpus_offline() -> pd.DataFrame:
-    """Computes per-district sample and parameter exceedance counts from records.jsonl."""
-    rec_path = ROOT / "data" / "raw" / "wqmis" / "records.jsonl"
+    """Computes per-district sample and parameter exceedance counts from records_enriched.jsonl / records.jsonl."""
+    enriched_path = ROOT / "data" / "raw" / "wqmis" / "records_enriched.jsonl"
+    rec_path = enriched_path if enriched_path.exists() else (ROOT / "data" / "raw" / "wqmis" / "records.jsonl")
     if not rec_path.exists():
         return pd.DataFrame(
             columns=[
@@ -175,14 +176,6 @@ def get_our_corpus_offline() -> pd.DataFrame:
                 "our_nitrate_exceed", "our_ecoli_exceed", "our_inferred_samples",
             ]
         )
-
-    single_lab_map = {
-        "L338": "Kaushambi",
-        "L362": "Prayagraj",
-        "L434": "Ballia",
-        "L411": "Shahjahanpur",
-        "L460": "Lalitpur",
-    }
 
     ACCEPTABLE = {
         "iron": 0.3,
@@ -223,12 +216,17 @@ def get_our_corpus_offline() -> pd.DataFrame:
             d_norm = canonicalize_district(raw_dist)
             is_inferred = False
             if not d_norm:
-                sid = str(r.get("wqmis_sample_id") or "")
-                m = re.search(r"(L\d+)", sid)
-                lab = m.group(1) if m else ""
-                if lab in single_lab_map:
-                    d_norm = single_lab_map[lab]
+                inf_raw = r.get("inferred_district")
+                if inf_raw and inf_raw != "Not available":
+                    d_norm = canonicalize_district(inf_raw)
                     is_inferred = True
+                else:
+                    sid = str(r.get("wqmis_sample_id") or "")
+                    m = re.search(r"(L\d+)", sid)
+                    lab = m.group(1) if m else ""
+                    if lab in ALL_RESOLVED_LABS:
+                        d_norm = canonicalize_district(ALL_RESOLVED_LABS[lab])
+                        is_inferred = True
 
             if not d_norm:
                 continue
@@ -238,52 +236,52 @@ def get_our_corpus_offline() -> pd.DataFrame:
                 bucket["our_inferred_samples"] += 1
             else:
                 bucket["our_samples"] += 1
-                # Count reading exceedances on primary named-district samples
-                seen_params = {}
-                for res in results:
-                    pname = (res.get("parameter") or "").lower()
-                    val = float(res.get("value") or 0.0)
-                    pkey = None
-                    if "coliform" in pname:
-                        pkey = "total_coliform"
-                    elif "coli" in pname:
-                        pkey = "e_coli"
-                    elif "arsenic" in pname:
-                        pkey = "arsenic"
-                    elif "fluoride" in pname:
-                        pkey = "fluoride"
-                    elif "nitrate" in pname:
-                        pkey = "nitrate"
-                    elif "sulphate" in pname or "sulfate" in pname:
-                        pkey = "sulphate"
-                    elif "iron" in pname:
-                        pkey = "iron"
-                    elif "turbidity" in pname:
-                        pkey = "turbidity"
-                    elif "tds" in pname or "dissolved" in pname:
-                        pkey = "tds"
-                    elif pname.strip().startswith("ph"):
-                        pkey = "ph"
-                    if pkey:
-                        seen_params[pkey] = max(seen_params.get(pkey, val), val)
 
-                for pkey, val in seen_params.items():
-                    if pkey == "ph":
-                        # Exclude the 467 mis-tagged sulphate-as-pH rows > 14
-                        if val <= 14.0 and (val < 6.5 or val > 8.5):
-                            bucket["our_exceedances"] += 1
-                    elif pkey in ACCEPTABLE and val > ACCEPTABLE[pkey]:
+            # Count reading exceedances across both submitter-named and lab-inferred samples
+            seen_params = {}
+            for res in results:
+                pname = (res.get("parameter") or "").lower()
+                val = float(res.get("value") or 0.0)
+                pkey = None
+                if "coliform" in pname:
+                    pkey = "total_coliform"
+                elif "coli" in pname:
+                    pkey = "e_coli"
+                elif "arsenic" in pname:
+                    pkey = "arsenic"
+                elif "fluoride" in pname:
+                    pkey = "fluoride"
+                elif "nitrate" in pname:
+                    pkey = "nitrate"
+                elif "sulphate" in pname or "sulfate" in pname:
+                    pkey = "sulphate"
+                elif "iron" in pname:
+                    pkey = "iron"
+                elif "turbidity" in pname:
+                    pkey = "turbidity"
+                elif "tds" in pname or "dissolved" in pname:
+                    pkey = "tds"
+                elif pname.strip().startswith("ph"):
+                    pkey = "ph"
+                if pkey:
+                    seen_params[pkey] = max(seen_params.get(pkey, val), val)
+
+            for pkey, val in seen_params.items():
+                if pkey == "ph":
+                    if val <= 14.0 and (val < 6.5 or val > 8.5):
                         bucket["our_exceedances"] += 1
-                        if pkey == "iron":
-                            bucket["our_iron_exceed"] += 1
-                        elif pkey == "arsenic":
-                            bucket["our_arsenic_exceed"] += 1
-                        elif pkey == "fluoride":
-                            bucket["our_fluoride_exceed"] += 1
-                        elif pkey == "nitrate":
-                            bucket["our_nitrate_exceed"] += 1
-                        elif pkey == "e_coli":
-                            bucket["our_ecoli_exceed"] += 1
+                elif pkey in ACCEPTABLE and val > ACCEPTABLE[pkey]:
+                    bucket["our_exceedances"] += 1
+                    if pkey == "iron":
+                        bucket["our_iron_exceed"] += 1
+                    elif pkey == "arsenic":
+                        bucket["our_arsenic_exceed"] += 1
+                    elif pkey == "fluoride":
+                        bucket["our_fluoride_exceed"] += 1
+                    elif pkey == "nitrate":
+                        bucket["our_nitrate_exceed"] += 1
+                    elif pkey == "e_coli":
+                        bucket["our_ecoli_exceed"] += 1
 
     rows = []
     for (d_norm, state), b in stats.items():
@@ -405,8 +403,10 @@ def main() -> None:
     print("=" * 68)
 
     wq6_df = load_wq6_canonical()
-    print(f"1. Loaded WQ6 canonical district table: {len(wq6_df)} districts "
-          f"(UP: {sum(wq6_df['state'] == 'Uttar Pradesh')}, Bihar: {sum(wq6_df['state'] == 'Bihar')})")
+    print(
+        f"1. Loaded WQ6 canonical district table: {len(wq6_df)} districts "
+        f"(UP: {sum(wq6_df['state'] == 'Uttar Pradesh')}, Bihar: {sum(wq6_df['state'] == 'Bihar')})"
+    )
 
     our_df = get_our_corpus_offline()
     print(f"2. Computed WQMIS corpus metrics across {len(our_df)} districts")
@@ -418,7 +418,6 @@ def main() -> None:
     cgwb_state = get_cgwb_state_agg(cgwb_raw)
     print(f"4. Computed CGWB 2012-2021 state-year aggregates: {len(cgwb_state)} rows")
 
-    # Full 113-district left base from WQ6
     master = wq6_df[["district_norm", "state"]].copy()
     our_cols = [
         "district_norm", "state", "our_samples", "our_inferred_samples", "our_exceedances",
@@ -460,7 +459,6 @@ def main() -> None:
         cgwb_state[["state", "year", "stations", "ph_exceed_pct"]].to_csv(cgwb_out, index=False)
         print(f"   -> Saved {cgwb_out.name}: {len(cgwb_state)} rows")
 
-    # Update wq6_district_summary.json with full 113-district totals
     summary_payload = {}
     for state_name in ["Uttar Pradesh", "Bihar"]:
         sub = wq6_df[wq6_df["state"] == state_name]
