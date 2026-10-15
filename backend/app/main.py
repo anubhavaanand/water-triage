@@ -11,8 +11,12 @@ from .engine import seed_bis_parameters
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
-        seed_bis_parameters(db)
+    try:
+        with SessionLocal() as db:
+            seed_bis_parameters(db)
+    except Exception as e:
+        import warnings
+        warnings.warn(f"DB seeding skipped ({e!s}); API running in offline mode.")
     yield
 
 
