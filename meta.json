@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-10-10T10:52:54.522012+00:00",
-  "git_commit": "133bd4e981bbfe4d195b4c9523d4ada0ec3f06d4",
+  "generated_at": "2026-10-04T20:29:26.693900+00:00",
+  "git_commit": "e27270c47cda9f36302dc9143e41f905702b29d3",
   "corpus": {
-    "samples": 1853,
-    "readings": 7454,
-    "historical_events_distinct": 34232,
+    "samples": 1741,
+    "readings": 6792,
+    "historical_events_distinct": 100690,
     "sample_years": [
       2022,
       2022
@@ -13,43 +13,24 @@
       2009,
       2012
     ],
-    "districts_with_samples": 110,
-    "village_name_coverage_pct": 19.43,
-    "unassigned_district_samples": {}
-  },
-  "bands": {
-    "Critical": 77,
-    "High": 56,
-    "Low": 1589,
-    "Medium": 131
-  },
-  "sensitivity": {
-    "iron_1_0": {
-      "bands": {
-        "Critical": 83,
-        "High": 25,
-        "Medium": 109,
-        "Low": 1636
-      },
-      "state_stats": {
-        "Bihar": {
-          "mean": 2.07,
-          "median": 0.0,
-          "critical": 35
-        },
-        "Uttar Pradesh": {
-          "mean": 4.55,
-          "median": 0.98,
-          "critical": 48
-        }
-      },
-      "iron_rates": {
-        "Bihar": 1.16,
-        "Uttar Pradesh": 8.0
-      }
+    "districts_with_samples": 49,
+    "village_name_coverage_pct": 1.21,
+    "unassigned_district_samples": {
+      "Bihar": 15,
+      "Uttar Pradesh": 339
     }
   },
-  "critical_concentration": null,
+  "bands": {
+    "Critical": 89,
+    "High": 392,
+    "Low": 1232,
+    "Medium": 28
+  },
+  "critical_concentration": {
+    "district": "Madhepura",
+    "total_critical": 70,
+    "single_parameter_iron_critical": 70
+  },
   "band_thresholds": {
     "Critical": 40,
     "High": 20,
@@ -59,36 +40,35 @@
   "state_comparison": [
     {
       "state": "Uttar Pradesh",
-      "samples": 701,
-      "mean_crs": 5.66,
-      "median_crs": 1.54,
+      "samples": 966,
+      "mean_crs": 12.68,
+      "median_crs": 4.08,
       "bands": {
-        "Critical": 42,
-        "High": 30,
-        "Medium": 90,
-        "Low": 539
+        "Critical": 14,
+        "High": 234,
+        "Medium": 27,
+        "Low": 691
       },
-      "critical_count": 42,
-      "critical_share_of_all_critical": 0.5455,
-      "share_zero_score": 0.321,
+      "critical_count": 14,
+      "critical_share_of_all_critical": 0.1573,
+      "share_zero_score": 0.3219,
       "samples_by_n_params": {
-        "10": 7,
-        "6": 183,
-        "4": 120,
-        "3": 73,
-        "5": 46,
-        "1": 127,
-        "7": 129,
-        "8": 15,
-        "9": 1
+        "8": 8,
+        "3": 117,
+        "7": 17,
+        "2": 55,
+        "1": 129,
+        "5": 122,
+        "6": 301,
+        "4": 217
       },
-      "single_param_samples": 127,
+      "single_param_samples": 129,
       "parameter_rates": [
         {
           "parameter_key": "arsenic",
-          "tested": 98,
-          "exceeding_acceptable": 45,
-          "exceeding_permissible": 34,
+          "tested": 29,
+          "exceeding_acceptable": 0,
+          "exceeding_permissible": 0,
           "has_permissible": true
         },
         {
@@ -100,44 +80,51 @@
         },
         {
           "parameter_key": "fluoride",
-          "tested": 523,
-          "exceeding_acceptable": 127,
-          "exceeding_permissible": 31,
+          "tested": 711,
+          "exceeding_acceptable": 159,
+          "exceeding_permissible": 40,
           "has_permissible": true
         },
         {
           "parameter_key": "iron",
-          "tested": 275,
-          "exceeding_acceptable": 146,
+          "tested": 426,
+          "exceeding_acceptable": 187,
           "exceeding_permissible": null,
           "has_permissible": false
         },
         {
           "parameter_key": "nitrate",
-          "tested": 321,
-          "exceeding_acceptable": 3,
+          "tested": 460,
+          "exceeding_acceptable": 8,
           "exceeding_permissible": null,
           "has_permissible": false
         },
         {
           "parameter_key": "ph",
-          "tested": 639,
-          "exceeding_acceptable": 1,
-          "exceeding_permissible": 1,
-          "has_permissible": true
-        },
-        {
-          "parameter_key": "sulphate",
-          "tested": 334,
-          "exceeding_acceptable": 44,
-          "exceeding_permissible": 7,
+          "tested": 902,
+          "exceeding_acceptable": 2,
+          "exceeding_permissible": 2,
           "has_permissible": true
         },
         {
           "parameter_key": "tds",
-          "tested": 611,
-          "exceeding_acceptable": 232,
-          "exceeding_permissible": 44,
+          "tested": 851,
+          "exceeding_acceptable": 348,
+          "exceeding_permissible": 51,
+          "has_permissible": true
+        },
+        {
+          "parameter_key": "turbidity",
+          "tested": 670,
+          "exceeding_acceptable": 547,
+          "exceeding_permissible": 53,
+          "has_permissible": true
+        },
+        {
+          "parameter_key": "sulphate",
+          "tested": 394,
+          "exceeding_acceptable": 50,
+          "exceeding_permissible": 7,
           "has_permissible": true
         },
         {
@@ -146,48 +133,39 @@
           "exceeding_acceptable": 3,
           "exceeding_permissible": null,
           "has_permissible": false
-        },
-        {
-          "parameter_key": "turbidity",
-          "tested": 440,
-          "exceeding_acceptable": 353,
-          "exceeding_permissible": 30,
-          "has_permissible": true
         }
       ]
     },
     {
       "state": "Bihar",
-      "samples": 1152,
-      "mean_crs": 3.62,
-      "median_crs": 0.42,
+      "samples": 775,
+      "mean_crs": 18.36,
+      "median_crs": 0.0,
       "bands": {
-        "Critical": 35,
-        "High": 26,
-        "Medium": 41,
-        "Low": 1050
+        "Critical": 75,
+        "High": 158,
+        "Medium": 1,
+        "Low": 541
       },
-      "critical_count": 35,
-      "critical_share_of_all_critical": 0.4545,
-      "share_zero_score": 0.4505,
+      "critical_count": 75,
+      "critical_share_of_all_critical": 0.8427,
+      "share_zero_score": 0.5432,
       "samples_by_n_params": {
-        "3": 132,
-        "1": 300,
-        "4": 299,
-        "7": 160,
-        "2": 90,
-        "6": 87,
+        "3": 94,
+        "1": 296,
+        "4": 231,
+        "6": 49,
+        "2": 40,
         "8": 20,
-        "5": 63,
-        "9": 1
+        "5": 45
       },
-      "single_param_samples": 300,
+      "single_param_samples": 296,
       "parameter_rates": [
         {
           "parameter_key": "arsenic",
-          "tested": 272,
-          "exceeding_acceptable": 35,
-          "exceeding_permissible": 35,
+          "tested": 230,
+          "exceeding_acceptable": 0,
+          "exceeding_permissible": 0,
           "has_permissible": true
         },
         {
@@ -199,52 +177,59 @@
         },
         {
           "parameter_key": "fluoride",
-          "tested": 482,
-          "exceeding_acceptable": 70,
-          "exceeding_permissible": 31,
+          "tested": 182,
+          "exceeding_acceptable": 2,
+          "exceeding_permissible": 0,
           "has_permissible": true
         },
         {
           "parameter_key": "iron",
-          "tested": 601,
-          "exceeding_acceptable": 274,
+          "tested": 450,
+          "exceeding_acceptable": 233,
           "exceeding_permissible": null,
           "has_permissible": false
         },
         {
           "parameter_key": "nitrate",
-          "tested": 373,
-          "exceeding_acceptable": 12,
+          "tested": 123,
+          "exceeding_acceptable": 0,
           "exceeding_permissible": null,
           "has_permissible": false
         },
         {
           "parameter_key": "ph",
-          "tested": 840,
-          "exceeding_acceptable": 1,
-          "exceeding_permissible": 1,
-          "has_permissible": true
-        },
-        {
-          "parameter_key": "sulphate",
-          "tested": 240,
-          "exceeding_acceptable": 7,
-          "exceeding_permissible": 1,
+          "tested": 467,
+          "exceeding_acceptable": 0,
+          "exceeding_permissible": 0,
           "has_permissible": true
         },
         {
           "parameter_key": "tds",
-          "tested": 795,
-          "exceeding_acceptable": 222,
-          "exceeding_permissible": 9,
+          "tested": 444,
+          "exceeding_acceptable": 44,
+          "exceeding_permissible": 0,
           "has_permissible": true
         },
         {
           "parameter_key": "turbidity",
-          "tested": 558,
-          "exceeding_acceptable": 324,
-          "exceeding_permissible": 23,
+          "tested": 328,
+          "exceeding_acceptable": 130,
+          "exceeding_permissible": 0,
           "has_permissible": true
+        },
+        {
+          "parameter_key": "sulphate",
+          "tested": 73,
+          "exceeding_acceptable": 0,
+          "exceeding_permissible": 0,
+          "has_permissible": true
+        },
+        {
+          "parameter_key": "total_coliform",
+          "tested": 0,
+          "exceeding_acceptable": 0,
+          "exceeding_permissible": null,
+          "has_permissible": false
         }
       ]
     }
@@ -253,92 +238,110 @@
     {
       "state": "Uttar Pradesh",
       "parameter_key": "turbidity",
-      "tested": 440,
-      "exceeding": 353
+      "tested": 670,
+      "exceeding": 547
+    },
+    {
+      "state": "Uttar Pradesh",
+      "parameter_key": "tds",
+      "tested": 851,
+      "exceeding": 348
+    },
+    {
+      "state": "Bihar",
+      "parameter_key": "iron",
+      "tested": 450,
+      "exceeding": 233
+    },
+    {
+      "state": "Uttar Pradesh",
+      "parameter_key": "iron",
+      "tested": 426,
+      "exceeding": 187
+    },
+    {
+      "state": "Uttar Pradesh",
+      "parameter_key": "fluoride",
+      "tested": 711,
+      "exceeding": 159
     },
     {
       "state": "Bihar",
       "parameter_key": "turbidity",
-      "tested": 558,
-      "exceeding": 324
-    },
-    {
-      "state": "Bihar",
-      "parameter_key": "iron",
-      "tested": 601,
-      "exceeding": 274
-    },
-    {
-      "state": "Uttar Pradesh",
-      "parameter_key": "tds",
-      "tested": 611,
-      "exceeding": 232
-    },
-    {
-      "state": "Bihar",
-      "parameter_key": "tds",
-      "tested": 795,
-      "exceeding": 222
-    },
-    {
-      "state": "Uttar Pradesh",
-      "parameter_key": "iron",
-      "tested": 275,
-      "exceeding": 146
-    },
-    {
-      "state": "Uttar Pradesh",
-      "parameter_key": "fluoride",
-      "tested": 523,
-      "exceeding": 127
-    },
-    {
-      "state": "Bihar",
-      "parameter_key": "fluoride",
-      "tested": 482,
-      "exceeding": 70
-    },
-    {
-      "state": "Uttar Pradesh",
-      "parameter_key": "arsenic",
-      "tested": 98,
-      "exceeding": 45
+      "tested": 328,
+      "exceeding": 130
     },
     {
       "state": "Uttar Pradesh",
       "parameter_key": "sulphate",
-      "tested": 334,
+      "tested": 394,
+      "exceeding": 50
+    },
+    {
+      "state": "Bihar",
+      "parameter_key": "tds",
+      "tested": 444,
       "exceeding": 44
     },
     {
-      "state": "Bihar",
-      "parameter_key": "arsenic",
-      "tested": 272,
-      "exceeding": 35
-    },
-    {
-      "state": "Bihar",
-      "parameter_key": "nitrate",
-      "tested": 373,
-      "exceeding": 12
-    },
-    {
-      "state": "Bihar",
-      "parameter_key": "sulphate",
-      "tested": 240,
-      "exceeding": 7
-    },
-    {
       "state": "Uttar Pradesh",
       "parameter_key": "nitrate",
-      "tested": 321,
-      "exceeding": 3
+      "tested": 460,
+      "exceeding": 8
     },
     {
       "state": "Uttar Pradesh",
       "parameter_key": "total_coliform",
       "tested": 7,
       "exceeding": 3
+    },
+    {
+      "state": "Uttar Pradesh",
+      "parameter_key": "ph",
+      "tested": 902,
+      "exceeding": 2
+    },
+    {
+      "state": "Bihar",
+      "parameter_key": "fluoride",
+      "tested": 182,
+      "exceeding": 2
+    },
+    {
+      "state": "Uttar Pradesh",
+      "parameter_key": "e_coli",
+      "tested": 8,
+      "exceeding": 2
+    },
+    {
+      "state": "Bihar",
+      "parameter_key": "ph",
+      "tested": 467,
+      "exceeding": 0
+    },
+    {
+      "state": "Bihar",
+      "parameter_key": "arsenic",
+      "tested": 230,
+      "exceeding": 0
+    },
+    {
+      "state": "Bihar",
+      "parameter_key": "nitrate",
+      "tested": 123,
+      "exceeding": 0
+    },
+    {
+      "state": "Bihar",
+      "parameter_key": "sulphate",
+      "tested": 73,
+      "exceeding": 0
+    },
+    {
+      "state": "Bihar",
+      "parameter_key": "e_coli",
+      "tested": 37,
+      "exceeding": 0
     }
   ],
   "scoring": {
@@ -350,30 +353,21 @@
       "total_coliform": 0.9,
       "fluoride": 0.8,
       "nitrate": 0.7,
-      "iron": 0.4,
       "sulphate": 0.5,
+      "iron": 0.4,
       "turbidity": 0.3,
       "tds": 0.3,
       "ph": 0.2
     },
     "escalation_rules": [
       {
-        "rule": "Acute hazards (arsenic, e_coli, total_coliform) full breach \u2192 Critical floor",
-        "bands_floor": "Critical"
-      },
-      {
-        "rule": "Non-acute full breaches contribute to score but do not force band escalation",
-        "bands_floor": "none"
+        "rule": "Any parameter severity 1.0 (exceeds permissible / acute risk)",
+        "bands_floor": "High"
       }
-    ]
+    ],
+    "total_weight": 6.0
   },
   "limitations": [
-    {
-      "id": "iron-limit-conflict",
-      "title": "Iron limit conflict between standard and records",
-      "detail": "876 readings explicitly carry an acceptable limit of 1.0 mg/L in the raw records. Scoring uses the stricter 0.3 mg/L specified by IS 10500:2012.",
-      "status": "accepted"
-    },
     {
       "id": "panel-size-bias",
       "title": "Panel size drives score",
@@ -383,13 +377,13 @@
     {
       "id": "missing-district",
       "title": "Unassigned samples",
-      "detail": "0 samples (0.0%) are missing district identifiers (marked 'Not available').",
+      "detail": "354 samples (20.3%) are missing district identifiers (marked 'Not available').",
       "status": "open"
     },
     {
       "id": "village-identifiability",
       "title": "Village names unavailable",
-      "detail": "Village names exist for 19.43% of samples.",
+      "detail": "Village names exist for 1.21% of samples.",
       "status": "accepted"
     },
     {
@@ -412,13 +406,146 @@
     },
     {
       "id": "medium-band-empty",
-      "title": "Medium band historically empty (now populated)",
-      "detail": "The original step function made scores bimodal; the Medium band contained only 1.6% of samples. After adjusting band thresholds to Critical=40, High=20, Medium=10, Low=0 and refining escalation logic, the Medium band now contains 7.2% of samples (125/1741).",
-      "status": "resolved"
+      "title": "Near-empty Medium band",
+      "detail": "The step function makes scores bimodal; the Medium band contains only 1.6% of samples, meaning the four-band scheme behaves like three bands.",
+      "status": "accepted"
     }
   ],
   "caveats": {
     "sampling": "non-random crawl; comparisons describe the corpus",
     "min_samples_for_mean": 5
+  },
+  "sensitivity": {
+    "iron_1_0": {
+      "bands": {
+        "Critical": 5,
+        "High": 139,
+        "Medium": 30,
+        "Low": 1567
+      },
+      "bands_no_floor_8param": {
+        "Critical": 3,
+        "High": 41,
+        "Medium": 108,
+        "Low": 1589
+      },
+      "state_means": {
+        "Uttar Pradesh": 9.99,
+        "Bihar": 1.58
+      },
+      "state_stats": {
+        "Uttar Pradesh": {
+          "mean": 9.95,
+          "median": 3.08,
+          "critical": 3
+        },
+        "Bihar": {
+          "mean": 1.58,
+          "median": 0.0,
+          "critical": 0
+        }
+      }
+    },
+    "model_v2_total_weight_6_0": {
+      "bands": {
+        "Critical": 3,
+        "High": 54,
+        "Medium": 125,
+        "Low": 1559
+      },
+      "band_thresholds": {
+        "Critical": 40,
+        "High": 20,
+        "Medium": 10,
+        "Low": 0
+      },
+      "state_means": {
+        "Bihar": 2.32,
+        "Uttar Pradesh": 4.72
+      }
+    }
+  },
+  "band_model_note": "Bands 89/392/28/1,232 are the frozen v1 (tested-weight) distribution used in WPR-11, WPR-12 and the Final Report. The live coverage-adjusted engine (scoring.py commit 7331a9b, TOTAL_BIS_WEIGHT = 6.0, 40/20/10 bands) yields 3/54/125/1,559. See sensitivity.* for both; band_thresholds describes the engine currently in code.",
+  "wq6_summary": {
+    "Uttar Pradesh": {
+      "state": "Uttar Pradesh",
+      "districts": 75,
+      "contaminated_villages_by_parameter": {
+        "pH": 92,
+        "TDS": 60,
+        "Turbidity": 404,
+        "Chloride": 24,
+        "Total_Alkalinity": 33,
+        "Total_Hardness": 51,
+        "Sulphate": 30,
+        "Iron": 88,
+        "Total_Arsenic": 34,
+        "Fluoride": 138,
+        "Nitrate": 40,
+        "Residual_Chlorine": 41,
+        "Others_chem": 0,
+        "E_coli": 125,
+        "Total_Coliform": 204,
+        "Others_bact": 0
+      },
+      "affected_districts_by_parameter": {
+        "pH": 22,
+        "TDS": 19,
+        "Turbidity": 53,
+        "Chloride": 8,
+        "Total_Alkalinity": 16,
+        "Total_Hardness": 19,
+        "Sulphate": 15,
+        "Iron": 18,
+        "Total_Arsenic": 7,
+        "Fluoride": 24,
+        "Nitrate": 19,
+        "Residual_Chlorine": 3,
+        "Others_chem": 0,
+        "E_coli": 26,
+        "Total_Coliform": 36,
+        "Others_bact": 0
+      }
+    },
+    "Bihar": {
+      "state": "Bihar",
+      "districts": 38,
+      "contaminated_villages_by_parameter": {
+        "pH": 95,
+        "TDS": 1,
+        "Turbidity": 85,
+        "Chloride": 0,
+        "Total_Alkalinity": 6,
+        "Total_Hardness": 3,
+        "Sulphate": 0,
+        "Iron": 4229,
+        "Total_Arsenic": 202,
+        "Fluoride": 296,
+        "Nitrate": 5,
+        "Residual_Chlorine": 0,
+        "Others_chem": 0,
+        "E_coli": 8,
+        "Total_Coliform": 0,
+        "Others_bact": 0
+      },
+      "affected_districts_by_parameter": {
+        "pH": 8,
+        "TDS": 1,
+        "Turbidity": 8,
+        "Chloride": 0,
+        "Total_Alkalinity": 2,
+        "Total_Hardness": 1,
+        "Sulphate": 0,
+        "Iron": 16,
+        "Total_Arsenic": 6,
+        "Fluoride": 9,
+        "Nitrate": 3,
+        "Residual_Chlorine": 0,
+        "Others_chem": 0,
+        "E_coli": 5,
+        "Total_Coliform": 0,
+        "Others_bact": 0
+      }
+    }
   }
 }
