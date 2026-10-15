@@ -2444,7 +2444,7 @@ export default function App() {
             <strong>WaterTriage</strong> · BIS IS 10500:2012 Multi-Tier Water Quality Risk Scoring &amp; Triage System
           </div>
           <div className="meta">
-            Anubhav Anand — submitted as final year (7th) Minor Project , ASET, Amity University Uttar Pradesh
+            Anubhav Anand — submitted as final year (7th sem) Minor Project , ASET, Amity University Uttar Pradesh
           </div>
         </div>
       </footer>
