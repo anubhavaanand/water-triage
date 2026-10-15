@@ -2444,7 +2444,7 @@ export default function App() {
             <strong>WaterTriage</strong> · BIS IS 10500:2012 Multi-Tier Water Quality Risk Scoring &amp; Triage System
           </div>
           <div className="meta">
-            Anubhav Anand (A41105223039) · Guide: Dr. Girish Paliwal · ASET, Amity University Uttar Pradesh
+            Anubhav Anand · Guide: Dr. Girish Paliwal · ASET, Amity University Uttar Pradesh
           </div>
         </div>
       </footer>
