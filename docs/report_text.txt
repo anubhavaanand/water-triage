@@ -57,7 +57,7 @@ cluster of single-parameter iron panels in Madhepura district rather than unifor
 those 70 samples score 100.0 by construction when normalized over tested weights alone, and all 876
 raw WQMIS iron records print a lab-recorded limit of 1.0 mg/L rather than the 0.3 mg/L BIS text value.
 Re-scoring under the 1.0 mg/L lab limit shifts bands to 5 Critical, 139 High, 30 Medium, and 1,567 Low
-(reversing state means to UP 9.99 > Bihar 1.58), while normalizing against total possible weight across
+(reversing state means to UP 9.99 (9.95 under direct recomputation) > Bihar 1.58), while normalizing against total possible weight across
 all 10 BIS parameters (TOTAL_BIS_WEIGHT = 6.0, bands 40/20/10) eliminates single-parameter inflation
 (3 Critical, 54 High, 125 Medium, 1,559 Low; UP mean 4.72 > Bihar 2.32). State comparisons are
 therefore anchored on medians and panel-independent parameter exceedance rates. Both findings are
@@ -223,7 +223,7 @@ Fe = 1.0 mg/L Lab Record
 139 (8.0%)
 30 (1.7%)
 1,567 (90.0%)
-UP 9.99 / Bihar 1.58
+UP 9.99 (9.95 under direct recomputation) / Bihar 1.58
 
 Model v2 — Total-Weight / 6.0
 (10 params, 40/20/10)
@@ -254,7 +254,7 @@ High band samples — v2
 
 Uttar Pradesh (n=966)
 12.68
-9.99
+9.99 (9.95 under direct recomputation)
 4.72
 4.08
 3.10
@@ -304,7 +304,7 @@ the Madhepura artifact: the 70 single-parameter iron samples (0.318–0.478 mg/L
 
   Limit        Bihar mean (n=775)   UP mean (n=966)
   0.3 mg/L     18.36                12.68
-  1.0 mg/L     1.58                 9.99
+  1.0 mg/L     1.58                 9.99 (9.95 under direct recomputation)
   Model v2     2.32                 4.72
 
 Bihar's elevated 0.3 mg/L mean is entirely explained by Madhepura; under 1.0 mg/L the means collapse
