@@ -31,7 +31,7 @@ Guide: Dr. Girish Paliwal
 
 **Lab-ID Resolution:** 302/354 missing districts resolved (85.3%) via ASP.NET session cookie handshake with `ejalshakti.gov.in`. Only 52 samples (2.99%) held back for multi-district regional lab L158.
 
-**Village Coverage:** 305/1,741 samples (17.52%) now have named village/habitation locations (1,451% gain from baseline of 21 samples).
+**Village Coverage:** 305/1,741 samples (17.52%) now have named village/habitation locations — a 1,352% gain from the baseline of 21 samples.
 
 ## Data & Limitations
 
