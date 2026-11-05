@@ -228,7 +228,7 @@ def get_metadata(db: Session = Depends(get_db)):
         samples_dict[r.sample_id].append((r.parameter_key, r.value))
         state_map[r.sample_id] = r.state
         
-    from backend.app.engine.scoring import composite_score, BIS_10500
+    from ..engine.scoring import composite_score, BIS_10500
     from copy import deepcopy
     my_limits = deepcopy(BIS_10500)
     my_limits["iron"]["acceptable"] = 1.0
