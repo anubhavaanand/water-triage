@@ -57,9 +57,10 @@ Guide: Dr. Girish Paliwal
 
 ## Security Notes
 
-- `.env` is gitignored — never commit it (contains DB password)
+- All dotenv files (`.env.*`) are gitignored — never commit them (they may contain DB passwords)
 - Use `.env.example` as a template for local development
 - PostgreSQL password must be set via `POSTGRES_PASSWORD` environment variable
+- If a credential is ever committed, revoke and rotate it immediately; deleting the file does not remove it from Git history.
 
 ## How to Run
 
