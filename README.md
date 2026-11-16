@@ -122,6 +122,61 @@ composite = (Σ wᵢ · severityᵢ) / TOTAL_BIS_WEIGHT × 100          # TOTAL_
 
 Bands: **Critical ≥ 40 · High ≥ 20 · Medium ≥ 10 · Low ≥ 0**. Acute hazards (arsenic, E. coli, total coliform) escalate to Critical on a full breach. The full parameter table with limits and weights is in [Data & Limitations](#data--limitations); the canonical source is `BIS_10500` in `backend/app/engine/scoring.py`.
 
+## API Reference
+
+FastAPI generates an interactive schema at runtime — no separate build step required.
+
+| URL | Description |
+|---|---|
+| `/docs` | Swagger UI — browse and call endpoints |
+| `/redoc` | Read-only reference |
+| `/openapi.json` | OpenAPI schema |
+
+Key endpoints (all prefixed with `/api`):
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/samples` | Sample list, filterable by district, band, limit, offset |
+| `GET /api/samples/{id}` | One sample with all readings and its risk score |
+| `GET /api/districts` | Districts with band counts and data-quality tiers |
+| `GET /api/districts/{id}` | District detail with villages and latest scores |
+| `GET /api/districts/full-triage` | Full 113-district multi-tier triage payload |
+| `GET /api/scoring/parameters` | BIS IS 10500 parameter table used by the engine |
+| `GET /api/priority` | Ranked intervention queue, filterable by state and band |
+| `GET /api/priority/top/{n}` | Top *n* priority items |
+| `POST /api/scoring/recompute` | Recompute all risk scores |
+| `GET /api/compare` | Per-state aggregate comparison |
+| `GET /api/recurrence` | Recurrent districts ranked as chronic hotspots |
+| `GET /api/recurrence/{village_id}` | Historical vs current comparison for one village |
+| `GET /api/validation/cgwb` | CGWB pH compliance + WQ6 validation ground truth |
+| `GET /api/meta` | Aggregate dashboard payload: corpus, bands, scoring, limitations |
+
+Example:
+
+```bash
+curl "http://localhost:8000/api/priority?state=Bihar&band=critical"
+```
+
+```json
+[
+  {
+    "rank": 1,
+    "sample_id": 1204,
+    "village": "Baraon",
+    "block": "Baraon",
+    "district": "Katihar",
+    "state": "Bihar",
+    "score": 71.67,
+    "band": "Critical",
+    "worst_parameter": "iron",
+    "n_scored_params": 1,
+    "collected_on": "2022-08-02T00:00:00"
+  }
+]
+```
+
+The API is read-only and unauthenticated, with open CORS. See [docs/api.md](docs/api.md) for request and response details on every endpoint.
+
 ## Stack
 
 - **Backend:** Python 3.13 · FastAPI · SQLAlchemy 2 · Alembic · PostgreSQL (Docker)
