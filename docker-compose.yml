@@ -36,6 +36,11 @@ services:
       context: ./dashboard
       dockerfile: Dockerfile
     container_name: watertriage-dashboard
+    environment:
+      # Only used by the Vite dev server. The production image serves the
+      # built bundle through nginx, which proxies /api to backend:8000
+      # directly (see dashboard/nginx.conf).
+      VITE_API_BASE: http://backend:8000
     ports:
       - "3000:80"
     depends_on:
