@@ -48,3 +48,22 @@ def test_get_git_commit_falls_back_outside_repo(monkeypatch, tmp_path):
     monkeypatch.setattr(meta, "REPO_ROOT", tmp_path)
     monkeypatch.chdir(tmp_path)
     assert meta.get_git_commit() == "unknown"
+
+
+def test_meta_sample_years_derived_from_data(client):
+    body = client.get("/api/meta").json()
+    years = body["corpus"]["sample_years"]
+    assert isinstance(years, list)
+    assert len(years) == len(set(years))
+    assert years == sorted(years)
+    assert all(isinstance(y, int) for y in years)
+    assert years, "expected at least one collection year"
+    assert len(years) == 1, "no duplicate years (was hardcoded [2022, 2022])"
+
+
+def test_meta_bands_not_hardcoded(client, db):
+    from sqlalchemy import text
+
+    body = client.get("/api/meta").json()
+    db_total = db.execute(text("SELECT COUNT(*) FROM risk_scores")).scalar()
+    assert sum(body["bands"].values()) == db_total
