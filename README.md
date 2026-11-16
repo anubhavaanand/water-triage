@@ -35,8 +35,55 @@ Guide: Dr. Girish Paliwal
 
 ## Data & Limitations
 
-- **Dataset:** 1,741 samples, 6,792 parameter readings across 10 scored BIS IS 10500 parameters (pH, TDS, Turbidity, Sulphate, Iron, Arsenic, Fluoride, Nitrate, Total Coliform, E. coli). Chloride, Total Alkalinity and Total Hardness are recorded in the corpus but are not weighted in the severity model.
-- **Data Provenance:** Extracted from WQMIS lab reports between August and September 2026. Data verified against official Form WQ6 (75 UP + 38 Bihar districts).
+**Corpus:** 1,741 samples · 6,792 parameter readings · 10 scored parameters · 2022 collection year.
+
+### Scored parameters and BIS IS 10500 limits
+
+Severity per parameter is `(value − acceptable) / (permissible − acceptable)`, clamped to 0–1. Where a parameter has no permissible limit (or `permissible <= acceptable`), any exceedance is binary — full 1.0 severity. Zero values for arsenic, E. coli, and total coliform are treated as below detection limit and excluded from scoring.
+
+| Parameter | Unit | Acceptable | Permissible | Weight | Strategy |
+|---|---|---|---|---|---|
+| Arsenic | mg/L | 0.01 | none | 1.0 | threshold (binary) |
+| E. coli | CFU/100 mL | 0 | 0 | 0.9 | microbial (binary) |
+| Total Coliform | CFU/100 mL | 0 | 0 | 0.9 | microbial (binary) |
+| Fluoride | mg/L | 1.0 | 1.5 | 0.8 | threshold |
+| Nitrate | mg/L | 45 | none | 0.7 | threshold (binary) |
+| Sulphate | mg/L | 200 | 400 | 0.5 | threshold |
+| Iron | mg/L | 0.3 | none | 0.4 | threshold (binary) |
+| Turbidity | NTU | 1.0 | 5.0 | 0.3 | threshold |
+| TDS | mg/L | 500 | 2000 | 0.3 | threshold |
+| pH | — | 6.5 | 8.5 | 0.2 | range |
+
+`TOTAL_BIS_WEIGHT = 6.0` (sum of the weights above). Composite score is `weighted_sum / 6.0 × 100`, which keeps scores comparable across samples with different parameter coverage. Bands: **Critical ≥ 40, High ≥ 20, Medium ≥ 10, Low ≥ 0**. Only acute hazards (arsenic, E. coli, total coliform) escalate a sample to Critical on a full breach; iron, fluoride, TDS, nitrate, and sulphate contribute to the score but do not force escalation.
+
+### Recorded but not weighted
+
+Chloride, Total Alkalinity, and Total Hardness are present in the WQMIS corpus but carry no weight in the severity model, so they affect neither the composite score nor the band assignment. They are retained for reference and future sensitivity analysis.
+
+### Known data gaps by district
+
+| District | State | Gap |
+|---|---|---|
+| Unnao | UP | Fluoride contamination concentrated; 33 affected villages recorded |
+| Ferozabad | UP | Fluoride contamination concentrated; 33 affected villages recorded |
+| Hardoi | UP | Microbial: E. coli 18, Total Coliform 41 |
+| Katihar | Bihar | Iron exceedances; 6 affected villages recorded |
+| Araria | Bihar | Turbidity exceedances; 1 affected village recorded |
+
+### Provenance caveats
+
+- **Source:** WQMIS (JJM / `ejalshakti.gov.in`) lab reports, extracted August–September 2026, verified against official Form WQ6 for all 75 UP + 38 Bihar districts.
+- **Crawl is non-random.** The corpus describes what was published and retrievable, not a statistically representative sample. Comparisons between states or districts describe this corpus only.
+- **Single year.** All water samples are from 2022; historical registry events span 2009–2012 and are used only for recurrence classification.
+- **Village identifiability is partial.** 305/1,741 samples (17.52%) have named village/habitation locations. The remainder are mapped to district and lab only.
+- **52 samples (2.99%)** are held back because they trace to multi-district regional lab L158.
+- **Iron limit conflict.** 876 readings carry an acceptable limit of 1.0 mg/L in the raw records; scoring uses the stricter 0.3 mg/L from IS 10500:2012. A sensitivity run at 1.0 mg/L is exposed via `/api/meta`.
+- **Panel size drives score.** Composite scores depend on how many parameters were tested, so single-parameter iron samples can score higher than multi-parameter samples with broader contamination. Treat cross-district score comparisons as indicative, not definitive.
+- **Microbial coverage is thin.** E. coli was tested in 45 samples (2.6%); the acute-hazard Critical floor rests heavily on that small subset.
+- **Synthetic data** exists only under `backend/tests/fixtures` for test purposes. No synthetic readings appear in reported results.
+
+### Framework and tests
+
 - **Framework:** React SPA frontend with Python FastAPI backend, Docker Compose for local deployment.
 - **Tests:** 28 passed, 1 skipped (offline); 29 passed (with PostgreSQL).
 
