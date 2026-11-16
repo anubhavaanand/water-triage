@@ -60,6 +60,7 @@ Guide: Dr. Girish Paliwal
 - `.env` is gitignored — never commit it (contains DB password)
 - Use `.env.example` as a template for local development
 - PostgreSQL password must be set via `POSTGRES_PASSWORD` environment variable
+- Found a vulnerability or an exposed credential? See [SECURITY.md](SECURITY.md) for how to report it privately (not via public issues).
 
 ## How to Run
 
