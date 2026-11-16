@@ -79,3 +79,15 @@ def test_dashboard_data_endpoint(client):
         assert first_pid in data["details"]
         assert "readings" in data["details"][first_pid]
 
+
+
+def test_compare_top_exceedance_parameter(client):
+    res = client.get("/api/compare")
+    assert res.status_code == 200
+    states = res.json()["states"]
+    assert len(states) > 0
+    for s in states:
+        assert "top_exceedance_parameter" in s
+        assert s["top_exceedance_parameter"] is None or isinstance(
+            s["top_exceedance_parameter"], str
+        )
