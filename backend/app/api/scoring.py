@@ -1,10 +1,26 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_session
+from ..engine.pipeline import score_sample
 from ..models import BisParameter
 
 router = APIRouter(prefix="/scoring", tags=["scoring"])
+
+
+@router.get("/{sample_id}")
+def get_sample_score(sample_id: int, db: Session = Depends(get_session)):
+    """Return the risk score and per-parameter severity breakdown for one sample.
+
+    Recomputed on request rather than read from risk_scores, so the result is
+    always consistent with the current BIS limits even before a recompute.
+    Returns a zero-score payload (not an error) when the sample has no
+    readings for scored parameters.
+    """
+    result = score_sample(db, sample_id)
+    if result is None:
+        raise HTTPException(404, "sample not found")
+    return result
 
 
 @router.get("/parameters")

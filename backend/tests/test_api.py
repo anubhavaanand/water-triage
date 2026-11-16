@@ -169,3 +169,58 @@ def test_unknown_band_returns_400(client):
 def test_band_filter_none_returns_all(client):
     all_rows = client.get("/api/samples", params={"limit": 500}).json()
     assert len(all_rows) > 0
+def test_scoring_sample_returns_breakdown(client):
+    sample_id = client.get("/api/samples", params={"limit": 1}).json()[0]["id"]
+    res = client.get(f"/api/scoring/{sample_id}")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["sample_id"] == sample_id
+    assert 0.0 <= body["score"] <= 100.0
+    assert body["band"] in {"Critical", "High", "Medium", "Low"}
+    assert body["n_scored_params"] >= 0
+    assert isinstance(body["breakdown"], list)
+    for row in body["breakdown"]:
+        assert {"parameter_key", "value", "weight", "severity", "exceeded"} <= set(row)
+        assert 0.0 <= row["severity"] <= 1.0
+
+
+def test_scoring_sample_agrees_with_priority_queue(client):
+    sample_id = client.get("/api/priority/top/1").json()[0]["sample_id"]
+    scored = client.get(f"/api/scoring/{sample_id}").json()
+    queued = client.get("/api/priority/top/1").json()[0]
+    assert round(scored["score"], 2) == round(queued["score"], 2)
+    assert scored["band"] == queued["band"]
+
+
+def test_scoring_sample_missing_returns_404(client):
+    res = client.get("/api/scoring/999999")
+    assert res.status_code == 404
+    assert "not found" in res.json()["detail"]
+
+
+def test_scoring_sample_zero_readings_does_not_500(db, client):
+    from datetime import datetime, timezone
+
+    from app.models import District, Village, WaterSample
+
+    district = db.query(District).filter(District.name == "Unnao").one()
+    village = Village(district_id=district.id, name="Zero Reading Habitation")
+    db.add(village)
+    db.flush()
+    ws = WaterSample(
+        village_id=village.id,
+        source_type="handpump",
+        collected_on=datetime(2022, 6, 1, tzinfo=timezone.utc),
+        wqmis_ref="TEST-ZERO-READINGS-1",
+    )
+    db.add(ws)
+    db.commit()
+    try:
+        res = client.get(f"/api/scoring/{ws.id}")
+        assert res.status_code == 200
+        body = res.json()
+        assert body["score"] == 0.0
+        assert body["n_scored_params"] == 0
+        assert body["breakdown"] == []
+    finally:
+        _drop_sample(db, ws.id)
