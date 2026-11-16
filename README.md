@@ -239,9 +239,6 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. The dev server proxies `/api` to port 8000; override
-with `VITE_API_BASE` if your backend is elsewhere.
-
 ### 5. Run the tests
 
 ```bash
@@ -254,6 +251,22 @@ The full stack is also available as containers:
 ```bash
 docker compose up --build
 # dashboard on http://localhost:3000, backend on :8000
+```
+
+### Ports
+
+| Service | Port | Notes |
+|---|---|---|
+| Backend (FastAPI) | `8000` | Fixed by the `--port 8000` flag above |
+| Vite dev server | `5173` | Proxies `/api` to `http://127.0.0.1:8000` |
+| Dashboard (Docker) | `3000` | Nginx serves the built bundle and proxies `/api` to `backend:8000` |
+| PostgreSQL | `5432` | Bound to `127.0.0.1` only |
+
+If your backend runs on a different host or port, point the dev proxy at it
+without editing the config:
+
+```bash
+VITE_API_BASE=http://127.0.0.1:9000 npm run dev
 ```
 
 ## License
