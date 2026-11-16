@@ -103,18 +103,18 @@ def normalize_district_name(raw_dist: str | None) -> str:
 
 def upsert_geo(db: Session, record: dict, use_enriched: bool = True):
     state_name = CANONICAL_STATE.get(record["state"], record["state"])
-    raw_dist = (
-        record.get("inferred_district") or record.get("district")
-        if use_enriched
-        else record.get("district")
-    )
+    # Prefer the enriched value when enrichment is enabled, otherwise fall
+    # back to the raw one. The parentheses matter: without them, `or` binds
+    # tighter than the conditional and use_enriched=False discards
+    # inferred_district entirely.
+    if use_enriched:
+        raw_dist = record.get("inferred_district") or record.get("district")
+        raw_vil = record.get("extracted_location") or record.get("village")
+    else:
+        raw_dist = record.get("district")
+        raw_vil = record.get("village")
     district_name = clip(normalize_district_name(raw_dist), 100) or "Not available"
 
-    raw_vil = (
-        record.get("extracted_location") or record.get("village")
-        if use_enriched
-        else record.get("village")
-    )
     village_name = clip(raw_vil, 150) or "UNKNOWN"
 
     state = db.query(State).filter_by(name=state_name).one_or_none()
