@@ -1,5 +1,11 @@
 # WaterTriage
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/anubhavaanand/water-triage/blob/main/LICENSE)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13%2B-blue.svg)](pyproject.toml)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.139+-009688.svg)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18-61dafb.svg)](dashboard/package.json)
+[![Tests](https://img.shields.io/badge/tests-33%20passed-brightgreen.svg)](backend/tests)
+
 **Live Demo:** [https://water-triage.onrender.com](https://water-triage.onrender.com) · **GitHub Pages:** [anubhavaanand.github.io/water-triage](https://anubhavaanand.github.io/water-triage)
 
 
@@ -193,22 +199,61 @@ The API is read-only and unauthenticated, with open CORS. See [docs/api.md](docs
 
 ## How to Run
 
-1. **Start the Database:**
+### Prerequisites
+
+- Python 3.13+ and [uv](https://docs.astral.sh/uv/)
+- Node 20+
+- Docker (for PostgreSQL) — optional, see the note below
+
+### 1. Install
+
 ```bash
-docker start watertriage-db
+git clone https://github.com/anubhavaanand/water-triage.git
+cd water-triage
+uv sync
+cp .env.example .env        # then set POSTGRES_PASSWORD
 ```
 
-2. **Run Backend (FastAPI):**
+### 2. Start the database
+
 ```bash
-uv sync
+docker compose up -d postgres
+```
+
+If you do not have Docker, the backend falls back to SQLite automatically and
+the demo still runs — you just lose PostgreSQL-specific queries.
+
+### 3. Run the backend
+
+```bash
 uv run uvicorn backend.app.main:app --port 8000
 ```
 
-3. **Run Dashboard (React):**
+Interactive docs: http://localhost:8000/docs
+
+### 4. Run the dashboard
+
 ```bash
 cd dashboard
 npm install
 npm run dev
+```
+
+Open http://localhost:5173. The dev server proxies `/api` to port 8000; override
+with `VITE_API_BASE` if your backend is elsewhere.
+
+### 5. Run the tests
+
+```bash
+uv run pytest backend/tests -q
+npx playwright test        # requires the dev server running
+```
+
+The full stack is also available as containers:
+
+```bash
+docker compose up --build
+# dashboard on http://localhost:3000, backend on :8000
 ```
 
 ## License
