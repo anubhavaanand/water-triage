@@ -210,3 +210,9 @@ cd dashboard
 npm install
 npm run dev
 ```
+
+## License
+
+Released under the [MIT License](LICENSE). The WQMIS-derived data under `data/` originates from
+government open data portals (JJM WQMIS, CGWB, IMIS) and remains subject to its own terms; see
+[Data & Limitations](#data--limitations) for provenance.
