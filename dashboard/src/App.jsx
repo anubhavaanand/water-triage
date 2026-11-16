@@ -2202,49 +2202,37 @@ export default function App() {
                     </pattern>
                   </defs>
                   <circle cx="80" cy="80" r="54" fill="none" stroke="var(--border)" strokeWidth="24" />
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="54"
-                    fill="none"
-                    stroke="url(#h-ecoli)"
-                    strokeWidth="24"
-                    strokeDasharray="115 224"
-                    strokeDashoffset="0"
-                  />
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="54"
-                    fill="none"
-                    stroke="url(#h-fe)"
-                    strokeWidth="24"
-                    strokeDasharray="78 261"
-                    strokeDashoffset="-115"
-                  />
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="54"
-                    fill="none"
-                    stroke="url(#h-as)"
-                    strokeWidth="24"
-                    strokeDasharray="62 277"
-                    strokeDashoffset="-193"
-                  />
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="54"
-                    fill="none"
-                    stroke="url(#h-fl)"
-                    strokeWidth="24"
-                    strokeDasharray="52 287"
-                    strokeDashoffset="-255"
-                  />
+                  {(() => {
+                    // Segment lengths are derived from the real distribution so
+                    // they sum to the district total. They were previously
+                    // hardcoded (115/78/62/52 = 307) while the centre label
+                    // read 107/113, so the ring and the number disagreed.
+                    const circumference = 2 * Math.PI * 54;
+                    const dist = triageSummary.worst_parameter_distribution || [];
+                    const patterns = ['#h-ecoli', '#h-fe', '#h-as', '#h-fl'];
+                    let offset = 0;
+                    return dist.slice(0, 4).map((item, i) => {
+                      const share = (item.districts / 113) * circumference;
+                      const node = (
+                        <circle
+                          key={item.parameter}
+                          cx="80"
+                          cy="80"
+                          r="54"
+                          fill="none"
+                          stroke={`url(${patterns[i]})`}
+                          strokeWidth="24"
+                          strokeDasharray={`${share} ${circumference - share}`}
+                          strokeDashoffset={-offset}
+                        />
+                      );
+                      offset += share;
+                      return node;
+                    });
+                  })()}
                   <circle cx="80" cy="80" r="42" fill="var(--surface)" stroke="var(--fg)" strokeWidth="1.5" />
                   <text x="80" y="77" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="14" fontWeight="700" fill="var(--fg)">
-                    107/113
+                    {Object.values(triageSummary.bands || {}).reduce((a, b) => a + b, 0)}/{triageSummary.total_districts || 113}
                   </text>
                   <text x="80" y="92" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--muted)">
                     ACTIVE
