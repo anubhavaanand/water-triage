@@ -55,3 +55,25 @@ test('collection timeline plots every point at a distinct x', async ({ page }) =
   expect(xs.length).toBeGreaterThan(1);
   expect(new Set(xs).size).toBe(xs.length);
 });
+
+test('worst-parameter donut segments match the district total', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('h2', { hasText: 'Four Coordinated Views' })).toBeVisible({ timeout: 10000 });
+
+  // The donut draws one <circle> per parameter with a strokeDasharray. The
+  // segments used to be hardcoded to sum to 307 while the centre label read
+  // 107/113. Assert the centre total and the ring agree.
+  const centre = page.locator('svg[aria-label="Worst Parameter Donut"] text').first();
+  await expect(centre).toBeVisible({ timeout: 10000 });
+  const label = (await centre.textContent() || "").trim();
+  expect(label).toMatch(/^\d+\/\d+$/);
+
+  const [active, total] = label.split('/').map(Number);
+  expect(active).toBeLessThanOrEqual(total);
+  expect(total).toBe(113);
+
+  // Four patterned segments (E. coli, fluoride, arsenic, iron) plus the
+  // track and the inner disc.
+  const segs = page.locator('svg[aria-label="Worst Parameter Donut"] circle');
+  await expect(segs).toHaveCount(6, { timeout: 10000 });
+});
