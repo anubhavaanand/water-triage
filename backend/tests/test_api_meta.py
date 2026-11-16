@@ -30,3 +30,21 @@ def test_meta_readings_sum():
     # because we changed n_params to n_scored_params! 
     # So this test needs to be adjusted, let's just assert calc_readings > 0
     assert calc_readings > 0
+
+
+def test_get_git_commit_resolves_repo_root():
+    from app.api.meta import REPO_ROOT, get_git_commit
+
+    assert (REPO_ROOT / ".git").exists()
+    commit = get_git_commit()
+    assert commit != "unknown"
+    assert len(commit) == 40
+    assert all(c in "0123456789abcdef" for c in commit)
+
+
+def test_get_git_commit_falls_back_outside_repo(monkeypatch, tmp_path):
+    import app.api.meta as meta
+
+    monkeypatch.setattr(meta, "REPO_ROOT", tmp_path)
+    monkeypatch.chdir(tmp_path)
+    assert meta.get_git_commit() == "unknown"
