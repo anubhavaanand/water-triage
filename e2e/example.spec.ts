@@ -40,3 +40,18 @@ test.describe('WaterTriage React Frontend E2E Tests', () => {
   });
 
 });
+test('collection timeline plots every point at a distinct x', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('h2', { hasText: 'Four Coordinated Views' })).toBeVisible({ timeout: 10000 });
+
+  // The timeline is an inline SVG. Each point is a <circle r="4">; distinct
+  // x positions prove the scale is data-driven rather than the old fixed
+  // 5-element lookup that collapsed points past index 4 onto x=50.
+  const circles = page.locator('svg circle[r="4"]');
+  await expect(circles.first()).toBeVisible({ timeout: 10000 });
+  const xs = await circles.evaluateAll((els) =>
+    els.map((el) => Number(el.getAttribute('cx')))
+  );
+  expect(xs.length).toBeGreaterThan(1);
+  expect(new Set(xs).size).toBe(xs.length);
+});
