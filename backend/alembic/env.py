@@ -21,8 +21,14 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from app.database import Base
 from app.models import __all__
+from app.config import DATABASE_URL
 
 target_metadata = Base.metadata
+
+# Prefer DATABASE_URL from the environment/.env, which is what the app
+# itself uses. alembic.ini still carries a placeholder so the config is
+# usable standalone, but it must not pin a developer's home directory.
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
