@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from ..database import get_session
@@ -8,6 +8,10 @@ from ..models import District, RiskScore, State, Village, WaterSample
 from ..schemas import CompareOut, PriorityItem, StateCompare
 
 router = APIRouter(tags=["scoring"])
+
+
+def func_cnt():
+    return func.count(RiskScore.id)
 
 
 def priority_items(db: Session) -> list[PriorityItem]:
@@ -112,9 +116,3 @@ def compare_states(db: Session = Depends(get_session)):
         )
 
     return CompareOut(states=out)
-
-
-def func_cnt():
-    from sqlalchemy import func
-
-    return func.count(RiskScore.id)
