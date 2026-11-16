@@ -91,3 +91,81 @@ def test_compare_top_exceedance_parameter(client):
         assert s["top_exceedance_parameter"] is None or isinstance(
             s["top_exceedance_parameter"], str
         )
+
+
+def _make_unscored_sample(db):
+    from datetime import datetime, timezone
+
+    from app.models import District, Village, WaterSample
+
+    district = db.query(District).filter(District.name == "Unnao").one()
+    village = Village(district_id=district.id, name="Unscored Test Habitation")
+    db.add(village)
+    db.flush()
+    ws = WaterSample(
+        village_id=village.id,
+        source_type="handpump",
+        collected_on=datetime(2022, 6, 1, tzinfo=timezone.utc),
+        wqmis_ref="TEST-UNSCORED-1",
+    )
+    db.add(ws)
+    db.commit()
+    return ws.id
+
+
+def _drop_sample(db, sample_id):
+    from app.models import Village, WaterSample
+
+    village_id = db.query(WaterSample.village_id).filter(
+        WaterSample.id == sample_id
+    ).scalar()
+    db.query(WaterSample).filter(WaterSample.id == sample_id).delete(
+        synchronize_session=False
+    )
+    if village_id is not None:
+        db.query(Village).filter(Village.id == village_id).delete(
+            synchronize_session=False
+        )
+    db.commit()
+
+
+def test_band_filter_excludes_unscored(db, client):
+    sample_id = _make_unscored_sample(db)
+    try:
+        total = client.get("/api/samples", params={"limit": 500}).json()
+        filtered = client.get(
+            "/api/samples", params={"band": "critical", "limit": 500}
+        ).json()
+        assert len(filtered) < len(total)
+        assert all(s["id"] != sample_id for s in filtered)
+    finally:
+        _drop_sample(db, sample_id)
+
+
+def test_unscored_band_returns_only_unscored(db, client):
+    sample_id = _make_unscored_sample(db)
+    try:
+        rows = client.get(
+            "/api/samples", params={"band": "unscored", "limit": 500}
+        ).json()
+        assert [s["id"] for s in rows] == [sample_id]
+    finally:
+        _drop_sample(db, sample_id)
+
+
+def test_band_filter_is_case_insensitive(client):
+    lower = client.get("/api/samples", params={"band": "critical", "limit": 500}).json()
+    upper = client.get("/api/samples", params={"band": "CRITICAL", "limit": 500}).json()
+    assert [s["id"] for s in lower] == [s["id"] for s in upper]
+    assert len(lower) > 0
+
+
+def test_unknown_band_returns_400(client):
+    res = client.get("/api/samples", params={"band": "bogus"})
+    assert res.status_code == 400
+    assert "bogus" in res.json()["detail"]
+
+
+def test_band_filter_none_returns_all(client):
+    all_rows = client.get("/api/samples", params={"limit": 500}).json()
+    assert len(all_rows) > 0
