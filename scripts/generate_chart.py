@@ -1,16 +1,23 @@
+import os
+
 import psycopg2
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Output goes next to the other report figures, resolved from the repo root.
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT_DIR = os.path.join(ROOT, "docs", "figures")
+
 def generate_plot():
-    # Connect to database
+    # Connect to the database using the environment, falling back to the
+    # local dev defaults. Never hardcode the password.
     conn = psycopg2.connect(
-        dbname="jjm_triage",
-        user="jjm_user",
-        password="SECRET_REDACTED",
-        host="localhost",
-        port="5432"
+        dbname=os.environ.get("PGDATABASE", "jjm_triage"),
+        user=os.environ.get("PGUSER", "jjm_user"),
+        password=os.environ.get("PGPASSWORD", ""),
+        host=os.environ.get("PGHOST", "localhost"),
+        port=os.environ.get("PGPORT", "5432"),
     )
 
     # Query data
@@ -62,8 +69,10 @@ def generate_plot():
         ax.bar_label(container, padding=3, fontsize=9)
 
     plt.tight_layout()
-    plt.savefig('/home/anubhavanand/Documents/NTCC minor project/reports/assets/fig1_state_distribution.png')
-    print("Plot saved to fig1_state_distribution.png")
+    os.makedirs(OUT_DIR, exist_ok=True)
+    out_path = os.path.join(OUT_DIR, "fig1_state_distribution.png")
+    plt.savefig(out_path)
+    print(f"Plot saved to {out_path}")
 
 if __name__ == "__main__":
     generate_plot()
