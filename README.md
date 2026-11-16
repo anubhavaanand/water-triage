@@ -49,6 +49,32 @@ Guide: Dr. Girish Paliwal
 | Bihar: 15 missing (L268) | 0 missing | L268 → Samastipur |
 | UP: 35 missing (6 labs) | 0 missing | L405→Raebareli, L339→Sonbhadra, etc. |
 
+## Documentation
+
+| Document | What it covers |
+|---|---|
+| [DESIGN.md](DESIGN.md) | System architecture, data flow, scoring model, and design decisions |
+| [AGENTS.md](AGENTS.md) | AI agent handoff — current project state, frozen decisions, conventions |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Acquisition → enrichment → serving pipeline diagram |
+| [docs/agents/](docs/agents/) | Issue tracker, triage label, and domain-doc conventions |
+| [docs/REVIEW_PACKET.md](docs/REVIEW_PACKET.md) | Review packet for evaluation |
+
+### Scoring model summary
+
+Per-parameter severity:
+
+```
+severity = (value − acceptable) / (permissible − acceptable)     # clamped to 0..1
+```
+
+Composite score:
+
+```
+composite = (Σ wᵢ · severityᵢ) / TOTAL_BIS_WEIGHT × 100          # TOTAL_BIS_WEIGHT = 6.0
+```
+
+Bands: **Critical ≥ 40 · High ≥ 20 · Medium ≥ 10 · Low ≥ 0**. Acute hazards (arsenic, E. coli, total coliform) escalate to Critical on a full breach. The full parameter table with limits and weights is in [Data & Limitations](#data--limitations); the canonical source is `BIS_10500` in `backend/app/engine/scoring.py`.
+
 ## Stack
 
 - **Backend:** Python 3.13 · FastAPI · SQLAlchemy 2 · Alembic · PostgreSQL (Docker)
