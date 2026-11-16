@@ -282,3 +282,16 @@ def test_priority_top_respects_n(client):
     res = client.get("/api/priority/top/3")
     assert res.status_code == 200
     assert len(res.json()) == 3
+
+
+def test_district_detail_takes_id_not_name(client):
+    """The route is /districts/{int}, so a name is a validation error.
+
+    Refs #41/#36, which reported that names with spaces or mixed case fail.
+    """
+    by_name = client.get("/api/districts/Hardoi")
+    assert by_name.status_code == 422
+
+    by_id = client.get("/api/districts/1")
+    assert by_id.status_code == 200
+    assert by_id.json()["name"] == "Unnao"
