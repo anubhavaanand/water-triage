@@ -5,16 +5,22 @@ test.describe('WaterTriage React Frontend E2E Tests', () => {
   test('loads Dashboard cleanly', async ({ page }) => {
     await page.goto('/');
     
-    // Check main title
-    await expect(page.locator('h1')).toContainText('WaterTriage');
+    // The h1 was rewritten to the coverage headline; the product name now
+    // lives in the header wordmark and the footer.
+    await expect(page.locator('h1')).toContainText('Every District Scored');
+    await expect(page.locator('header')).toContainText('WaterTriage');
     
-    // DB Status indicator should be visible
-    await expect(page.locator('text=DB LIVE')).toBeVisible();
+    // DB Status indicator should be visible. The badge renders one of
+    // "API Live · 113 Dist." / "Verified Snapshot · 113 Dist." /
+    // "Checking..." inside .status-pill — there is no "DB LIVE" string.
+    await expect(page.locator('.status-pill')).toBeVisible();
+    await expect(page.locator('.status-pill')).toContainText(/Live|Snapshot/);
     
-    // Check interactive system tabs
-    await expect(page.locator('button', { hasText: /^Overview$/ })).toBeVisible();
-    await expect(page.locator('button', { hasText: /^Queue$/ })).toBeVisible();
-    await expect(page.locator('button', { hasText: /^Methodology$/ })).toBeVisible();
+    // Check interactive system tabs. These render as <a> elements in the
+    // topnav, and the queue tab is labelled "Priority Queue".
+    await expect(page.locator('nav a', { hasText: /^Overview$/ })).toBeVisible();
+    await expect(page.locator('nav a', { hasText: /^Priority Queue$/ })).toBeVisible();
+    await expect(page.locator('nav a', { hasText: /^Methodology$/ })).toBeVisible();
   });
 
   test('verifies tab navigation and data loading', async ({ page }) => {
