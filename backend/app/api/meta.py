@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
@@ -9,15 +10,28 @@ from ..database import get_session as get_db
 
 router = APIRouter(prefix="/meta", tags=["Metadata"])
 
-def get_git_commit():
-    try:
-        import subprocess
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], 
-            cwd="/home/anubhavanand/Documents/NTCC minor project/codebase"
-        ).decode("utf-8").strip()
-    except Exception:
-        return "unknown"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def get_git_commit() -> str:
+    """Return the short HEAD commit, or "unknown" outside a git checkout.
+
+    Uses the repository root derived from this file's location, so it works
+    from any checkout path, inside Docker, and in CI. Falls back to walking
+    up from the current working directory for scripts run outside the tree.
+    """
+    import subprocess
+
+    for candidate in (REPO_ROOT, Path.cwd()):
+        try:
+            return subprocess.check_output(
+                ["git", "rev-parse", "HEAD"],
+                cwd=candidate,
+                stderr=subprocess.DEVNULL,
+            ).decode("utf-8").strip()
+        except Exception:
+            continue
+    return "unknown"
 
 
 @router.get("")
