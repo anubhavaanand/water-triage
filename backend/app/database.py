@@ -1,9 +1,12 @@
+import logging
 import os
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from .config import DATABASE_URL
+
+logger = logging.getLogger("watertriage.database")
 
 # Attempt to use the configured DATABASE_URL (e.g. PostgreSQL from Render).
 # If that database is unreachable or credentials are invalid, fall back to
@@ -17,10 +20,10 @@ try:
     with engine.connect() as conn:
         conn.exec_driver_sql("SELECT 1")
 except Exception as e:
-    import warnings
-    warnings.warn(
-        f"DATABASE_URL connection failed ({e!s}); falling back to in-memory SQLite. "
-        "Live DB endpoints will return empty/404 responses."
+    logger.warning(
+        "DATABASE_URL connection failed (%s); falling back to in-memory SQLite. "
+        "Live DB endpoints will return empty/404 responses. All data is lost on restart.",
+        e,
     )
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
 
