@@ -28,14 +28,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+import os
+
+_cors_origins = os.environ.get("CORS_ORIGINS", "")
+allow_origins = [o.strip() for o in _cors_origins.split(",") if o.strip()] if _cors_origins else ["http://localhost:3000", "http://127.0.0.1:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-import os
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
