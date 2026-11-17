@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -42,7 +43,12 @@ for router in all_routers:
     app.include_router(router, prefix="/api")
 
 # Serve the React dashboard if the dist folder exists
-dashboard_dist = os.path.join(os.path.dirname(__file__), "../../dashboard/dist")
+dashboard_dist = Path(
+    os.environ.get(
+        "WATERTRIAGE_DASHBOARD_DIST",
+        Path(__file__).resolve().parents[2] / "dashboard" / "dist",
+    )
+)
 if os.path.isdir(dashboard_dist):
     app.mount("/assets", StaticFiles(directory=os.path.join(dashboard_dist, "assets")), name="assets")
 
