@@ -207,8 +207,16 @@ def load_all(db: Session, use_enriched: bool | None = None) -> dict:
             db.add(Reading(sample_id=sample.id, parameter_key=key, value=value))
         inserted += 1
 
-    db.commit()
-    scored = compute_scores(db)
+    # Score inside the same transaction as the insert. Previously this
+    # committed first and then called compute_scores(), so a scoring failure
+    # left committed samples and readings with no risk_scores row and no
+    # rollback path.
+    try:
+        scored = compute_scores(db)
+    except Exception:
+        db.rollback()
+        print("[ERROR] scoring failed; rolled back all inserted samples and readings")
+        raise
     return {
         "source_file": source_jsonl.name,
         "inserted": inserted,

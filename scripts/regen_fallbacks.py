@@ -139,6 +139,16 @@ def build_validation_cgwb_offline() -> dict:
 
 
 def enrich_meta_offline(meta_path: Path) -> dict | None:
+    """Merge the enrichment fields into a copy of meta.json without mutating it.
+
+    Previously this read the committed file, injected hardcoded rows, and
+    wrote the result back over the original. That made every run destructive:
+    a manual correction was lost, and the injected numbers (tested=394 /
+    exceeding=50 for UP sulphate) were indistinguishable from real values.
+
+    Now the enriched copy is written to a separate file and the caller
+    decides what to do with it.
+    """
     if not meta_path.exists():
         return None
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
@@ -163,7 +173,6 @@ def enrich_meta_offline(meta_path: Path) -> dict | None:
     if wq6_path.exists():
         meta["wq6_summary"] = json.loads(wq6_path.read_text(encoding="utf-8"))
 
-    meta_path.write_text(json.dumps(meta, indent=2), encoding="utf-8")
     return meta
 
 
@@ -186,10 +195,14 @@ def main() -> None:
     )
 
     # 3. meta.json
+    # Written to a derived file, never over the committed meta.json, so a
+    # manual correction there survives subsequent runs.
     meta = enrich_meta_offline(OUT / "meta.json")
     if meta:
+        enriched_path = OUT / "meta.enriched.json"
+        enriched_path.write_text(json.dumps(meta, indent=2), encoding="utf-8")
         print(
-            f"OK meta.json ({(OUT / 'meta.json').stat().st_size}B) "
+            f"OK meta.enriched.json ({enriched_path.stat().st_size}B) "
             f"samples={meta['corpus']['samples']} top_params={len(meta.get('top_parameters', []))}"
         )
 

@@ -13,7 +13,7 @@ sys.path.insert(0, "backend")
 from app.database import Base, SessionLocal, engine
 from app.engine import compute_scores, seed_bis_parameters
 from app.models import Reading, RiskScore, WaterSample
-from etl.load_wqmis import JSONL, map_param
+from etl.load_wqmis import RAW_JSONL, map_param
 
 APPLY = "--apply" in sys.argv
 
@@ -24,7 +24,7 @@ def bands(db):
 
 def main():
     expected = {}
-    for line in JSONL.open():
+    for line in RAW_JSONL.open():
         line = line.strip()
         if not line:
             continue

@@ -91,22 +91,62 @@ ALL_RESOLVED_LABS: dict[str, str] = {**SINGLE_DISTRICT_LABS, **SESSION_RESOLVED_
 MULTI_DISTRICT_LABS: set[str] = {"L158"}
 
 MISSING_LAB_PROBES: dict[str, dict[str, str | int]] = {
-    "L268": {"state": "Bihar", "unassigned_count": 15, "internal_id": 1057819, "s_id": "l0Qyn6RBu161Azza/u2IGA=="},
-    "L339": {"state": "Uttar Pradesh", "unassigned_count": 7, "internal_id": 1060487, "s_id": "7di7SbPBqHZ6s0pUfCULJw=="},
-    "L359": {"state": "Uttar Pradesh", "unassigned_count": 15, "internal_id": 1017309, "s_id": "RrDPMHxTF3n65CLzcFPVaQ=="},
-    "L375": {"state": "Uttar Pradesh", "unassigned_count": 40, "internal_id": 1005092, "s_id": "qkVOWu30kDtI1qsvXlCdTA=="},
-    "L376": {"state": "Uttar Pradesh", "unassigned_count": 16, "internal_id": 1015008, "s_id": "YTlfxQM9o0VR4Tt6NmLyjA=="},
-    "L377": {"state": "Uttar Pradesh", "unassigned_count": 48, "internal_id": 1000022, "s_id": "yA+wpLQr8xfHcV0XU71/yw=="},
-    "L400": {"state": "Uttar Pradesh", "unassigned_count": 1, "internal_id": 10018, "s_id": "Ywjka/ntcIT6gdyDTApB/A=="},
-    "L405": {"state": "Uttar Pradesh", "unassigned_count": 20, "internal_id": 1002693, "s_id": "JSNPb0Xce0eq2hbBp9z58Q=="},
-    "L452": {"state": "Uttar Pradesh", "unassigned_count": 28, "internal_id": 1002001, "s_id": "ZbuVwW1NdC8Z0XcMb8nvuA=="},
-    "L455": {"state": "Uttar Pradesh", "unassigned_count": 12, "internal_id": 1057942, "s_id": "FqigBgWTlKAMOvRhhYSs4Q=="},
-    "L468": {"state": "Uttar Pradesh", "unassigned_count": 9, "internal_id": 1009337, "s_id": "4nDQxbbO+Lieh46gmLt9cQ=="},
-    "L516": {"state": "Uttar Pradesh", "unassigned_count": 16, "internal_id": 1000040, "s_id": "kBxePP7SFXR1r/eJnY0qTA=="},
-    "L535": {"state": "Uttar Pradesh", "unassigned_count": 4, "internal_id": 1000005, "s_id": "XDah38HBlj59v7Bjvoq3Bw=="},
-    "L664": {"state": "Uttar Pradesh", "unassigned_count": 15, "internal_id": 1002459, "s_id": "0g6iQaiBibD/5DlWwypnzw=="},
-    "L730": {"state": "Uttar Pradesh", "unassigned_count": 9, "internal_id": 1016495, "s_id": "3SC9USiNcx//A9OZE0t8kA=="},
+    "L268": {"state": "Bihar", "unassigned_count": 15, "internal_id": 1057819, "s_id": ""},
+    "L339": {"state": "Uttar Pradesh", "unassigned_count": 7, "internal_id": 1060487, "s_id": ""},
+    "L359": {"state": "Uttar Pradesh", "unassigned_count": 15, "internal_id": 1017309, "s_id": ""},
+    "L375": {"state": "Uttar Pradesh", "unassigned_count": 40, "internal_id": 1005092, "s_id": ""},
+    "L376": {"state": "Uttar Pradesh", "unassigned_count": 16, "internal_id": 1015008, "s_id": ""},
+    "L377": {"state": "Uttar Pradesh", "unassigned_count": 48, "internal_id": 1000022, "s_id": ""},
+    "L400": {"state": "Uttar Pradesh", "unassigned_count": 1, "internal_id": 10018, "s_id": ""},
+    "L405": {"state": "Uttar Pradesh", "unassigned_count": 20, "internal_id": 1002693, "s_id": ""},
+    "L452": {"state": "Uttar Pradesh", "unassigned_count": 28, "internal_id": 1002001, "s_id": ""},
+    "L455": {"state": "Uttar Pradesh", "unassigned_count": 12, "internal_id": 1057942, "s_id": ""},
+    "L468": {"state": "Uttar Pradesh", "unassigned_count": 9, "internal_id": 1009337, "s_id": ""},
+    "L516": {"state": "Uttar Pradesh", "unassigned_count": 16, "internal_id": 1000040, "s_id": ""},
+    "L535": {"state": "Uttar Pradesh", "unassigned_count": 4, "internal_id": 1000005, "s_id": ""},
+    "L664": {"state": "Uttar Pradesh", "unassigned_count": 15, "internal_id": 1002459, "s_id": ""},
+    "L730": {"state": "Uttar Pradesh", "unassigned_count": 9, "internal_id": 1016495, "s_id": ""},
 }
+
+
+LAB_PROBES_MANIFEST = Path(__file__).with_name("lab_probes.local.json")
+
+
+def load_lab_probes(
+    manifest: Path | None = None,
+) -> dict[str, dict[str, str | int]]:
+    """Overlay s_id session tokens from a local, gitignored manifest.
+
+    The s_id values are live WQMIS ASP.NET session tokens and must never be
+    committed. Copy `scripts/lab_probes.example.json` to
+    `scripts/lab_probes.local.json`, paste the tokens there, and this loader
+    merges them over the redacted defaults above.
+    """
+    local = manifest or LAB_PROBES_MANIFEST
+    if not local.exists():
+        missing = [code for code, info in MISSING_LAB_PROBES.items() if not info.get("s_id")]
+        if missing:
+            print(
+                f"[WARN] No lab probe manifest at {local.name}; "
+                f"{len(missing)} lab IDs have no s_id and will fall back to "
+                "SESSION_RESOLVED_LABS or their cached district."
+            )
+        return MISSING_LAB_PROBES
+
+    try:
+        overlay = json.loads(local.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"[WARN] Could not read {local.name} ({exc}); using redacted defaults.")
+        return MISSING_LAB_PROBES
+
+    merged = {code: dict(info) for code, info in MISSING_LAB_PROBES.items()}
+    for code, token in overlay.items():
+        if code not in merged:
+            print(f"[WARN] {local.name} lists unknown lab ID {code}; ignoring.")
+            continue
+        if token:
+            merged[code]["s_id"] = token
+    return merged
 
 WQ6_PARAMETER_COLS = [
     "pH", "TDS", "Turbidity", "Chloride", "Total_Alkalinity", "Total_Hardness",
@@ -183,7 +223,7 @@ def fetch_missing_lab_districts(delay_sec: float = 0.8) -> dict[str, dict[str, s
     except Exception as exc:
         print(f"  [WARN] Session bootstrap via Report_p failed ({exc}); using cached session-resolved Lab IDs...")
 
-    for lab_code, info in MISSING_LAB_PROBES.items():
+    for lab_code, info in load_lab_probes().items():
         qs = urllib.parse.urlencode({"s_id": str(info["s_id"])})
         url = f"{FINAL_REPORT_URL}?{qs}"
         try:

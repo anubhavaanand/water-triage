@@ -13,6 +13,19 @@ try:
 except ImportError:
     from scripts.district_registry import CANONICAL_DISTRICTS
 
+# Paths are derived from the repo layout and overridable via the environment,
+# so the script runs on any machine. The previous version hardcoded
+# /home/anubhavanand/... for both inputs and outputs.
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(ROOT, "data")
+OUT_DIR = os.path.join(DATA_DIR, "validation_reports")
+
+# Directory holding the raw WQ6 .xls exports. Override with WQ6_SOURCE_DIR.
+WQ6_SOURCE_DIR = os.environ.get("WQ6_SOURCE_DIR") or os.path.join(
+    DATA_DIR, "raw", "official"
+)
+os.makedirs(OUT_DIR, exist_ok=True)
+
 CONTAMINANT_COLS = [
     'pH', 'TDS', 'Turbidity', 'Chloride', 'Total_Alkalinity', 'Total_Hardness',
     'Sulphate', 'Iron', 'Total_Arsenic', 'Fluoride', 'Nitrate', 'Residual_Chlorine',
@@ -66,16 +79,20 @@ def parse_wq6_file(filepath):
 
 # Bihar files
 bihar_files = [
-    '/home/anubhavanand/Downloads/Water_Triage_Data/Format WQ6. Contaminant wise details of villages where in water samples were found contaminated(PWS Sources test from Lab) (1).xls',
+    os.path.join(WQ6_SOURCE_DIR, "Format WQ6. Contaminant wise details of villages where in water samples were found contaminated(PWS Sources test from Lab) (1).xls"),
 ]
 for i in range(2, 10):
-    bihar_files.append(f'/home/anubhavanand/Downloads/Format WQ6. Contaminant wise details of villages where in water samples were found contaminated(PWS Sources test from Lab) ({i}).xls')
+    bihar_files.append(os.path.join(WQ6_SOURCE_DIR, f"Format WQ6. Contaminant wise details of villages where in water samples were found contaminated(PWS Sources test from Lab) ({i}).xls"))
 
 # UP files
 up_files = [
-    f'/home/anubhavanand/Downloads/Format WQ6. Contaminant wise details of villages where in water samples were found contaminated(PWS Sources test from Lab) ({i}).xls'
+    os.path.join(WQ6_SOURCE_DIR, f"Format WQ6. Contaminant wise details of villages where in water samples were found contaminated(PWS Sources test from Lab) ({i}).xls")
     for i in range(10, 14)
 ]
+
+if not any(os.path.exists(p) for p in bihar_files + up_files):
+    print(f"No WQ6 .xls files found in {WQ6_SOURCE_DIR}.")
+    print("Set WQ6_SOURCE_DIR to the directory holding the raw exports.")
 
 bihar_dfs = []
 up_dfs = []
@@ -108,7 +125,7 @@ if bihar_dfs:
     print(f"\nTotal unique Bihar districts: {len(bihar_all)}")
     
     # Export
-    out_path = "/home/anubhavanand/Documents/Projects/water-triage/data/validation_reports/WQ6_Complete_Bihar.xlsx"
+    out_path = os.path.join(OUT_DIR, "WQ6_Complete_Bihar.xlsx")
     bihar_all.to_excel(out_path, index=False)
     print(f"Saved: {out_path}")
 
@@ -120,14 +137,14 @@ if up_dfs:
     up_all['state'] = 'Uttar Pradesh'
     print(f"\nTotal unique UP districts: {len(up_all)}")
     
-    out_path = "/home/anubhavanand/Documents/Projects/water-triage/data/validation_reports/WQ6_Complete_UP.xlsx"
+    out_path = os.path.join(OUT_DIR, "WQ6_Complete_UP.xlsx")
     up_all.to_excel(out_path, index=False)
     print(f"Saved: {out_path}")
 
 # Also export as CSV for easy viewing
 if bihar_dfs:
-    bihar_all.to_csv("/home/anubhavanand/Documents/Projects/water-triage/data/validation_reports/WQ6_Complete_Bihar.csv", index=False)
+    bihar_all.to_csv(os.path.join(OUT_DIR, "WQ6_Complete_Bihar.csv"), index=False)
 if up_dfs:
-    up_all.to_csv("/home/anubhavanand/Documents/Projects/water-triage/data/validation_reports/WQ6_Complete_UP.csv", index=False)
+    up_all.to_csv(os.path.join(OUT_DIR, "WQ6_Complete_UP.csv"), index=False)
 
 print("\nDone!")

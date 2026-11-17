@@ -45,3 +45,23 @@ def db():
 
 
 __all__ = ["client", "db", "compute_scores", "seed_bis_parameters"]
+
+
+def drop_test_sample(db, sample_id):
+    """Delete a sample and its village so tests do not collide on villages."""
+    from app.models import Village, WaterSample
+
+    village_id = db.query(WaterSample.village_id).filter(
+        WaterSample.id == sample_id
+    ).scalar()
+    db.query(WaterSample).filter(WaterSample.id == sample_id).delete(
+        synchronize_session=False
+    )
+    if village_id is not None:
+        db.query(Village).filter(Village.id == village_id).delete(
+            synchronize_session=False
+        )
+    db.commit()
+
+
+__all__ += ["drop_test_sample"]

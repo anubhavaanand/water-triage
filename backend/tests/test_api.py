@@ -79,3 +79,219 @@ def test_dashboard_data_endpoint(client):
         assert first_pid in data["details"]
         assert "readings" in data["details"][first_pid]
 
+
+
+def test_compare_top_exceedance_parameter(client):
+    res = client.get("/api/compare")
+    assert res.status_code == 200
+    states = res.json()["states"]
+    assert len(states) > 0
+    for s in states:
+        assert "top_exceedance_parameter" in s
+        assert s["top_exceedance_parameter"] is None or isinstance(
+            s["top_exceedance_parameter"], str
+        )
+
+
+def _make_unscored_sample(db):
+    from datetime import datetime, timezone
+
+    from app.models import District, Village, WaterSample
+
+    district = db.query(District).filter(District.name == "Unnao").one()
+    village = Village(district_id=district.id, name="Unscored Test Habitation")
+    db.add(village)
+    db.flush()
+    ws = WaterSample(
+        village_id=village.id,
+        source_type="handpump",
+        collected_on=datetime(2022, 6, 1, tzinfo=timezone.utc),
+        wqmis_ref="TEST-UNSCORED-1",
+    )
+    db.add(ws)
+    db.commit()
+    return ws.id
+
+
+def _drop_sample(db, sample_id):
+    from app.models import Village, WaterSample
+
+    village_id = db.query(WaterSample.village_id).filter(
+        WaterSample.id == sample_id
+    ).scalar()
+    db.query(WaterSample).filter(WaterSample.id == sample_id).delete(
+        synchronize_session=False
+    )
+    if village_id is not None:
+        db.query(Village).filter(Village.id == village_id).delete(
+            synchronize_session=False
+        )
+    db.commit()
+
+
+def test_band_filter_excludes_unscored(db, client):
+    sample_id = _make_unscored_sample(db)
+    try:
+        total = client.get("/api/samples", params={"limit": 500}).json()
+        filtered = client.get(
+            "/api/samples", params={"band": "critical", "limit": 500}
+        ).json()
+        assert len(filtered) < len(total)
+        assert all(s["id"] != sample_id for s in filtered)
+    finally:
+        _drop_sample(db, sample_id)
+
+
+def test_unscored_band_returns_only_unscored(db, client):
+    sample_id = _make_unscored_sample(db)
+    try:
+        rows = client.get(
+            "/api/samples", params={"band": "unscored", "limit": 500}
+        ).json()
+        assert [s["id"] for s in rows] == [sample_id]
+    finally:
+        _drop_sample(db, sample_id)
+
+
+def test_band_filter_is_case_insensitive(client):
+    lower = client.get("/api/samples", params={"band": "critical", "limit": 500}).json()
+    upper = client.get("/api/samples", params={"band": "CRITICAL", "limit": 500}).json()
+    assert [s["id"] for s in lower] == [s["id"] for s in upper]
+    assert len(lower) > 0
+
+
+def test_unknown_band_returns_400(client):
+    res = client.get("/api/samples", params={"band": "bogus"})
+    assert res.status_code == 400
+    assert "bogus" in res.json()["detail"]
+
+
+def test_band_filter_none_returns_all(client):
+    all_rows = client.get("/api/samples", params={"limit": 500}).json()
+    assert len(all_rows) > 0
+def test_scoring_sample_returns_breakdown(client):
+    sample_id = client.get("/api/samples", params={"limit": 1}).json()[0]["id"]
+    res = client.get(f"/api/scoring/{sample_id}")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["sample_id"] == sample_id
+    assert 0.0 <= body["score"] <= 100.0
+    assert body["band"] in {"Critical", "High", "Medium", "Low"}
+    assert body["n_scored_params"] >= 0
+    assert isinstance(body["breakdown"], list)
+    for row in body["breakdown"]:
+        assert {"parameter_key", "value", "weight", "severity", "exceeded"} <= set(row)
+        assert 0.0 <= row["severity"] <= 1.0
+
+
+def test_scoring_sample_agrees_with_priority_queue(client):
+    sample_id = client.get("/api/priority/top/1").json()[0]["sample_id"]
+    scored = client.get(f"/api/scoring/{sample_id}").json()
+    queued = client.get("/api/priority/top/1").json()[0]
+    assert round(scored["score"], 2) == round(queued["score"], 2)
+    assert scored["band"] == queued["band"]
+
+
+def test_scoring_sample_missing_returns_404(client):
+    res = client.get("/api/scoring/999999")
+    assert res.status_code == 404
+    assert "not found" in res.json()["detail"]
+
+
+def test_scoring_sample_zero_readings_does_not_500(db, client):
+    from datetime import datetime, timezone
+
+    from app.models import District, Village, WaterSample
+
+    district = db.query(District).filter(District.name == "Unnao").one()
+    village = Village(district_id=district.id, name="Zero Reading Habitation")
+    db.add(village)
+    db.flush()
+    ws = WaterSample(
+        village_id=village.id,
+        source_type="handpump",
+        collected_on=datetime(2022, 6, 1, tzinfo=timezone.utc),
+        wqmis_ref="TEST-ZERO-READINGS-1",
+    )
+    db.add(ws)
+    db.commit()
+    try:
+        res = client.get(f"/api/scoring/{ws.id}")
+        assert res.status_code == 200
+        body = res.json()
+        assert body["score"] == 0.0
+        assert body["n_scored_params"] == 0
+        assert body["breakdown"] == []
+    finally:
+        _drop_sample(db, ws.id)
+
+def test_unscored_sample_detail_returns_200(db, client):
+    """A sample with no risk_scores row must not 404.
+
+    risk_score is optional in SampleDetailOut, and the endpoint uses an
+    outer join, so the unscored case must still return the sample.
+    """
+    from datetime import datetime, timezone
+
+    from app.models import District, Village, WaterSample
+
+    district = db.query(District).filter(District.name == "Unnao").one()
+    village = Village(district_id=district.id, name="Unscored Detail Hab")
+    db.add(village)
+    db.flush()
+    ws = WaterSample(
+        village_id=village.id,
+        source_type="handpump",
+        collected_on=datetime(2022, 6, 1, tzinfo=timezone.utc),
+        wqmis_ref="TEST-UNSCORED-DETAIL",
+    )
+    db.add(ws)
+    db.commit()
+    try:
+        res = client.get(f"/api/samples/{ws.id}")
+        assert res.status_code == 200
+        body = res.json()
+        assert body["id"] == ws.id
+        assert body["risk_score"] is None
+    finally:
+        _drop_sample(db, ws.id)
+
+
+
+def test_missing_sample_detail_returns_404(client):
+    res = client.get("/api/samples/999999")
+    assert res.status_code == 404
+
+
+def test_priority_top_zero_rejected(client):
+    res = client.get("/api/priority/top/0")
+    assert res.status_code == 422
+
+
+def test_priority_top_negative_rejected(client):
+    res = client.get("/api/priority/top/-5")
+    assert res.status_code == 422
+
+
+def test_priority_top_upper_bound(client):
+    res = client.get("/api/priority/top/100000")
+    assert res.status_code == 422
+
+
+def test_priority_top_respects_n(client):
+    res = client.get("/api/priority/top/3")
+    assert res.status_code == 200
+    assert len(res.json()) == 3
+
+
+def test_district_detail_takes_id_not_name(client):
+    """The route is /districts/{int}, so a name is a validation error.
+
+    Refs #41/#36, which reported that names with spaces or mixed case fail.
+    """
+    by_name = client.get("/api/districts/Hardoi")
+    assert by_name.status_code == 422
+
+    by_id = client.get("/api/districts/1")
+    assert by_id.status_code == 200
+    assert by_id.json()["name"] == "Unnao"

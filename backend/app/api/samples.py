@@ -9,6 +9,9 @@ from .helpers import reading_units
 
 router = APIRouter(prefix="/samples", tags=["samples"])
 
+VALID_BANDS = ("critical", "high", "medium", "low")
+UNSCORED_BAND = "unscored"
+
 
 @router.get("", response_model=list[SampleOut])
 def list_samples(
@@ -29,7 +32,17 @@ def list_samples(
     if district:
         q = q.filter(District.name.ilike(district))
     if band:
-        q = q.filter(RiskScore.band == band.capitalize())
+        wanted = band.strip().lower()
+        if wanted == UNSCORED_BAND:
+            q = q.filter(RiskScore.band.is_(None))
+        elif wanted in VALID_BANDS:
+            q = q.filter(RiskScore.band == wanted.capitalize())
+        else:
+            raise HTTPException(
+                400,
+                f"Unknown band {band!r}. Expected one of "
+                f"{', '.join(VALID_BANDS)}, or {UNSCORED_BAND!r}.",
+            )
     rows = (
         q.order_by(WaterSample.collected_on.desc()).limit(limit).offset(offset).all()
     )

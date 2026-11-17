@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
@@ -9,15 +10,45 @@ from ..database import get_session as get_db
 
 router = APIRouter(prefix="/meta", tags=["Metadata"])
 
-def get_git_commit():
-    try:
-        import subprocess
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], 
-            cwd="/home/anubhavanand/Documents/NTCC minor project/codebase"
-        ).decode("utf-8").strip()
-    except Exception:
-        return "unknown"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def get_git_commit() -> str:
+    """Return the short HEAD commit, or "unknown" outside a git checkout.
+
+    Uses the repository root derived from this file's location, so it works
+    from any checkout path, inside Docker, and in CI. Falls back to walking
+    up from the current working directory for scripts run outside the tree.
+    """
+    import subprocess
+
+    for candidate in (REPO_ROOT, Path.cwd()):
+        try:
+            return subprocess.check_output(
+                ["git", "rev-parse", "HEAD"],
+                cwd=candidate,
+                stderr=subprocess.DEVNULL,
+            ).decode("utf-8").strip()
+        except Exception:
+            continue
+    return "unknown"
+
+
+def _coerce_datetime(value: Any) -> datetime | None:
+    """Normalise a collected_on value from either driver.
+
+    SQLite hands the column back as a string because the model declares
+    DateTime(timezone=True); PostgreSQL returns a real datetime. Both must
+    yield a usable year.
+    """
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            return None
+    return None
 
 
 @router.get("")
@@ -33,6 +64,22 @@ def get_metadata(db: Session = Depends(get_db)):
         "JOIN villages v ON ws.village_id = v.id "
         "JOIN districts d ON v.district_id = d.id"
     )).scalar()
+
+    # Distinct collection years, derived from the data. Was hardcoded to
+    # [2022, 2022], which both duplicated a value and went stale the moment
+    # a sample from another year was loaded. Group in Python rather than with
+    # strftime/extract so this works on both SQLite and PostgreSQL.
+    sample_years = sorted({
+        parsed.year
+        for parsed in (
+            _coerce_datetime(collected_on)
+            for (collected_on,) in db.execute(text(
+                "SELECT collected_on FROM water_samples "
+                "WHERE collected_on IS NOT NULL"
+            )).fetchall()
+        )
+        if parsed is not None
+    })
     
     # Missing district distribution
     # In this dataset, "Not available" is the string used for missing districts
@@ -295,7 +342,7 @@ def get_metadata(db: Session = Depends(get_db)):
             "samples": samples,
             "readings": readings,
             "historical_events_distinct": historical,
-            "sample_years": [2022, 2022],
+            "sample_years": sample_years,
             "registry_years": [2009, 2012],
             "districts_with_samples": districts_with_samples,
             "village_name_coverage_pct": round((v_named / max(samples, 1)) * 100, 2),
