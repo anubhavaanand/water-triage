@@ -123,7 +123,7 @@ def compute_scores(session: Session) -> int:
         for r in readings_raw:
             spec = specs[r.parameter_key]
             severity = _severity_for_value(r.value, spec)
-            if r.parameter_key not in readings or severity > readings[r.parameter_key][1]:
+            if r.parameter_key not in readings or severity > readings[r.parameter_key][2]:
                 readings[r.parameter_key] = (r.value, spec, severity)
 
         # Convert to expected format: (value, spec)
