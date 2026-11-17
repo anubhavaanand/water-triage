@@ -103,18 +103,18 @@ def normalize_district_name(raw_dist: str | None) -> str:
 
 def upsert_geo(db: Session, record: dict, use_enriched: bool = True):
     state_name = CANONICAL_STATE.get(record["state"], record["state"])
-    raw_dist = (
-        record.get("inferred_district") or record.get("district")
-        if use_enriched
-        else record.get("district")
-    )
+    # Prefer the enriched value when enrichment is enabled, otherwise fall
+    # back to the raw one. The parentheses matter: without them, `or` binds
+    # tighter than the conditional and use_enriched=False discards
+    # inferred_district entirely.
+    if use_enriched:
+        raw_dist = record.get("inferred_district") or record.get("district")
+        raw_vil = record.get("extracted_location") or record.get("village")
+    else:
+        raw_dist = record.get("district")
+        raw_vil = record.get("village")
     district_name = clip(normalize_district_name(raw_dist), 100) or "Not available"
 
-    raw_vil = (
-        record.get("extracted_location") or record.get("village")
-        if use_enriched
-        else record.get("village")
-    )
     village_name = clip(raw_vil, 150) or "UNKNOWN"
 
     state = db.query(State).filter_by(name=state_name).one_or_none()
@@ -209,8 +209,16 @@ def load_all(db: Session, use_enriched: bool | None = None) -> dict:
             db.add(Reading(sample_id=sample.id, parameter_key=key, value=value))
         inserted += 1
 
-    db.commit()
-    scored = compute_scores(db)
+    # Score inside the same transaction as the insert. Previously this
+    # committed first and then called compute_scores(), so a scoring failure
+    # left committed samples and readings with no risk_scores row and no
+    # rollback path.
+    try:
+        scored = compute_scores(db)
+    except Exception:
+        db.rollback()
+        print("[ERROR] scoring failed; rolled back all inserted samples and readings")
+        raise
     return {
         "source_file": source_jsonl.name,
         "inserted": inserted,

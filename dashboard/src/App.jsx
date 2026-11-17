@@ -2202,49 +2202,37 @@ export default function App() {
                     </pattern>
                   </defs>
                   <circle cx="80" cy="80" r="54" fill="none" stroke="var(--border)" strokeWidth="24" />
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="54"
-                    fill="none"
-                    stroke="url(#h-ecoli)"
-                    strokeWidth="24"
-                    strokeDasharray="115 224"
-                    strokeDashoffset="0"
-                  />
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="54"
-                    fill="none"
-                    stroke="url(#h-fe)"
-                    strokeWidth="24"
-                    strokeDasharray="78 261"
-                    strokeDashoffset="-115"
-                  />
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="54"
-                    fill="none"
-                    stroke="url(#h-as)"
-                    strokeWidth="24"
-                    strokeDasharray="62 277"
-                    strokeDashoffset="-193"
-                  />
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="54"
-                    fill="none"
-                    stroke="url(#h-fl)"
-                    strokeWidth="24"
-                    strokeDasharray="52 287"
-                    strokeDashoffset="-255"
-                  />
+                  {(() => {
+                    // Segment lengths are derived from the real distribution so
+                    // they sum to the district total. They were previously
+                    // hardcoded (115/78/62/52 = 307) while the centre label
+                    // read 107/113, so the ring and the number disagreed.
+                    const circumference = 2 * Math.PI * 54;
+                    const dist = triageSummary.worst_parameter_distribution || [];
+                    const patterns = ['#h-ecoli', '#h-fe', '#h-as', '#h-fl'];
+                    let offset = 0;
+                    return dist.slice(0, 4).map((item, i) => {
+                      const share = (item.districts / 113) * circumference;
+                      const node = (
+                        <circle
+                          key={item.parameter}
+                          cx="80"
+                          cy="80"
+                          r="54"
+                          fill="none"
+                          stroke={`url(${patterns[i]})`}
+                          strokeWidth="24"
+                          strokeDasharray={`${share} ${circumference - share}`}
+                          strokeDashoffset={-offset}
+                        />
+                      );
+                      offset += share;
+                      return node;
+                    });
+                  })()}
                   <circle cx="80" cy="80" r="42" fill="var(--surface)" stroke="var(--fg)" strokeWidth="1.5" />
                   <text x="80" y="77" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="14" fontWeight="700" fill="var(--fg)">
-                    107/113
+                    {Object.values(triageSummary.bands || {}).reduce((a, b) => a + b, 0)}/{triageSummary.total_districts || 113}
                   </text>
                   <text x="80" y="92" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--muted)">
                     ACTIVE
@@ -2281,26 +2269,33 @@ export default function App() {
                   stroke="var(--accent)"
                   strokeWidth="2.5"
                 />
-                {(fullTriage?.collection_timeline || []).map((pt, i) => {
-                  const xs = [50, 110, 170, 230, 290];
-                  const maxS = Math.max(
-                    1,
-                    ...((fullTriage?.collection_timeline || []).map((x) => x.samples))
-                  );
-                  const y = 115 - Math.round((pt.samples / maxS) * 88);
-                  const x = xs[i] || 50;
-                  return (
-                    <g key={pt.month}>
-                      <circle cx={x} cy={y} r="4" fill="var(--surface)" stroke="var(--fg)" strokeWidth="2" />
-                      <text x={x} y={y - 8} textAnchor="middle" fontFamily="var(--font-mono)" fontSize="9.5" fill="var(--fg)">
-                        {pt.samples}
-                      </text>
-                      <text x={x} y="136" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="9" fill="var(--muted)">
-                        {pt.label.split(' ')[0]}
-                      </text>
-                    </g>
-                  );
-                })}
+                {(() => {
+                  // Data-driven x scale. The previous version used a fixed
+                  // 5-element lookup, so any point past index 4 fell back to
+                  // x=50 and overlapped the first point.
+                  const timeline = fullTriage?.collection_timeline || [];
+                  if (timeline.length === 0) return null;
+                  const maxS = Math.max(1, ...timeline.map((x) => x.samples));
+                  const xStart = 50;
+                  const xEnd = 290;
+                  const step =
+                    timeline.length > 1 ? (xEnd - xStart) / (timeline.length - 1) : 0;
+                  return timeline.map((pt, i) => {
+                    const y = 115 - Math.round((pt.samples / maxS) * 88);
+                    const x = Math.round(xStart + step * i);
+                    return (
+                      <g key={pt.month}>
+                        <circle cx={x} cy={y} r="4" fill="var(--surface)" stroke="var(--fg)" strokeWidth="2" />
+                        <text x={x} y={y - 8} textAnchor="middle" fontFamily="var(--font-mono)" fontSize="9.5" fill="var(--fg)">
+                          {pt.samples}
+                        </text>
+                        <text x={x} y="136" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="9" fill="var(--muted)">
+                          {pt.label.split(' ')[0]}
+                        </text>
+                      </g>
+                    );
+                  });
+                })()}
               </svg>
               <div className="chart-label-x">
                 Jul – Nov 2022 JJM WQMIS Lab Crawl (1,741 Active UP &amp; Bihar Reports)

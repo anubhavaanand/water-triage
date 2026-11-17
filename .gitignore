@@ -77,3 +77,7 @@ check_ajax.py
 .env
 .env.*
 !.env.example
+
+# Live WQMIS ASP.NET session tokens must never be committed. Copy
+# scripts/lab_probes.example.json to scripts/lab_probes.local.json instead.
+scripts/lab_probes.local.json

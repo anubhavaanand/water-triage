@@ -6,13 +6,19 @@ import react from '@vitejs/plugin-react';
 // base, so set BASE_PATH env var or run: BASE_PATH=/water-triage/ npm run build
 const basePath = process.env.BASE_PATH || '/';
 
+// Backend listens on 8000 (see docker-compose.yml and
+// `uv run uvicorn backend.app.main:app --port 8000`). Override for a
+// different host or port without editing this file:
+//   VITE_API_BASE=http://127.0.0.1:9000 npm run dev
+const apiTarget = process.env.VITE_API_BASE || 'http://127.0.0.1:8000';
+
 export default defineConfig({
   plugins: [react()],
   base: basePath,
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8088',
+        target: apiTarget,
         changeOrigin: true
       }
     }

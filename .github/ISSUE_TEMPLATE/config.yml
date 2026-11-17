@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/anubhavaanand/water-triage/security/advisories/new
+    about: Report security issues privately. Never open a public issue for a vulnerability. See SECURITY.md.
+  - name: Questions and discussion
+    url: https://github.com/anubhavaanand/water-triage/discussions
+    about: Ask a question or discuss an idea that is not a bug report or feature request.
+  - name: Documentation
+    url: https://github.com/anubhavaanand/water-triage/blob/main/README.md
+    about: Read the project overview, setup instructions, and known data limitations.

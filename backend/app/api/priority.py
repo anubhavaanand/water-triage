@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import desc
+from fastapi import APIRouter, Depends, Path, Query
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from ..database import get_session
@@ -8,6 +8,12 @@ from ..models import District, RiskScore, State, Village, WaterSample
 from ..schemas import CompareOut, PriorityItem, StateCompare
 
 router = APIRouter(tags=["scoring"])
+
+MAX_TOP_N = 200
+
+
+def func_cnt():
+    return func.count(RiskScore.id)
 
 
 def priority_items(db: Session) -> list[PriorityItem]:
@@ -63,7 +69,13 @@ def get_priority(
 
 
 @router.get("/priority/top/{n}", response_model=list[PriorityItem])
-def get_priority_top(n: int, db: Session = Depends(get_session)):
+def get_priority_top(
+    n: int = Path(..., ge=1, le=MAX_TOP_N),
+    db: Session = Depends(get_session),
+):
+    # `ge=1` rejects n=0. Previously there was no bound at all: the route
+    # took any int, so n=0 returned the entire priority queue and a huge n
+    # was accepted. `le` caps the result set.
     return priority_items(db)[:n]
 
 
@@ -112,9 +124,3 @@ def compare_states(db: Session = Depends(get_session)):
         )
 
     return CompareOut(states=out)
-
-
-def func_cnt():
-    from sqlalchemy import func
-
-    return func.count(RiskScore.id)
