@@ -4,7 +4,15 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
-load_dotenv(ROOT_DIR / ".env")
+env_file = ROOT_DIR / ".env"
+if not env_file.exists():
+    import warnings
+    warnings.warn(
+        f".env not found at {env_file}; copy .env.example to .env and set "
+        "DATABASE_URL before connecting to PostgreSQL. Falling back to SQLite.",
+        stacklevel=2,
+    )
+load_dotenv(env_file)
 
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{ROOT_DIR / 'data' / 'watertriage.db'}")
 
