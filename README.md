@@ -191,9 +191,10 @@ The API is read-only and unauthenticated, with open CORS. See [docs/api.md](docs
 
 ## Security Notes
 
-- `.env` is gitignored — never commit it (contains DB password)
+- All dotenv files (`.env.*`) are gitignored — never commit them (they may contain DB passwords)
 - Use `.env.example` as a template for local development
 - PostgreSQL password must be set via `POSTGRES_PASSWORD` environment variable
+- If a credential is ever committed, revoke and rotate it immediately; deleting the file does not remove it from Git history.
 - Found a vulnerability or an exposed credential? See [SECURITY.md](SECURITY.md) for how to report it privately (not via public issues).
 - Community expectations for respectful and inclusive participation are set out in [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
