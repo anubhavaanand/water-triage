@@ -23,7 +23,9 @@ def _exceeds(value: float, acceptable: float, permissible: float | None, strateg
     return value > acceptable
 
 
-def list_recurrent_districts(db: Session, limit: int = 50) -> list[VillageRecurrence]:
+def list_recurrent_districts(
+    db: Session, limit: int = 50, state: str | None = None
+) -> list[VillageRecurrence]:
     """
     District-level recurrence engine.
     Returns it inside the VillageRecurrence struct to maintain API backwards compatibility.
@@ -77,6 +79,21 @@ def list_recurrent_districts(db: Session, limit: int = 50) -> list[VillageRecurr
 
     # 3. Compute recurrence scores
     all_ids = set(historical_by_district) | set(exceeds_by_district)
+
+    if state is not None:
+        state_row = db.query(State).filter(State.name == state).one_or_none()
+        if state_row is None:
+            return []
+        state_district_ids = {
+            d.id for d in db.query(District).filter(District.state_id == state_row.id).all()
+        }
+        historical_by_district = {
+            d_id: h for d_id, h in historical_by_district.items() if d_id in state_district_ids
+        }
+        exceeds_by_district = {
+            d_id: e for d_id, e in exceeds_by_district.items() if d_id in state_district_ids
+        }
+        all_ids = set(historical_by_district) | set(exceeds_by_district)
     districts = {d.id: d for d in db.query(District).filter(District.id.in_(all_ids)).all()}
     states = {s.id: s.name for s in db.query(State).all()}
 

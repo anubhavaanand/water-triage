@@ -28,9 +28,11 @@ def get_village_recurrence(village_id: int, db: Session = Depends(get_session)):
 
 @router.get("")
 def list_recurrent(
-    limit: int = Query(50, le=200), db: Session = Depends(get_session)
+    limit: int = Query(50, le=200),
+    state: str | None = Query(None, description="Filter results by state name"),
+    db: Session = Depends(get_session),
 ):
-    rows = list_recurrent_districts(db, limit=limit)
+    rows = list_recurrent_districts(db, limit=limit, state=state)
     return [
         {
             "village_id": r.village_id,
