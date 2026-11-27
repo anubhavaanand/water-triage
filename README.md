@@ -87,20 +87,20 @@ Chloride, Total Alkalinity, and Total Hardness are present in the WQMIS corpus b
 - **52 samples (2.99%)** are held back because they trace to multi-district regional lab L158.
 - **Iron limit conflict.** 876 readings carry an acceptable limit of 1.0 mg/L in the raw records; scoring uses the stricter 0.3 mg/L from IS 10500:2012. A sensitivity run at 1.0 mg/L is exposed via `/api/meta`.
 - **Panel size drives score.** Composite scores depend on how many parameters were tested, so single-parameter iron samples can score higher than multi-parameter samples with broader contamination. Treat cross-district score comparisons as indicative, not definitive.
-- **Microbial coverage is thin.** E. coli was tested in 45 samples (2.6%); the acute-hazard Critical floor rests heavily on that small subset.
+- **Microbial coverage is thin.** E. coli was tested in 45 samples (2.5%); the acute-hazard Critical floor rests heavily on that small subset.
 - **Synthetic data** exists only under `backend/tests/fixtures` for test purposes. No synthetic readings appear in reported results.
 
 ### Framework and tests
 
 - **Framework:** React SPA frontend with Python FastAPI backend, Docker Compose for local deployment.
-- **Tests:** 28 passed, 1 skipped (offline); 29 passed (with PostgreSQL).
+- **Tests:** 75 test functions across 17 modules in `backend/tests`. Run with `uv run pytest backend/tests` (needs the project environment; 29 of them previously reported 28 passed / 1 skipped offline).
 
 ## Data Gaps Recovery
 
 | Before | After | Resolution |
 |---|---|---|
-| 354 Not Available (20.3%) | 52 (2.99%) | 302/354 resolved via 20 Lab IDs |
-| 21 named villages (1.21%) | 305 (17.52%) | +284 extracted from source field |
+| 378 unresolved (21.2%) | 73 (4.1%) | 305/378 resolved via lab probes |
+| 21 named villages (1.2%) | 305 (16.7%) | +284 extracted from source field |
 | Bihar: 15 missing (L268) | 0 missing | L268 → Samastipur |
 | UP: 35 missing (6 labs) | 0 missing | L405→Raebareli, L339→Sonbhadra, etc. |
 
