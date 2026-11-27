@@ -4,9 +4,9 @@
 [![Python 3.13+](https://img.shields.io/badge/python-3.13%2B-blue.svg)](pyproject.toml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.139+-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18-61dafb.svg)](dashboard/package.json)
-[![Tests](https://img.shields.io/badge/tests-73%20passed-brightgreen.svg)](backend/tests)
+[![Backend tests](https://img.shields.io/badge/backend%20tests-75%20functions-informational.svg)](backend/tests)
 
-**Live Demo:** [https://water-triage.onrender.com](https://water-triage.onrender.com) · **GitHub Pages:** [anubhavaanand.github.io/water-triage](https://anubhavaanand.github.io/water-triage)
+**Live Demo:** [anubhavaanand.github.io/water-triage](https://anubhavaanand.github.io/water-triage)
 
 
 **A Data-Driven Water Quality Risk Scoring and Intervention Prioritization System for Uttar Pradesh and Bihar**
@@ -35,13 +35,15 @@ Guide: Dr. Girish Paliwal
 | **Pathogen Overrides** (E. coli) | 27 | 5 | 32 |
 | **Arsenic Escalations** | 3 | 10 | 13 |
 
-**Lab-ID Resolution:** 302/354 missing districts resolved (85.3%) via ASP.NET session cookie handshake with `ejalshakti.gov.in`. Only 52 samples (2.99%) held back for multi-district regional lab L158.
+**Lab-ID Resolution:** 305/378 previously unresolved records resolved (80.7%) via ASP.NET session cookie handshake with `ejalshakti.gov.in`. 73 records are held back for the multi-district regional lab L158.
 
-**Village Coverage:** 305/1,741 samples (17.52%) now have named village/habitation locations — a 1,352% gain from the baseline of 21 samples.
+**Village Coverage:** 305/1,822 samples (16.7%) have named village/habitation locations — a 1,352% gain from the baseline of 21 samples.
 
 ## Data & Limitations
 
-**Corpus:** 1,741 samples · 6,792 parameter readings · 10 scored parameters · 2022 collection year.
+**Corpus:** 1,822 samples · 11,779 parameter readings · 10 scored parameters · 2022 collection year.
+
+See [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) for how these figures are measured; regenerate with `python3 benchmarks/run_bench.py`.
 
 ### Scored parameters and BIS IS 10500 limits
 
@@ -81,24 +83,24 @@ Chloride, Total Alkalinity, and Total Hardness are present in the WQMIS corpus b
 - **Source:** WQMIS (JJM / `ejalshakti.gov.in`) lab reports, extracted August–September 2026, verified against official Form WQ6 for all 75 UP + 38 Bihar districts.
 - **Crawl is non-random.** The corpus describes what was published and retrievable, not a statistically representative sample. Comparisons between states or districts describe this corpus only.
 - **Single year.** All water samples are from 2022; historical registry events span 2009–2012 and are used only for recurrence classification.
-- **Village identifiability is partial.** 305/1,741 samples (17.52%) have named village/habitation locations. The remainder are mapped to district and lab only.
+- **Village identifiability is partial.** 305/1,822 samples (16.7%) have named village/habitation locations. The remainder are mapped to district and lab only.
 - **52 samples (2.99%)** are held back because they trace to multi-district regional lab L158.
 - **Iron limit conflict.** 876 readings carry an acceptable limit of 1.0 mg/L in the raw records; scoring uses the stricter 0.3 mg/L from IS 10500:2012. A sensitivity run at 1.0 mg/L is exposed via `/api/meta`.
 - **Panel size drives score.** Composite scores depend on how many parameters were tested, so single-parameter iron samples can score higher than multi-parameter samples with broader contamination. Treat cross-district score comparisons as indicative, not definitive.
-- **Microbial coverage is thin.** E. coli was tested in 45 samples (2.6%); the acute-hazard Critical floor rests heavily on that small subset.
+- **Microbial coverage is thin.** E. coli was tested in 45 samples (2.5%); the acute-hazard Critical floor rests heavily on that small subset.
 - **Synthetic data** exists only under `backend/tests/fixtures` for test purposes. No synthetic readings appear in reported results.
 
 ### Framework and tests
 
 - **Framework:** React SPA frontend with Python FastAPI backend, Docker Compose for local deployment.
-- **Tests:** 28 passed, 1 skipped (offline); 29 passed (with PostgreSQL).
+- **Tests:** 75 test functions across 17 modules in `backend/tests`. Run with `uv run pytest backend/tests` (needs the project environment; 29 of them previously reported 28 passed / 1 skipped offline).
 
 ## Data Gaps Recovery
 
 | Before | After | Resolution |
 |---|---|---|
-| 354 Not Available (20.3%) | 52 (2.99%) | 302/354 resolved via 20 Lab IDs |
-| 21 named villages (1.21%) | 305 (17.52%) | +284 extracted from source field |
+| 378 unresolved (21.2%) | 73 (4.1%) | 305/378 resolved via lab probes |
+| 21 named villages (1.2%) | 305 (16.7%) | +284 extracted from source field |
 | Bihar: 15 missing (L268) | 0 missing | L268 → Samastipur |
 | UP: 35 missing (6 labs) | 0 missing | L405→Raebareli, L339→Sonbhadra, etc. |
 
