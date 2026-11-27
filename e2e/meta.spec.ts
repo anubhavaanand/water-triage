@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type APIRequestContext } from '@playwright/test';
 
 const API_URL = 'http://localhost:8000/api/meta';
 
-async function apiAvailable(request: { get: (url: string) => Promise<{ ok: () => boolean }> }) {
+async function apiAvailable(request: APIRequestContext) {
   try {
     const res = await request.get(API_URL);
     return res.ok();

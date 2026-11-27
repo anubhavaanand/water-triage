@@ -111,18 +111,13 @@ def query_timing() -> dict:
             "reason": "DATABASE_URL is not set and no local PostgreSQL is reachable; query timing cannot be measured here.",
         }
     try:
-        import psycopg  # noqa: F401
+        import psycopg
     except ImportError:
         return {
             "status": "BLOCKED",
             "reason": "psycopg is not installed in this environment (pip install 'psycopg[binary]').",
         }
-    try:
-        import psycopg
-    except ImportError as exc:  # pragma: no cover
-        return {"status": "BLOCKED", "reason": str(exc)}
 
-    import statistics
     import time
 
     results = {}
@@ -172,7 +167,11 @@ def main() -> int:
     print(f"distinct districts     : {ds['distinct_districts_in_raw']}")
     print(f"parameter readings     : {ds['total_parameter_readings']}")
     res = ds["district_resolution"]
-    print(f"lab-resolution rate    : {res['resolution_rate_pct']}% ({res['resolved_via_lab_probe']}/{res['denominator_resolved_plus_multi']})")
+    rate = res["resolution_rate_pct"]
+    if rate is None:
+        print("lab-resolution rate    : N/A (denominator zero)")
+    else:
+        print(f"lab-resolution rate    : {rate}% ({res['resolved_via_lab_probe']}/{res['denominator_resolved_plus_multi']})")
     print(f"query timing           : {payload['query_timing']['status'] if isinstance(payload['query_timing'], dict) else 'partial'}")
     print(f"\nwrote {RESULTS.relative_to(ROOT)}")
     return 0
