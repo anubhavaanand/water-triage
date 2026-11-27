@@ -35,13 +35,15 @@ Guide: Dr. Girish Paliwal
 | **Pathogen Overrides** (E. coli) | 27 | 5 | 32 |
 | **Arsenic Escalations** | 3 | 10 | 13 |
 
-**Lab-ID Resolution:** 302/354 missing districts resolved (85.3%) via ASP.NET session cookie handshake with `ejalshakti.gov.in`. Only 52 samples (2.99%) held back for multi-district regional lab L158.
+**Lab-ID Resolution:** 305/378 previously unresolved records resolved (80.7%) via ASP.NET session cookie handshake with `ejalshakti.gov.in`. 73 records are held back for the multi-district regional lab L158.
 
-**Village Coverage:** 305/1,741 samples (17.52%) now have named village/habitation locations — a 1,352% gain from the baseline of 21 samples.
+**Village Coverage:** 305/1,822 samples (16.7%) have named village/habitation locations — a 1,352% gain from the baseline of 21 samples.
 
 ## Data & Limitations
 
-**Corpus:** 1,741 samples · 6,792 parameter readings · 10 scored parameters · 2022 collection year.
+**Corpus:** 1,822 samples · 11,779 parameter readings · 10 scored parameters · 2022 collection year.
+
+See [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) for how these figures are measured; regenerate with `python3 benchmarks/run_bench.py`.
 
 ### Scored parameters and BIS IS 10500 limits
 
@@ -81,7 +83,7 @@ Chloride, Total Alkalinity, and Total Hardness are present in the WQMIS corpus b
 - **Source:** WQMIS (JJM / `ejalshakti.gov.in`) lab reports, extracted August–September 2026, verified against official Form WQ6 for all 75 UP + 38 Bihar districts.
 - **Crawl is non-random.** The corpus describes what was published and retrievable, not a statistically representative sample. Comparisons between states or districts describe this corpus only.
 - **Single year.** All water samples are from 2022; historical registry events span 2009–2012 and are used only for recurrence classification.
-- **Village identifiability is partial.** 305/1,741 samples (17.52%) have named village/habitation locations. The remainder are mapped to district and lab only.
+- **Village identifiability is partial.** 305/1,822 samples (16.7%) have named village/habitation locations. The remainder are mapped to district and lab only.
 - **52 samples (2.99%)** are held back because they trace to multi-district regional lab L158.
 - **Iron limit conflict.** 876 readings carry an acceptable limit of 1.0 mg/L in the raw records; scoring uses the stricter 0.3 mg/L from IS 10500:2012. A sensitivity run at 1.0 mg/L is exposed via `/api/meta`.
 - **Panel size drives score.** Composite scores depend on how many parameters were tested, so single-parameter iron samples can score higher than multi-parameter samples with broader contamination. Treat cross-district score comparisons as indicative, not definitive.

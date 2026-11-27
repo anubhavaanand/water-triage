@@ -37,13 +37,13 @@ def git_sha() -> str:
 
 
 def environment() -> dict:
+    # Deliberately excludes hostname: this file is committed to a public repo.
     return {
         "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "git_sha": git_sha(),
         "python": sys.version.split()[0],
         "platform": platform.platform(),
         "machine": platform.machine(),
-        "hostname": socket.gethostname(),
         "cpu_count": os.cpu_count(),
     }
 
