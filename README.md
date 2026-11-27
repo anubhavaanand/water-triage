@@ -4,7 +4,7 @@
 [![Python 3.13+](https://img.shields.io/badge/python-3.13%2B-blue.svg)](pyproject.toml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.139+-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18-61dafb.svg)](dashboard/package.json)
-[![Tests](https://img.shields.io/badge/tests-73%20passed-brightgreen.svg)](backend/tests)
+[![Backend tests](https://img.shields.io/badge/backend%20tests-75%20functions-informational.svg)](backend/tests)
 
 **Live Demo:** [anubhavaanand.github.io/water-triage](https://anubhavaanand.github.io/water-triage)
 
