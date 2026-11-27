@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-18-61dafb.svg)](dashboard/package.json)
 [![Tests](https://img.shields.io/badge/tests-73%20passed-brightgreen.svg)](backend/tests)
 
-**Live Demo:** [https://water-triage.onrender.com](https://water-triage.onrender.com) · **GitHub Pages:** [anubhavaanand.github.io/water-triage](https://anubhavaanand.github.io/water-triage)
+**Live Demo:** [anubhavaanand.github.io/water-triage](https://anubhavaanand.github.io/water-triage)
 
 
 **A Data-Driven Water Quality Risk Scoring and Intervention Prioritization System for Uttar Pradesh and Bihar**

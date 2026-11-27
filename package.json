@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "@neon/config": "^1.8.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
   }
 }
